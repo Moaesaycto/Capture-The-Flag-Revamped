@@ -16,11 +16,11 @@ public class Game {
   }
 
   public boolean addPlayer(String name, UUID team) {
-    return teams.stream()
-        .filter(t -> t.getID().equals(team))
-        .findFirst()
-        .map(t -> players.add(new Player(name, team)))
-        .orElse(false);
+    if (this.players.stream().anyMatch(p -> p.getName().equals(name))) {
+      return false;
+    }
+
+    return this.players.add(new Player(name, team));
   }
 
   public boolean removePlayer(UUID id) {
@@ -32,7 +32,12 @@ public class Game {
     List<Map<String, String>> teamList = new ArrayList<>();
 
     this.players.forEach(
-        p -> playerList.add(Map.of("name", p.getName(), "id", p.getID().toString())));
+        p ->
+            playerList.add(
+                Map.of(
+                    "name", p.getName(),
+                    "id", p.getID().toString(),
+                    "team", p.getTeam().toString())));
 
     this.teams.forEach(
         t ->
