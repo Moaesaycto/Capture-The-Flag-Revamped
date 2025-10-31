@@ -29,13 +29,28 @@ public class Game {
 
   public Map<String, Object> status() {
     List<Map<String, String>> playerList = new ArrayList<>();
+    List<Map<String, String>> teamList = new ArrayList<>();
 
     this.players.forEach(
         p -> playerList.add(Map.of("name", p.getName(), "id", p.getID().toString())));
-    return Map.of("players", playerList);
+
+    this.teams.forEach(
+        t ->
+            teamList.add(
+                Map.of("name", t.getName(), "color", t.getColor(), "id", t.getID().toString())));
+
+    return Map.of("players", playerList, "teams", teamList);
   }
 
   public Team getTeam(UUID id) {
     return teams.stream().filter(t -> t.getID().equals(id)).findFirst().orElse(null);
+  }
+
+  public boolean registerTeam(String name, String color) {
+    if (teams.stream().anyMatch(t -> t.getName().equals(name))) {
+      return false;
+    }
+
+    return this.teams.add(new Team(name, color));
   }
 }

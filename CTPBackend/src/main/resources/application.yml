@@ -3,3 +3,6 @@ server:
 logging:
   level:
     root: INFO
+spring:
+  config:
+    import: classpath:config.yml
