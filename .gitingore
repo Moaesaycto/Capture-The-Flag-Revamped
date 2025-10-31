@@ -1,37 +1,27 @@
-# ----------------------------
-# IntelliJ IDEA
-# ----------------------------
 .idea/
 *.iml
 out/
 
-# ----------------------------
-# Windows system files
-# ----------------------------
 Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 *.lnk
 
-# ----------------------------
-# Node / Frontend
-# ----------------------------
 CTPFrontend/node_modules/
 CTPFrontend/dist/
 CTPFrontend/build/
 CTPFrontend/.env
 CTPFrontend/.next/
 
-# ----------------------------
-# Backend (Java / Spring Boot)
-# ----------------------------
 CTPBackend/target/
 CTPBackend/build/
 CTPBackend/.env
+CTPBackend/.idea/
+CTPBackend/*.iml
+CTPBackend/out/
 *.log
 
-# ----------------------------
-# Misc
-# ----------------------------
 .DS_Store
+
+temp/
