@@ -3,27 +3,31 @@ package moae.dev.Game;
 import java.util.*;
 
 public class Game {
-  private List<Team> teams;
-  private List<Player> players;
+  private static List<Team> teams;
+  private static List<Player> players;
 
   public Game() {
-    this.teams = new ArrayList<Team>();
-    this.players = new ArrayList<Player>();
+    teams = new ArrayList<Team>();
+    players = new ArrayList<Player>();
   }
 
-  public List<Player> getPlayers() {
-    return this.players;
+    public static Player getPlayer(UUID id) {
+        return players.stream().filter(p -> p.getID().equals(id)).findFirst().orElse(null);
+    }
+
+    public List<Player> getPlayers() {
+    return players;
   }
 
-  public boolean addPlayer(String name, UUID team) {
-    if (this.players.stream().anyMatch(p -> p.getName().equals(name))) {
+  public static boolean addPlayer(String name, UUID team) {
+    if (players.stream().anyMatch(p -> p.getName().equals(name))) {
       return false;
     }
 
-    return this.players.add(new Player(name, team));
+    return players.add(new Player(name, team));
   }
 
-  public boolean removePlayer(UUID id) {
+  public static boolean removePlayer(UUID id) {
     return players.removeIf(p -> id.equals(p.getID()));
   }
 
@@ -31,7 +35,7 @@ public class Game {
     List<Map<String, String>> playerList = new ArrayList<>();
     List<Map<String, String>> teamList = new ArrayList<>();
 
-    this.players.forEach(
+    players.forEach(
         p ->
             playerList.add(
                 Map.of(
@@ -39,15 +43,18 @@ public class Game {
                     "id", p.getID().toString(),
                     "team", p.getTeam().toString())));
 
-    this.teams.forEach(
+    teams.forEach(
         t ->
             teamList.add(
-                Map.of("name", t.getName(), "color", t.getColor(), "id", t.getID().toString())));
+                Map.of(
+                    "name", t.getName(),
+                    "color", t.getColor(),
+                    "id", t.getID().toString())));
 
     return Map.of("players", playerList, "teams", teamList);
   }
 
-  public Team getTeam(UUID id) {
+  public static Team getTeam(UUID id) {
     return teams.stream().filter(t -> t.getID().equals(id)).findFirst().orElse(null);
   }
 
@@ -56,6 +63,6 @@ public class Game {
       return false;
     }
 
-    return this.teams.add(new Team(name, color));
+    return teams.add(new Team(name, color));
   }
 }
