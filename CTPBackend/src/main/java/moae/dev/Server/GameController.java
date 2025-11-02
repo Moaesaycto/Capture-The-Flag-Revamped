@@ -26,7 +26,7 @@ public class GameController {
     return game.status();
   }
 
-  @PutMapping("/settings")
+  @PatchMapping("/settings")
   public Map<String, Object> editSettings(@Valid @RequestBody SettingsRequest settings) {
     this.game.merge(settings);
     return Map.of("message", "success");
