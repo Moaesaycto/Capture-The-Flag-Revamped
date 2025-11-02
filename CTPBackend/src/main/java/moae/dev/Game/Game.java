@@ -88,15 +88,18 @@ public class Game {
   }
 
   public void merge(@Valid SettingsRequest settings) {
+    if (state != State.WAITING_TO_START)
+      throw new ResponseStatusException(
+          HttpStatus.LOCKED, "Settings can only be changed before the game.");
+
     Integer newMax = settings.getMaxTeams();
 
     int trueMax = config.getTeams().size();
     if (newMax != null && newMax != teams.size()) {
-      if (newMax <= config.getTeams().size()) {
+      if (newMax <= config.getTeams().size())
         throw new ResponseStatusException(
             HttpStatus.BAD_REQUEST,
             "Invalid maxTeams (" + newMax + "). Must be less than or equal to " + trueMax);
-      }
       reset(); // Hard reset when teams are changed. TODO: Account for this with JWTs
       registerNTeams(newMax, config.getTeams());
     }

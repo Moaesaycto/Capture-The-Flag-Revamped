@@ -2,7 +2,6 @@ package moae.dev.Server;
 
 import jakarta.validation.Valid;
 import moae.dev.Game.Game;
-import moae.dev.Game.Team;
 import moae.dev.Requests.JoinRequest;
 import moae.dev.Requests.LeaveRequest;
 import moae.dev.Utils.Validation;
