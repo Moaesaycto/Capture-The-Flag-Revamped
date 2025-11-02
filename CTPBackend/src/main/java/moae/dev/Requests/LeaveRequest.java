@@ -3,7 +3,7 @@ package moae.dev.Requests;
 import jakarta.validation.constraints.NotNull;
 
 public class LeaveRequest {
-  @NotNull(message = "a valid UUID is required")
+  @NotNull(message = "A valid UUID is required")
   private String id;
 
   private boolean forced = false;

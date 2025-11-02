@@ -1,11 +1,18 @@
 package moae.dev.Game;
 
+import jakarta.validation.Valid;
+import moae.dev.Requests.SettingsRequest;
+import moae.dev.Server.AppConfig;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.*;
 
 public class Game {
   private static List<Team> teams;
   private static List<Player> players;
   private static State state;
+  private static AppConfig config;
 
   public static enum State {
     WAITING_TO_START("ready"),
@@ -28,10 +35,13 @@ public class Game {
     }
   }
 
-  public Game() {
+  public Game(AppConfig initConfig) {
     teams = new ArrayList<Team>();
     players = new ArrayList<Player>();
     state = State.WAITING_TO_START;
+    config = initConfig;
+
+    registerNTeams(initConfig.getGame().getMaxTeams(), initConfig.getTeams());
   }
 
   // ----- Game -----
@@ -46,7 +56,7 @@ public class Game {
   public Map<String, Object> status() {
     List<Map<String, String>> playerList = new ArrayList<>();
     List<Map<String, String>> teamList = new ArrayList<>();
-    Map<String, String> game = Map.of("state", state.toString());
+    Map<String, String> currState = Map.of("state", state.toString());
 
     players.forEach(
         p ->
@@ -64,13 +74,34 @@ public class Game {
                     "color", t.getColor(),
                     "id", t.getID().toString())));
 
-    return Map.of("players", playerList, "teams", teamList, "game", game);
+    return Map.of(
+        "players", playerList,
+        "teams", teamList,
+        "state", currState,
+        "game", config.getMap());
   }
 
   public void reset() {
     players.clear();
     teams.clear();
     setState(State.WAITING_TO_START);
+  }
+
+  public void merge(@Valid SettingsRequest settings) {
+    Integer newMax = settings.getMaxTeams();
+
+    int trueMax = config.getTeams().size();
+    if (newMax != null && newMax != teams.size()) {
+      if (newMax <= config.getTeams().size()) {
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Invalid maxTeams (" + newMax + "). Must be less than or equal to " + trueMax);
+      }
+      reset(); // Hard reset when teams are changed. TODO: Account for this with JWTs
+      registerNTeams(newMax, config.getTeams());
+    }
+
+    config.merge(settings);
   }
 
   // ----- Players -----
@@ -97,6 +128,10 @@ public class Game {
   // ----- Teams -----
   public static Team getTeam(UUID id) {
     return teams.stream().filter(t -> t.getID().equals(id)).findFirst().orElse(null);
+  }
+
+  private void registerNTeams(int n, List<AppConfig.TeamConfig> allTeams) {
+    allTeams.stream().limit(n).forEach(t -> registerTeam(t.getName(), t.getColor()));
   }
 
   public boolean registerTeam(String name, String color) {

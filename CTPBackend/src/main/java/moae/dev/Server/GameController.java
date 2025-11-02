@@ -1,6 +1,8 @@
 package moae.dev.Server;
 
+import jakarta.validation.Valid;
 import moae.dev.Game.Game;
+import moae.dev.Requests.SettingsRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -8,15 +10,10 @@ import java.util.Map;
 @RestController
 @RequestMapping("/game")
 public class GameController {
-  private final AppConfig config;
-  private final Game game = new Game();
+  private final Game game;
 
   public GameController(AppConfig config) {
-    this.config = config;
-
-    this.config.getTeams().stream()
-        .limit(config.getGame().getMaxTeams())
-        .forEach(t -> this.game.registerTeam(t.getName(), t.getColor()));
+    this.game = new Game(config);
   }
 
   @GetMapping("/")
@@ -29,5 +26,9 @@ public class GameController {
     return game.status();
   }
 
-
+  @PutMapping("/settings")
+  public Map<String, Object> editSettings(@Valid @RequestBody SettingsRequest settings) {
+    this.game.merge(settings);
+    return Map.of("message", "success");
+  }
 }

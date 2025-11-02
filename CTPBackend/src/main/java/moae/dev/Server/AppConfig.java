@@ -1,9 +1,12 @@
 package moae.dev.Server;
 
+import moae.dev.Requests.SettingsRequest;
+import moae.dev.Utils.Validation;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 @ConfigurationProperties
@@ -61,6 +64,14 @@ public class AppConfig {
       this.minPlayersPerTeam = minPlayersPerTeam;
     }
 
+    public int getMaxPlayersPerTeam() {
+      return maxPlayersPerTeam;
+    }
+
+    public void setMaxPlayersPerTeam(int maxPlayersPerTeam) {
+      this.maxPlayersPerTeam = maxPlayersPerTeam;
+    }
+
     public int getMaxTeams() {
       return maxTeams;
     }
@@ -92,14 +103,6 @@ public class AppConfig {
     public void setFfaTime(int ffaTime) {
       this.ffaTime = ffaTime;
     }
-
-      public int getMaxPlayersPerTeam() {
-          return maxPlayersPerTeam;
-      }
-
-      public void setMaxPlayersPerTeam(int maxPlayersPerTeam) {
-          this.maxPlayersPerTeam = maxPlayersPerTeam;
-      }
   }
 
   public static class TeamConfig {
@@ -121,5 +124,42 @@ public class AppConfig {
     public void setName(String name) {
       this.name = name;
     }
+  }
+
+  public Map<String, Object> getMap() {
+    return Map.of(
+        "maxPlayers", getGame().getMaxPlayers(),
+        "minPlayers", getGame().getMinPlayers(),
+        "minPlayersPerTeam", getGame().getMinPlayersPerTeam(),
+        "maxPlayersPerTeam", getGame().getMaxPlayersPerTeam(),
+        "maxTeams", getGame().getMaxTeams(),
+        "graceTime", getGame().getGraceTime(),
+        "scoutTime", getGame().getScoutTime(),
+        "FFATime", getGame().getFfaTime());
+  }
+
+  public void merge(SettingsRequest req) {
+    Integer maxPlayers = Validation.validateOptionalNumber(req.getMaxPlayers(), "maxPlayers");
+    if (maxPlayers != null) this.getGame().setMaxPlayers(maxPlayers);
+
+    Integer minPlayers = Validation.validateOptionalNumber(req.getMinPlayers(), "minPlayers");
+    if (minPlayers != null) this.getGame().setMinPlayers(minPlayers);
+
+    Integer minPlayersPerTeam =
+        Validation.validateOptionalNumber(req.getMinPlayersPerTeam(), "minPlayersPerTeam");
+    if (minPlayersPerTeam != null) this.getGame().setMinPlayersPerTeam(minPlayersPerTeam);
+
+    Integer maxPlayersPerTeam =
+        Validation.validateOptionalNumber(req.getMaxPlayersPerTeam(), "maxPlayersPerTeam");
+    if (maxPlayersPerTeam != null) this.getGame().setMaxPlayersPerTeam(maxPlayersPerTeam);
+
+    Integer graceTime = Validation.validatePeriodTime(req.getGraceTime(), "grace");
+    if (graceTime != null) this.getGame().setGraceTime(graceTime);
+
+    Integer scoutTime = Validation.validatePeriodTime(req.getScoutTime(), "scout");
+    if (scoutTime != null) this.getGame().setScoutTime(scoutTime);
+
+    Integer ffaTime = Validation.validatePeriodTime(req.getFfaTime(), "FFA");
+    if (ffaTime != null) this.getGame().setFfaTime(ffaTime);
   }
 }

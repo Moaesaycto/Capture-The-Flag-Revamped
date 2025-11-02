@@ -31,4 +31,22 @@ public class Validation {
     }
     return uuid;
   }
+
+  public static Integer validateOptionalNumber(Integer value, String name) {
+    if (value != null && value <= 0 && value != -1) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Invalid " + name + " (" + value + ")");
+    }
+
+    return value;
+  }
+
+  public static Integer validatePeriodTime(Integer value, String name) {
+    if (value != null && value < 0) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Invalid " + name + " time (" + value + ")");
+    }
+
+    return value;
+  }
 }
