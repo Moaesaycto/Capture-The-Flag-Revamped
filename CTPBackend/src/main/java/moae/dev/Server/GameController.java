@@ -1,13 +1,9 @@
 package moae.dev.Server;
 
 import moae.dev.Game.Game;
-import moae.dev.Game.Team;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/game")
@@ -32,5 +28,6 @@ public class GameController {
   public Map<String, Object> status() {
     return game.status();
   }
+
 
 }

@@ -31,7 +31,11 @@ public class AppConfig {
     private int maxPlayers;
     private int minPlayers;
     private int minPlayersPerTeam;
+    private int maxPlayersPerTeam;
     private int maxTeams;
+    private int graceTime;
+    private int scoutTime;
+    private int ffaTime;
 
     public int getMinPlayers() {
       return minPlayers;
@@ -64,6 +68,38 @@ public class AppConfig {
     public void setMaxTeams(int maxTeams) {
       this.maxTeams = maxTeams;
     }
+
+    public int getGraceTime() {
+      return graceTime;
+    }
+
+    public void setGraceTime(int graceTime) {
+      this.graceTime = graceTime;
+    }
+
+    public int getScoutTime() {
+      return scoutTime;
+    }
+
+    public void setScoutTime(int scoutTime) {
+      this.scoutTime = scoutTime;
+    }
+
+    public int getFfaTime() {
+      return ffaTime;
+    }
+
+    public void setFfaTime(int ffaTime) {
+      this.ffaTime = ffaTime;
+    }
+
+      public int getMaxPlayersPerTeam() {
+          return maxPlayersPerTeam;
+      }
+
+      public void setMaxPlayersPerTeam(int maxPlayersPerTeam) {
+          this.maxPlayersPerTeam = maxPlayersPerTeam;
+      }
   }
 
   public static class TeamConfig {
