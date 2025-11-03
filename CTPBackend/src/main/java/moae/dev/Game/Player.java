@@ -1,5 +1,6 @@
 package moae.dev.Game;
 
+import java.util.Map;
 import java.util.UUID;
 
 public class Player {
@@ -29,5 +30,13 @@ public class Player {
 
   public boolean isAuth() {
     return this.auth;
+  }
+
+  public Map<String, Object> getInfo() {
+    return Map.of(
+        "id", id,
+        "name", name,
+        "team", team,
+        "auth", auth);
   }
 }

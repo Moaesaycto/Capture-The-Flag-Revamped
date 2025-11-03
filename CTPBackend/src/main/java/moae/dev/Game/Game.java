@@ -140,6 +140,10 @@ public class Game {
     return players.removeIf(p -> id.equals(p.getID()));
   }
 
+  public static boolean isValidPlayer(UUID player) {
+    return players.stream().anyMatch(p -> p.getID().equals(player));
+  }
+
   // ----- Teams -----
   public static Team getTeam(UUID id) {
     return teams.stream().filter(t -> t.getID().equals(id)).findFirst().orElse(null);

@@ -12,7 +12,7 @@ public class GameTest {
 
     @Test
     void initializeGame() {
-        this.game = new Game();
+
 
         Map<String, Object> status = game.status();
 

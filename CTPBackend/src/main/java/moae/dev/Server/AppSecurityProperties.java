@@ -10,6 +10,8 @@ import java.util.List;
 public class AppSecurityProperties {
   private List<String> publicPaths;
   private String authPw;
+  private String jwtSecret;
+  private String expiryMinutes;
 
   public List<String> getPublicPaths() {
     return publicPaths;
@@ -31,5 +33,21 @@ public class AppSecurityProperties {
   public boolean passCheck(String password) {
     System.out.println(password + " != " + authPw);
     return authPw != null && authPw.equals(password);
+  }
+
+  public String getJwtSecret() {
+    return jwtSecret;
+  }
+
+  public void setJwtSecret(String jwtSecret) {
+    this.jwtSecret = jwtSecret;
+  }
+
+  public String getExpiryMinutes() {
+    return expiryMinutes;
+  }
+
+  public void setExpiryMinutes(String expiryMinutes) {
+    this.expiryMinutes = expiryMinutes;
   }
 }

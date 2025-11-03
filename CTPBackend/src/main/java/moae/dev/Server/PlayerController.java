@@ -1,19 +1,17 @@
 package moae.dev.Server;
 
 import jakarta.validation.Valid;
-import moae.dev.App;
 import moae.dev.Game.Game;
-import moae.dev.Requests.AuthJoinRequest;
 import moae.dev.Requests.JoinRequest;
 import moae.dev.Requests.LeaveRequest;
 import moae.dev.Requests.RemoveRequest;
 import moae.dev.Utils.Validation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.JwtClaimsSet;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -53,27 +51,37 @@ public class PlayerController {
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Player already exists in this team");
     }
 
+    String jti = UUID.randomUUID().toString();
+
     var now = Instant.now();
     var claims =
         JwtClaimsSet.builder()
+            .issuer("CTF-Backend")
             .issuedAt(now)
             .expiresAt(now.plusSeconds(expiryMinutes * 60))
+            .id(jti)
             .subject(joined.toString())
             .claim("scope", "api.read api.write")
             .build();
 
-    String token = encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+    var header = JwsHeader.with(MacAlgorithm.HS256).build();
+    String token = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
     return Map.of("message", "success", "access_token", token, "token_type", "Bearer");
+  }
+
+  @GetMapping("/me")
+  public Map<String, Object> playerInfo(@AuthenticationPrincipal Jwt jwt) {
+    UUID playerId = UUID.fromString(jwt.getSubject());
+    return Game.getPlayer(playerId).getInfo();
   }
 
   // TODO: Add JWT verification, overriden by forced
   @PostMapping("/leave")
   public Map<String, Object> playerLeave(@Valid @RequestBody LeaveRequest body) {
     UUID playerId = Validation.ValidateUUID(body.getId(), "player");
-
-    boolean joined = Game.removePlayer(playerId);
-    if (!joined) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, "Player already exists in this team");
+    boolean removed = Game.removePlayer(playerId);
+    if (!removed) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Player not found");
     }
 
     return Map.of("message", "success");

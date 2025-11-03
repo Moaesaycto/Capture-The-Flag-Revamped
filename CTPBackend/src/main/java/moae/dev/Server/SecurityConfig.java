@@ -1,5 +1,8 @@
 package moae.dev.Server;
 
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.nimbusds.jose.proc.SecurityContext;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -7,7 +10,14 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.jwt.*;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class SecurityConfig {
@@ -19,17 +29,20 @@ public class SecurityConfig {
   }
 
   @Bean
-  SecurityFilterChain api(HttpSecurity http) throws Exception {
-    String[] publicPaths =
-        props.getPublicPaths() == null
-            ? new String[0]
-            : props.getPublicPaths().toArray(new String[0]);
+  SecurityFilterChain api(HttpSecurity http, JwtDecoder jwtDecoder) throws Exception {
+    String[] publicPaths = props.getPublicPaths().toArray(new String[0]);
 
     http.csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
             auth -> auth.requestMatchers(publicPaths).permitAll().anyRequest().authenticated())
-        .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+        .oauth2ResourceServer(
+            oauth2 ->
+                oauth2.jwt(
+                    jwt -> {
+                      jwt.jwtAuthenticationConverter(new JwtAuthenticationConverter());
+                      jwt.decoder(jwtDecoder); // injected as parameter
+                    }));
 
     return http.build();
   }
@@ -37,5 +50,28 @@ public class SecurityConfig {
   @Bean
   PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
+  }
+
+  @Bean
+  JwtEncoder jwtEncoder(@Value("${app.jwt.secret}") String secret) {
+    var key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+    return new NimbusJwtEncoder(new ImmutableSecret<SecurityContext>(key));
+  }
+
+  @Bean
+  JwtDecoder jwtDecoder(@Value("${app.jwt.secret}") String secret) {
+    var key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+    NimbusJwtDecoder jwtDecoder =
+        NimbusJwtDecoder.withSecretKey(key)
+            .macAlgorithm(org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256)
+            .build();
+
+    OAuth2TokenValidator<Jwt> withDefaults = JwtValidators.createDefault();
+    OAuth2TokenValidator<Jwt> combinedValidator =
+        new DelegatingOAuth2TokenValidator<>(withDefaults, new moae.dev.Utils.JwtValidator());
+
+    jwtDecoder.setJwtValidator(combinedValidator);
+
+    return jwtDecoder;
   }
 }

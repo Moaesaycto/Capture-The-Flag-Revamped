@@ -4,11 +4,13 @@ import moae.dev.Requests.SettingsRequest;
 import moae.dev.Utils.Validation;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 
 import java.util.List;
 import java.util.Map;
 
 @Configuration
+@PropertySource(value = "classpath:config.yml")
 @ConfigurationProperties
 public class AppConfig {
   private GameConfig game;
