@@ -3,7 +3,6 @@ package moae.dev.Server;
 import jakarta.validation.Valid;
 import moae.dev.Game.Game;
 import moae.dev.Requests.JoinRequest;
-import moae.dev.Requests.LeaveRequest;
 import moae.dev.Requests.RemoveRequest;
 import moae.dev.Utils.Validation;
 import org.springframework.beans.factory.annotation.Value;
@@ -75,10 +74,9 @@ public class PlayerController {
     return Game.getPlayer(playerId).getInfo();
   }
 
-  // TODO: Add JWT verification, overriden by forced
-  @PostMapping("/leave")
-  public Map<String, Object> playerLeave(@Valid @RequestBody LeaveRequest body) {
-    UUID playerId = Validation.ValidateUUID(body.getId(), "player");
+  @DeleteMapping("/leave")
+  public Map<String, Object> playerLeave(@AuthenticationPrincipal Jwt jwt) {
+    UUID playerId = Validation.ValidateUUID(jwt.getSubject(), "player");
     boolean removed = Game.removePlayer(playerId);
     if (!removed) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Player not found");
@@ -87,8 +85,15 @@ public class PlayerController {
     return Map.of("message", "success");
   }
 
-  @PostMapping("/remove")
-  public Map<String, Object> playerRemove(@Valid @RequestBody RemoveRequest body) {
+  @DeleteMapping("/remove")
+  public Map<String, Object> playerRemove(
+      @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody RemoveRequest body) {
+
+    if (!Game.getPlayer(UUID.fromString(jwt.getSubject())).isAuth()) {
+      throw new ResponseStatusException(
+          HttpStatus.UNAUTHORIZED, "You are not authorized to do this");
+    }
+
     Game.removePlayer(Validation.ValidateUUID(body.getId(), "player"));
     return Map.of("message", "success");
   }
