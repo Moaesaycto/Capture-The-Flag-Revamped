@@ -54,7 +54,7 @@ public class Game {
   }
 
   public Map<String, Object> status() {
-    List<Map<String, String>> playerList = new ArrayList<>();
+    List<Map<String, Object>> playerList = new ArrayList<>();
     List<Map<String, String>> teamList = new ArrayList<>();
     Map<String, String> currState = Map.of("state", state.toString());
 
@@ -62,9 +62,14 @@ public class Game {
         p ->
             playerList.add(
                 Map.of(
-                    "name", p.getName(),
-                    "id", p.getID().toString(),
-                    "team", p.getTeam().toString())));
+                    "name",
+                    p.getName(),
+                    "id",
+                    p.getID().toString(),
+                    "team",
+                    p.getTeam().toString(),
+                    "auth",
+                    p.isAuth())));
 
     teams.forEach(
         t ->
@@ -101,7 +106,11 @@ public class Game {
             HttpStatus.BAD_REQUEST,
             "Invalid maxTeams (" + newMax + "). Must be less than or equal to " + trueMax);
       reset(); // Hard reset when teams are changed. TODO: Account for this with JWTs
-      registerNTeams(newMax, config.getTeams());
+      if (!registerNTeams(newMax, config.getTeams())) {
+        reset();
+        throw new ResponseStatusException(
+            HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong registering the teams.");
+      }
     }
 
     config.merge(settings);
@@ -116,12 +125,15 @@ public class Game {
     return players;
   }
 
-  public static boolean addPlayer(String name, UUID team) {
+  public static UUID addPlayer(String name, UUID team, boolean auth) {
     if (players.stream().anyMatch(p -> p.getName().equals(name))) {
-      return false;
+      return null;
     }
 
-    return players.add(new Player(name, team));
+    Player newPlayer = new Player(name, team, auth);
+    players.add(newPlayer);
+
+    return newPlayer.getID();
   }
 
   public static boolean removePlayer(UUID id) {
@@ -133,8 +145,16 @@ public class Game {
     return teams.stream().filter(t -> t.getID().equals(id)).findFirst().orElse(null);
   }
 
-  private void registerNTeams(int n, List<AppConfig.TeamConfig> allTeams) {
-    allTeams.stream().limit(n).forEach(t -> registerTeam(t.getName(), t.getColor()));
+  private boolean registerNTeams(int n, List<AppConfig.TeamConfig> allTeams) {
+    final boolean[] success = {true};
+    allTeams.stream()
+        .limit(n)
+        .forEach(
+            t -> {
+              success[0] = success[0] && registerTeam(t.getName(), t.getColor());
+            });
+
+    return success[0];
   }
 
   public boolean registerTeam(String name, String color) {

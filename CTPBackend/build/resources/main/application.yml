@@ -5,6 +5,19 @@ server:
 logging:
   level:
     root: INFO
+    org.springframework.security: DEBUG
 spring:
   config:
     import: classpath:config.yml
+app:
+  jwt:
+    secret: "12345678901234567890123456789012"
+    expiry-minutes: 300 # 5 hours, should be enough
+  security:
+    public-paths:
+      - /error
+      - /game/
+      - /player/join
+      - /game/status
+      - /game/settings
+    auth-pw: "oopygoopy"

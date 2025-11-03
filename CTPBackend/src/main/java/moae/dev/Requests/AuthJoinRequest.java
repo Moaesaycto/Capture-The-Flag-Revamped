@@ -3,23 +3,22 @@ package moae.dev.Requests;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public class JoinRequest {
+public class AuthJoinRequest {
   @NotBlank(message = "name is required")
   private String name;
 
   @NotNull(message = "team is required")
   private String team;
 
-  @NotNull(message = "auth state request is required")
-  private boolean auth;
-
+  @NotNull(message = "password is required")
   private String password;
 
-  public JoinRequest() {}
+  public AuthJoinRequest() {}
 
-  public JoinRequest(String name, String team) {
+  public AuthJoinRequest(String name, String team, String password) {
     this.name = name;
     this.team = team;
+    this.password = password;
   }
 
   public String getName() {
@@ -36,14 +35,6 @@ public class JoinRequest {
 
   public void setTeam(String team) {
     this.team = team;
-  }
-
-  public boolean isAuth() {
-    return auth;
-  }
-
-  public void setAuth(boolean auth) {
-    this.auth = auth;
   }
 
   public String getPassword() {
