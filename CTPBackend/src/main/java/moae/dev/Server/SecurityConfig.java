@@ -30,7 +30,11 @@ public class SecurityConfig {
   }
 
   @Bean
-  SecurityFilterChain api(HttpSecurity http, JwtDecoder jwtDecoder) throws Exception {
+  SecurityFilterChain api(
+      HttpSecurity http,
+      JwtDecoder jwtDecoder,
+      ConditionalBearerTokenResolver conditionalBearerTokenResolver)
+      throws Exception {
     String[] publicPaths = props.getPublicPaths().toArray(new String[0]);
 
     http.csrf(AbstractHttpConfigurer::disable)
@@ -39,11 +43,13 @@ public class SecurityConfig {
             auth -> auth.requestMatchers(publicPaths).permitAll().anyRequest().authenticated())
         .oauth2ResourceServer(
             oauth2 ->
-                oauth2.jwt(
-                    jwt -> {
-                      jwt.jwtAuthenticationConverter(new JwtAuthenticationConverter());
-                      jwt.decoder(jwtDecoder); // injected as parameter
-                    }));
+                oauth2
+                    .bearerTokenResolver(conditionalBearerTokenResolver)
+                    .jwt(
+                        jwt -> {
+                          jwt.jwtAuthenticationConverter(new JwtAuthenticationConverter());
+                          jwt.decoder(jwtDecoder);
+                        }));
 
     return http.build();
   }

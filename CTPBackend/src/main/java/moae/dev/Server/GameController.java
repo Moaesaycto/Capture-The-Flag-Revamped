@@ -16,7 +16,7 @@ public class GameController {
     this.game = game;
   }
 
-  @GetMapping("/")
+  @GetMapping("")
   public Map<String, String> health() {
     return Map.of("message", "success");
   }

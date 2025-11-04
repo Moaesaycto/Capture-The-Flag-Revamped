@@ -12,14 +12,14 @@ spring:
 app:
   jwt:
     secret: "12345678901234567890123456789012"
-    expiry-minutes: 300 # 5 hours, should be enough
+    expiry-minutes: 720 # 12 hours, should be enough
   security:
     public-paths:
       - /error
-      - /game/
-      - /player/join
+      - /state
+      - /game
       - /game/status
       - /game/settings
-      - /hello
       - /game/toggle-status
+      - /player/join
     auth-pw: "oopygoopy"

@@ -91,6 +91,7 @@ public class Game {
 
   // ----- Utilities -----
   public void setState(State state) {
+    if (Game.state == state) return;
     Game.state = state;
     SocketConnectionHandler.broadcast("state:" + state.toString());
   }
