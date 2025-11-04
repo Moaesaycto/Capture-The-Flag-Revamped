@@ -20,4 +20,6 @@ app:
       - /player/join
       - /game/status
       - /game/settings
+      - /hello
+      - /game/toggle-status
     auth-pw: "oopygoopy"

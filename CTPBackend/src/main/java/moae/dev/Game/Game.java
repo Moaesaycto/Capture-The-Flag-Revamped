@@ -3,6 +3,7 @@ package moae.dev.Game;
 import jakarta.validation.Valid;
 import moae.dev.Requests.SettingsRequest;
 import moae.dev.Server.AppConfig;
+import moae.dev.Sockets.SocketConnectionHandler;
 import moae.dev.Utils.Locked;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -48,29 +49,50 @@ public class Game {
   }
 
   // ----- Gameplay -----
+  @Locked(
+      allowed = {State.WAITING_TO_START},
+      error = "Cannot start in this current state")
   public void start() {
+    checkLock();
     // TODO: Fix me
   }
 
+  @Locked(
+      allowed = {State.GRACE_PERIOD, State.SCOUT_PERIOD, State.FFA_PERIOD},
+      error = "You can only skip a period during the game")
   public void skip() {
+    checkLock();
     // TODO: Fix me
   }
 
+  @Locked(
+      allowed = {State.SCOUT_PERIOD, State.FFA_PERIOD, State.ENDED},
+      error = "You can only rewind to another point during the game")
   public void rewind() {
+    checkLock();
     // TODO: Fix me
   }
 
+  @Locked(
+      allowed = {State.GRACE_PERIOD, State.SCOUT_PERIOD, State.FFA_PERIOD},
+      error = "You can only pause during the game")
   public void pause() {
+    checkLock();
     // TODO: Fix me
   }
 
+  @Locked(
+      allowed = {State.GRACE_PERIOD, State.SCOUT_PERIOD, State.FFA_PERIOD},
+      error = "You can only end the game during it")
   public void end() {
+    checkLock();
     // TODO: Fix
   }
 
   // ----- Utilities -----
   public void setState(State state) {
     Game.state = state;
+    SocketConnectionHandler.broadcast("state:" + state.toString());
   }
 
   public State getState() {
@@ -182,6 +204,8 @@ public class Game {
       allowed = {State.WAITING_TO_START},
       error = "You can only join before the game")
   private boolean registerNTeams(int n, List<AppConfig.TeamConfig> allTeams) {
+    checkLock();
+
     final boolean[] success = {true};
     allTeams.stream()
         .limit(n)

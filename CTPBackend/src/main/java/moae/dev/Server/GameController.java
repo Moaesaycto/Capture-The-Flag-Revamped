@@ -31,4 +31,15 @@ public class GameController {
     this.game.merge(settings);
     return Map.of("message", "success");
   }
+
+  // TODO: REMOVE ME ONCE READY
+  @PatchMapping("/toggle-status")
+  public Map<String, Object> setStatus() {
+    if (game.getState() == Game.State.WAITING_TO_START) {
+      game.setState(Game.State.ENDED);
+    } else {
+      game.setState(Game.State.WAITING_TO_START);
+    }
+    return Map.of("message", "success");
+  }
 }

@@ -16,7 +16,7 @@ public class App {
   }
 
   @Bean
-    public Game game(AppConfig config) {
-      return new Game(config);
+  public Game game(AppConfig config) {
+    return new Game(config);
   }
 }
