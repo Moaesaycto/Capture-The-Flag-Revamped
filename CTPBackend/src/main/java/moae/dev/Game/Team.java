@@ -1,20 +1,19 @@
 package moae.dev.Game;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class Team {
   private final UUID id;
   private final String name;
   private final String color;
-  private final List<Player> players;
+  private final Flag flag;
 
   public Team(String name, String color) {
     this.id = UUID.randomUUID();
     this.name = name;
     this.color = color;
-    this.players = new ArrayList<Player>();
+    this.flag = new Flag();
   }
 
   public UUID getID() {
@@ -29,17 +28,11 @@ public class Team {
     return this.color;
   }
 
-  public boolean join(Player p) {
-    if (players.contains(p)
-        || players.stream().anyMatch(player -> p.getName().equals(player.getName()))) {
-      return false;
-    }
-
-    players.add(p);
-    return true;
-  }
-
-  public boolean leave(Player p) {
-    return players.remove(p);
+  public Map<String, Object> toMap() {
+    return Map.of(
+        "id", this.id,
+        "name", this.name,
+        "color", this.color,
+        "flag", this.flag.toMap());
   }
 }

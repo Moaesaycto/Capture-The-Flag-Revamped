@@ -32,7 +32,7 @@ public class Player {
     return this.auth;
   }
 
-  public Map<String, Object> getInfo() {
+  public Map<String, Object> toMap() {
     return Map.of(
         "id", id,
         "name", name,

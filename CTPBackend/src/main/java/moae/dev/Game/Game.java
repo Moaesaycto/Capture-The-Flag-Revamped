@@ -3,18 +3,22 @@ package moae.dev.Game;
 import jakarta.validation.Valid;
 import moae.dev.Requests.SettingsRequest;
 import moae.dev.Server.AppConfig;
+import moae.dev.Utils.Locked;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 
 public class Game {
-  private static List<Team> teams;
-  private static List<Player> players;
-  private static State state;
   private static AppConfig config;
 
-  public static enum State {
+  private static List<Team> teams;
+  private static List<Player> players;
+  private static boolean registerationLock;
+
+  private static State state;
+
+  public enum State {
     WAITING_TO_START("ready"),
     GRACE_PERIOD("grace"),
     SCOUT_PERIOD("scout"),
@@ -40,11 +44,33 @@ public class Game {
     players = new ArrayList<Player>();
     state = State.WAITING_TO_START;
     config = initConfig;
+    registerationLock = false;
 
     registerNTeams(initConfig.getGame().getMaxTeams(), initConfig.getTeams());
   }
 
-  // ----- Game -----
+  // ----- Gameplay -----
+  public void start() {
+    // TODO: Fix me
+  }
+
+  public void skip() {
+    // TODO: Fix me
+  }
+
+  public void rewind() {
+    // TODO: Fix me
+  }
+
+  public void pause() {
+    // TODO: Fix me
+  }
+
+  public void end() {
+    // TODO: Fix
+  }
+
+  // ----- Utilities -----
   public static void setState(State state) {
     Game.state = state;
   }
@@ -55,29 +81,11 @@ public class Game {
 
   public Map<String, Object> status() {
     List<Map<String, Object>> playerList = new ArrayList<>();
-    List<Map<String, String>> teamList = new ArrayList<>();
+    List<Map<String, Object>> teamList = new ArrayList<>();
     Map<String, String> currState = Map.of("state", state.toString());
 
-    players.forEach(
-        p ->
-            playerList.add(
-                Map.of(
-                    "name",
-                    p.getName(),
-                    "id",
-                    p.getID().toString(),
-                    "team",
-                    p.getTeam().toString(),
-                    "auth",
-                    p.isAuth())));
-
-    teams.forEach(
-        t ->
-            teamList.add(
-                Map.of(
-                    "name", t.getName(),
-                    "color", t.getColor(),
-                    "id", t.getID().toString())));
+    players.forEach(p -> playerList.add(p.toMap()));
+    teams.forEach(t -> teamList.add(t.toMap()));
 
     return Map.of(
         "players", playerList,
@@ -116,8 +124,26 @@ public class Game {
     config.merge(settings);
   }
 
+  private void checkLock() {
+    try {
+      StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+      String methodName = stack[2].getMethodName();
+      var method = this.getClass().getMethod(methodName);
+
+      if (method.isAnnotationPresent(Locked.class)) {
+        Locked locked = method.getAnnotation(Locked.class);
+        boolean allowed = Arrays.stream(locked.allowed()).anyMatch(s -> s == state);
+
+        if (!allowed) {
+          throw new IllegalStateException(locked.error() + " (current: " + state + ")");
+        }
+      }
+    } catch (NoSuchMethodException ignored) {
+    }
+  }
+
   // ----- Players -----
-  public static Player getPlayer(UUID id) {
+  public Player getPlayer(UUID id) {
     return players.stream().filter(p -> p.getID().equals(id)).findFirst().orElse(null);
   }
 
@@ -125,7 +151,12 @@ public class Game {
     return players;
   }
 
-  public static UUID addPlayer(String name, UUID team, boolean auth) {
+  @Locked(
+      allowed = {State.WAITING_TO_START},
+      error = "You can only join before the game")
+  public UUID addPlayer(String name, UUID team, boolean auth) {
+    checkLock();
+
     if (players.stream().anyMatch(p -> p.getName().equals(name))) {
       return null;
     }
@@ -149,6 +180,9 @@ public class Game {
     return teams.stream().filter(t -> t.getID().equals(id)).findFirst().orElse(null);
   }
 
+  @Locked(
+      allowed = {State.WAITING_TO_START},
+      error = "You can only join before the game")
   private boolean registerNTeams(int n, List<AppConfig.TeamConfig> allTeams) {
     final boolean[] success = {true};
     allTeams.stream()

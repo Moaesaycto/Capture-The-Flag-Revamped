@@ -71,7 +71,7 @@ public class PlayerController {
   @GetMapping("/me")
   public Map<String, Object> playerInfo(@AuthenticationPrincipal Jwt jwt) {
     UUID playerId = UUID.fromString(jwt.getSubject());
-    return Game.getPlayer(playerId).getInfo();
+    return Game.getPlayer(playerId).toMap();
   }
 
   @DeleteMapping("/leave")
