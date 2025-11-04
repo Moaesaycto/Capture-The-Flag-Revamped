@@ -12,8 +12,8 @@ import java.util.Map;
 public class GameController {
   private final Game game;
 
-  public GameController(AppConfig config) {
-    this.game = new Game(config);
+  public GameController(Game game) {
+    this.game = game;
   }
 
   @GetMapping("/")

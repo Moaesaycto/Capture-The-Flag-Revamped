@@ -10,11 +10,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.*;
 
 public class Game {
-  private static AppConfig config;
+  private final AppConfig config;
 
-  private static List<Team> teams;
-  private static List<Player> players;
-  private static boolean registerationLock;
+  private final List<Team> teams;
+  private final List<Player> players;
 
   private static State state;
 
@@ -44,7 +43,6 @@ public class Game {
     players = new ArrayList<Player>();
     state = State.WAITING_TO_START;
     config = initConfig;
-    registerationLock = false;
 
     registerNTeams(initConfig.getGame().getMaxTeams(), initConfig.getTeams());
   }
@@ -71,11 +69,11 @@ public class Game {
   }
 
   // ----- Utilities -----
-  public static void setState(State state) {
+  public void setState(State state) {
     Game.state = state;
   }
 
-  public static State getState() {
+  public State getState() {
     return Game.state;
   }
 
@@ -167,16 +165,16 @@ public class Game {
     return newPlayer.getID();
   }
 
-  public static boolean removePlayer(UUID id) {
+  public boolean removePlayer(UUID id) {
     return players.removeIf(p -> id.equals(p.getID()));
   }
 
-  public static boolean isValidPlayer(UUID player) {
+  public boolean isValidPlayer(UUID player) {
     return players.stream().anyMatch(p -> p.getID().equals(player));
   }
 
   // ----- Teams -----
-  public static Team getTeam(UUID id) {
+  public Team getTeam(UUID id) {
     return teams.stream().filter(t -> t.getID().equals(id)).findFirst().orElse(null);
   }
 

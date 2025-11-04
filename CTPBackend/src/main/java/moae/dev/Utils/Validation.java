@@ -2,12 +2,20 @@ package moae.dev.Utils;
 
 import moae.dev.Game.Game;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
+@Component
 public class Validation {
-  public static UUID ValidateUUID(String id, String type) {
+  private final Game game;
+
+  public Validation(Game game) {
+    this.game = game;
+  }
+
+  public UUID ValidateUUID(String id, String type) {
     UUID uuid;
     try {
       uuid = UUID.fromString(id);
@@ -17,12 +25,12 @@ public class Validation {
 
     switch (type) {
       case "team":
-        if (Game.getTeam(uuid) == null) {
+        if (game.getTeam(uuid) == null) {
           throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
         }
         break;
       case "player":
-        if (Game.getPlayer(uuid) == null) {
+        if (game.getPlayer(uuid) == null) {
           throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
         }
         break;

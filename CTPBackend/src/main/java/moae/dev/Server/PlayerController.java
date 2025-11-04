@@ -25,16 +25,22 @@ public class PlayerController {
   private final PasswordEncoder pe;
   private final long expiryMinutes;
   private final AppSecurityProperties secProps;
+  private final Game game;
+  private final Validation validator;
 
   public PlayerController(
       JwtEncoder enc,
       PasswordEncoder pe,
       AppSecurityProperties secProps,
+      Game game,
+      Validation validation,
       @Value("${app.jwt.expiry-minutes}") long exp) {
     this.encoder = enc;
     this.pe = pe;
     this.expiryMinutes = exp;
     this.secProps = secProps;
+    this.game = game;
+    this.validator = validation;
   }
 
   @PostMapping("/join")
@@ -45,7 +51,7 @@ public class PlayerController {
       }
     }
 
-    UUID joined = Game.addPlayer(body.getName(), UUID.fromString(body.getTeam()), body.isAuth());
+    UUID joined = game.addPlayer(body.getName(), UUID.fromString(body.getTeam()), body.isAuth());
     if (joined == null) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Player already exists in this team");
     }
@@ -71,13 +77,13 @@ public class PlayerController {
   @GetMapping("/me")
   public Map<String, Object> playerInfo(@AuthenticationPrincipal Jwt jwt) {
     UUID playerId = UUID.fromString(jwt.getSubject());
-    return Game.getPlayer(playerId).toMap();
+    return game.getPlayer(playerId).toMap();
   }
 
   @DeleteMapping("/leave")
   public Map<String, Object> playerLeave(@AuthenticationPrincipal Jwt jwt) {
-    UUID playerId = Validation.ValidateUUID(jwt.getSubject(), "player");
-    boolean removed = Game.removePlayer(playerId);
+    UUID playerId = validator.ValidateUUID(jwt.getSubject(), "player");
+    boolean removed = game.removePlayer(playerId);
     if (!removed) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Player not found");
     }
@@ -89,12 +95,12 @@ public class PlayerController {
   public Map<String, Object> playerRemove(
       @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody RemoveRequest body) {
 
-    if (!Game.getPlayer(UUID.fromString(jwt.getSubject())).isAuth()) {
+    if (!game.getPlayer(UUID.fromString(jwt.getSubject())).isAuth()) {
       throw new ResponseStatusException(
           HttpStatus.UNAUTHORIZED, "You are not authorized to do this");
     }
 
-    Game.removePlayer(Validation.ValidateUUID(body.getId(), "player"));
+    game.removePlayer(validator.ValidateUUID(body.getId(), "player"));
     return Map.of("message", "success");
   }
 }

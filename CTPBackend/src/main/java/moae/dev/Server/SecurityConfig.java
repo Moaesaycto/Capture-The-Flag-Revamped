@@ -2,6 +2,7 @@ package moae.dev.Server;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.proc.SecurityContext;
+import moae.dev.Utils.JwtValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 import org.springframework.security.config.Customizer;
@@ -59,7 +60,8 @@ public class SecurityConfig {
   }
 
   @Bean
-  JwtDecoder jwtDecoder(@Value("${app.jwt.secret}") String secret) {
+  JwtDecoder jwtDecoder(@Value("${app.jwt.secret}") String secret, JwtValidator jwtValidator) {
+
     var key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
     NimbusJwtDecoder jwtDecoder =
         NimbusJwtDecoder.withSecretKey(key)
@@ -68,10 +70,9 @@ public class SecurityConfig {
 
     OAuth2TokenValidator<Jwt> withDefaults = JwtValidators.createDefault();
     OAuth2TokenValidator<Jwt> combinedValidator =
-        new DelegatingOAuth2TokenValidator<>(withDefaults, new moae.dev.Utils.JwtValidator());
+        new DelegatingOAuth2TokenValidator<>(withDefaults, jwtValidator);
 
     jwtDecoder.setJwtValidator(combinedValidator);
-
     return jwtDecoder;
   }
 }
