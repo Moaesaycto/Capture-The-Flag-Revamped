@@ -62,7 +62,7 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
     }
 
     Player player = game.getPlayer(UUID.fromString(jwt.getSubject()));
-    return player.isAuth() || player.isOnTeam(team);
+    return player.isAuth() || (team == null || player.isOnTeam(team));
   }
 
   @Override

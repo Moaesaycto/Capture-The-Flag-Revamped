@@ -3,7 +3,7 @@ package moae.dev.Game;
 import jakarta.validation.Valid;
 import moae.dev.Requests.SettingsRequest;
 import moae.dev.Server.AppConfig;
-import moae.dev.Sockets.SocketConnectionHandler;
+import moae.dev.Sockets.StateSocketConnectionHandler;
 import moae.dev.Utils.Locked;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -93,7 +93,7 @@ public class Game {
   public void setState(State state) {
     if (Game.state == state) return;
     Game.state = state;
-    SocketConnectionHandler.broadcast("state:" + state.toString());
+    StateSocketConnectionHandler.broadcast("state:" + state.toString());
   }
 
   public State getState() {

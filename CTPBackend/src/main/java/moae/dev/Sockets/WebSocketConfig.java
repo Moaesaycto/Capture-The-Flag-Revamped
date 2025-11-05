@@ -21,7 +21,12 @@ public class WebSocketConfig implements WebSocketConfigurer {
   @Override
   public void registerWebSocketHandlers(WebSocketHandlerRegistry webSocketHandlerRegistry) {
     webSocketHandlerRegistry
-        .addHandler(new SocketConnectionHandler(), "/state")
+        .addHandler(new StateSocketConnectionHandler(game), "/state")
+        .setAllowedOrigins("*");
+
+    webSocketHandlerRegistry
+        .addHandler(new SocketConnectionHandler(game), "/global-socket")
+        .addInterceptors(new JwtHandshakeInterceptor(jwtDecoder, null, game))
         .setAllowedOrigins("*");
 
     game.getTeams()
@@ -29,7 +34,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
             t -> {
               webSocketHandlerRegistry
                   .addHandler(
-                      new TeamSocketConnectionHandler(game), "/team-socket/" + t.getID().toString())
+                      new SocketConnectionHandler(game), "/team-socket/" + t.getID().toString())
                   .addInterceptors(new JwtHandshakeInterceptor(jwtDecoder, t.getID(), game))
                   .setAllowedOrigins("*");
             });
