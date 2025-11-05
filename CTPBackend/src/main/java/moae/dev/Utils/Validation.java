@@ -20,18 +20,18 @@ public class Validation {
     try {
       uuid = UUID.fromString(id);
     } catch (Exception e) {
-      throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Not a valid UUID");
+      return null;
     }
 
     switch (type) {
       case "team":
         if (game.getTeam(uuid) == null) {
-          throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
+          return null;
         }
         break;
       case "player":
         if (game.getPlayer(uuid) == null) {
-          throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found");
+          return null;
         }
         break;
       default:

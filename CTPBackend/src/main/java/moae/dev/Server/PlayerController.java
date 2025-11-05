@@ -16,13 +16,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/player")
 public class PlayerController {
   private final JwtEncoder encoder;
-  private final PasswordEncoder pe;
   private final long expiryMinutes;
   private final AppSecurityProperties secProps;
   private final Game game;
@@ -30,13 +30,11 @@ public class PlayerController {
 
   public PlayerController(
       JwtEncoder enc,
-      PasswordEncoder pe,
       AppSecurityProperties secProps,
       Game game,
       Validation validation,
       @Value("${app.jwt.expiry-minutes}") long exp) {
     this.encoder = enc;
-    this.pe = pe;
     this.expiryMinutes = exp;
     this.secProps = secProps;
     this.game = game;
@@ -45,15 +43,18 @@ public class PlayerController {
 
   @PostMapping("/join")
   public Map<String, Object> playerJoin(@Valid @RequestBody JoinRequest body) {
-    if (body.isAuth()) {
-      if (!secProps.passCheck(body.getPassword())) {
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect auth password");
-      }
-    }
+    if (body.isAuth() && !secProps.passCheck(body.getPassword()))
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect auth password");
 
-    UUID joined = game.addPlayer(body.getName(), UUID.fromString(body.getTeam()), body.isAuth());
-    if (joined == null) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, "Player already exists in this team");
+    UUID joined = null;
+    try {
+      joined = game.addPlayer(body.getName(), UUID.fromString(body.getTeam()), body.isAuth());
+    } catch (IllegalStateException e) {
+      throw new ResponseStatusException(
+          HttpStatus.UNAUTHORIZED, "You cannot join the game at this time");
+    } catch (IllegalArgumentException e) {
+      throw new ResponseStatusException(
+          HttpStatus.CONFLICT, "You cannot join the game at this time");
     }
 
     String jti = UUID.randomUUID().toString();
@@ -77,16 +78,27 @@ public class PlayerController {
   @GetMapping("/me")
   public Map<String, Object> playerInfo(@AuthenticationPrincipal Jwt jwt) {
     UUID playerId = UUID.fromString(jwt.getSubject());
-    return game.getPlayer(playerId).toMap();
+
+    Map<String, Object> playerInfo;
+
+    try {
+      playerInfo = game.getPlayer(playerId).toMap();
+    } catch (NoSuchElementException e) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    return playerInfo;
   }
 
   @DeleteMapping("/leave")
   public Map<String, Object> playerLeave(@AuthenticationPrincipal Jwt jwt) {
     UUID playerId = validator.ValidateUUID(jwt.getSubject(), "player");
+
+    if (playerId == null)
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player not found");
+
     boolean removed = game.removePlayer(playerId);
-    if (!removed) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, "Player not found");
-    }
+    if (!removed) throw new ResponseStatusException(HttpStatus.CONFLICT, "Player not found");
 
     return Map.of("message", "success");
   }
@@ -95,12 +107,16 @@ public class PlayerController {
   public Map<String, Object> playerRemove(
       @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody RemoveRequest body) {
 
-    if (!game.getPlayer(UUID.fromString(jwt.getSubject())).isAuth()) {
+    if (!game.getPlayer(UUID.fromString(jwt.getSubject())).isAuth())
       throw new ResponseStatusException(
           HttpStatus.UNAUTHORIZED, "You are not authorized to do this");
+
+    try {
+      game.removePlayer(validator.ValidateUUID(body.getId(), "player"));
+    } catch (NoSuchElementException e) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found");
     }
 
-    game.removePlayer(validator.ValidateUUID(body.getId(), "player"));
     return Map.of("message", "success");
   }
 }

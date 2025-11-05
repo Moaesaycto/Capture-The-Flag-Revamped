@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
@@ -33,30 +31,8 @@ public class SocketConnectionHandler extends TextWebSocketHandler {
   public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus status)
       throws Exception {
     super.afterConnectionClosed(session, status);
-    System.out.println(session.getId() + " DisConnected");
+    System.out.println(session.getId() + " Disconnected");
     webSocketSessions.remove(session);
-  }
-
-  // Unnecessary for now, just for testing
-  @Override
-  public void handleMessage(@NonNull WebSocketSession session, @NonNull WebSocketMessage<?> message)
-      throws Exception {
-
-    super.handleMessage(session, message);
-    for (WebSocketSession webSocketSession : webSocketSessions) {
-      if (session == webSocketSession) continue;
-      webSocketSession.sendMessage(message);
-    }
-
-    String prefixedMessage = "Received: " + message.getPayload().toString();
-    try {
-      if (session.isOpen()) {
-        session.sendMessage(new TextMessage(prefixedMessage));
-        System.out.println("Echoed message to " + session.getId());
-      }
-    } catch (Exception e) {
-      logger.error("Error sending echo to session {}", session.getId(), e);
-    }
   }
 
   public static void broadcast(String message) {

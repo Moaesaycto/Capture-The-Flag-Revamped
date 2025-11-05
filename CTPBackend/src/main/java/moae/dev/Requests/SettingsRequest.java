@@ -5,7 +5,6 @@ public class SettingsRequest {
   private Integer minPlayers;
   private Integer minPlayersPerTeam;
   private Integer maxPlayersPerTeam;
-  private Integer maxTeams;
   private Integer graceTime;
   private Integer scoutTime;
   private Integer ffaTime;
@@ -40,14 +39,6 @@ public class SettingsRequest {
 
   public void setMaxPlayersPerTeam(Integer maxPlayersPerTeam) {
     this.maxPlayersPerTeam = maxPlayersPerTeam;
-  }
-
-  public Integer getMaxTeams() {
-    return maxTeams;
-  }
-
-  public void setMaxTeams(Integer maxTeams) {
-    this.maxTeams = maxTeams;
   }
 
   public Integer getGraceTime() {

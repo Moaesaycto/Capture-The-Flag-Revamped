@@ -126,22 +126,6 @@ public class Game {
       throw new ResponseStatusException(
           HttpStatus.LOCKED, "Settings can only be changed before the game.");
 
-    Integer newMax = settings.getMaxTeams();
-
-    int trueMax = config.getTeams().size();
-    if (newMax != null && newMax != teams.size()) {
-      if (newMax <= config.getTeams().size())
-        throw new ResponseStatusException(
-            HttpStatus.BAD_REQUEST,
-            "Invalid maxTeams (" + newMax + "). Must be less than or equal to " + trueMax);
-      reset(); // Hard reset when teams are changed. TODO: Account for this with JWTs
-      if (!registerNTeams(newMax, config.getTeams())) {
-        reset();
-        throw new ResponseStatusException(
-            HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong registering the teams.");
-      }
-    }
-
     config.merge(settings);
   }
 
@@ -165,30 +149,32 @@ public class Game {
 
   // ----- Players -----
   public Player getPlayer(UUID id) {
-    return players.stream().filter(p -> p.getID().equals(id)).findFirst().orElse(null);
+    Player player = players.stream().filter(p -> p.getID().equals(id)).findFirst().orElse(null);
+    if (player == null) throw new NoSuchElementException("Cannot find player");
+
+    return player;
   }
 
   public List<Player> getPlayers() {
     return players;
   }
 
-  @Locked(
-      allowed = {State.WAITING_TO_START},
-      error = "You can only join before the game")
   public UUID addPlayer(String name, UUID team, boolean auth) {
-    checkLock();
+    if (state != State.WAITING_TO_START)
+      throw new IllegalStateException("Cannot join game at this time");
 
-    if (players.stream().anyMatch(p -> p.getName().equals(name))) {
-      return null;
-    }
+    if (players.stream().anyMatch(p -> p.getName().equals(name)))
+      throw new IllegalArgumentException(
+          "A player with the name " + name + "already exists in the game");
 
     Player newPlayer = new Player(name, team, auth);
     players.add(newPlayer);
-
     return newPlayer.getID();
   }
 
   public boolean removePlayer(UUID id) {
+    if (!isValidPlayer(id)) throw new NoSuchElementException("Player not found");
+
     return players.removeIf(p -> id.equals(p.getID()));
   }
 
@@ -197,6 +183,10 @@ public class Game {
   }
 
   // ----- Teams -----
+  public List<Team> getTeams() {
+    return teams;
+  }
+
   public Team getTeam(UUID id) {
     return teams.stream().filter(t -> t.getID().equals(id)).findFirst().orElse(null);
   }
@@ -224,5 +214,12 @@ public class Game {
     }
 
     return teams.add(new Team(name, color));
+  }
+
+  @Locked(
+      allowed = {State.GRACE_PERIOD, State.SCOUT_PERIOD, State.FFA_PERIOD},
+      error = "Cannot declare victory at this time")
+  public boolean declareVictory(UUID team) {
+    return true;
   }
 }

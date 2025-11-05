@@ -31,7 +31,6 @@ public class AppSecurityProperties {
   }
 
   public boolean passCheck(String password) {
-    System.out.println(password + " != " + authPw);
     return authPw != null && authPw.equals(password);
   }
 

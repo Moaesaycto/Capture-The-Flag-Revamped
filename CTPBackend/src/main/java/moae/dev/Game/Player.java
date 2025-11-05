@@ -39,4 +39,8 @@ public class Player {
         "team", team,
         "auth", auth);
   }
+
+  public boolean isOnTeam(UUID cTeam) {
+    return cTeam.equals(this.team);
+  }
 }

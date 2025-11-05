@@ -26,6 +26,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation "org.springframework.integration:spring-integration-websocket:6.5.3"
     implementation "org.springframework:spring-webmvc"
+    implementation 'jakarta.servlet:jakarta.servlet-api:6.0.0'
 }
 
 test {
