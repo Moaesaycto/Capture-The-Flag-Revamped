@@ -4,7 +4,6 @@ import jakarta.validation.Valid;
 import moae.dev.Requests.SettingsRequest;
 import moae.dev.Server.AppConfig;
 import moae.dev.Sockets.StateSocketConnectionHandler;
-import moae.dev.Utils.Locked;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -45,47 +44,29 @@ public class Game {
     state = State.WAITING_TO_START;
     config = initConfig;
 
-    registerNTeams(initConfig.getGame().getMaxTeams(), initConfig.getTeams());
+    if (!registerNTeams(initConfig.getGame().getMaxTeams(), initConfig.getTeams())) {
+      throw new RuntimeException("Failed to register teams. Check the configuration and retry");
+    }
   }
 
   // ----- Gameplay -----
-  @Locked(
-      allowed = {State.WAITING_TO_START},
-      error = "Cannot start in this current state")
   public void start() {
-    checkLock();
     // TODO: Fix me
   }
 
-  @Locked(
-      allowed = {State.GRACE_PERIOD, State.SCOUT_PERIOD, State.FFA_PERIOD},
-      error = "You can only skip a period during the game")
   public void skip() {
-    checkLock();
     // TODO: Fix me
   }
 
-  @Locked(
-      allowed = {State.SCOUT_PERIOD, State.FFA_PERIOD, State.ENDED},
-      error = "You can only rewind to another point during the game")
   public void rewind() {
-    checkLock();
     // TODO: Fix me
   }
 
-  @Locked(
-      allowed = {State.GRACE_PERIOD, State.SCOUT_PERIOD, State.FFA_PERIOD},
-      error = "You can only pause during the game")
   public void pause() {
-    checkLock();
     // TODO: Fix me
   }
 
-  @Locked(
-      allowed = {State.GRACE_PERIOD, State.SCOUT_PERIOD, State.FFA_PERIOD},
-      error = "You can only end the game during it")
   public void end() {
-    checkLock();
     // TODO: Fix
   }
 
@@ -127,24 +108,6 @@ public class Game {
           HttpStatus.LOCKED, "Settings can only be changed before the game.");
 
     config.merge(settings);
-  }
-
-  private void checkLock() {
-    try {
-      StackTraceElement[] stack = Thread.currentThread().getStackTrace();
-      String methodName = stack[2].getMethodName();
-      var method = this.getClass().getMethod(methodName);
-
-      if (method.isAnnotationPresent(Locked.class)) {
-        Locked locked = method.getAnnotation(Locked.class);
-        boolean allowed = Arrays.stream(locked.allowed()).anyMatch(s -> s == state);
-
-        if (!allowed) {
-          throw new IllegalStateException(locked.error() + " (current: " + state + ")");
-        }
-      }
-    } catch (NoSuchMethodException ignored) {
-    }
   }
 
   // ----- Players -----
@@ -191,11 +154,7 @@ public class Game {
     return teams.stream().filter(t -> t.getID().equals(id)).findFirst().orElse(null);
   }
 
-  @Locked(
-      allowed = {State.WAITING_TO_START},
-      error = "You can only join before the game")
   private boolean registerNTeams(int n, List<AppConfig.TeamConfig> allTeams) {
-    checkLock();
 
     final boolean[] success = {true};
     allTeams.stream()
@@ -216,9 +175,6 @@ public class Game {
     return teams.add(new Team(name, color));
   }
 
-  @Locked(
-      allowed = {State.GRACE_PERIOD, State.SCOUT_PERIOD, State.FFA_PERIOD},
-      error = "Cannot declare victory at this time")
   public boolean declareVictory(UUID team) {
     return true;
   }
