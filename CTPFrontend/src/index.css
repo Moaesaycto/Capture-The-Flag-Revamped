@@ -5,12 +5,30 @@
   src: url('/fonts/AmericanCaptain.otf') format('truetype');
 }
 
+@font-face {
+  font-family: "Titillium Web";
+  src: url('/fonts/TitilliumWeb-SemiBold.ttf') format('truetype');
+}
+
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Titillium Web";
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
   background-color: black;
+}
+
+.page {
+  color: white;
+}
+
+a {
+  text-decoration: underline;
+}
+
+a:hover {
+  opacity: 0.8;
 }
