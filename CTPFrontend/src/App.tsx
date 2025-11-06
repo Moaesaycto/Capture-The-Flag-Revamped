@@ -6,17 +6,17 @@ import MainFooter from './components/main/MainFooter'
 
 function App() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <MainHeader />
-      <main className="flex-1">
-        <BrowserRouter>
+    <BrowserRouter>
+      <div className="flex flex-col min-h-screen w-full">
+        <MainHeader />
+        <main className="flex-1 w-full flex">
           <Routes>
             <Route path="/" element={<HomePage />} />
           </Routes>
-        </BrowserRouter>
-      </main>
-      <MainFooter />
-    </div>
+        </main>
+        <MainFooter />
+      </div>
+    </BrowserRouter>
   )
 }
 

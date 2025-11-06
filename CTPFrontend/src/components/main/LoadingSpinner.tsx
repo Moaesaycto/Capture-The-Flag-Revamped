@@ -8,7 +8,6 @@ type Props = {
 export default function Spinner({
     size = 24,
     thickness = 3,
-    colorClass = "text-sky-500",
     className,
 }: Props) {
     const s = typeof size === "number" ? `${size}px` : size;
@@ -17,14 +16,17 @@ export default function Spinner({
         <span
             role="status"
             aria-label="Loading"
-            className={`inline-block animate-spin rounded-full border-transparent border-solid ${colorClass} ${className ?? ""}`}
+            className={`inline-block animate-spin rounded-full border-solid ${className ?? ""}`}
             style={{
                 width: s,
                 height: s,
                 borderWidth: thickness,
+                borderColor: "rgba(0,0,0,0.12)",
                 borderTopColor: "currentColor",
-                borderRightColor: "currentColor",
+                boxSizing: "border-box",
+                borderStyle: "solid",
             }}
         />
+
     );
 }

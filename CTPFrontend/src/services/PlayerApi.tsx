@@ -1,3 +1,4 @@
+import type { StandardStatus } from "../types";
 import apiCall from "./api"
 
 type PlayerJoinRequest = {
@@ -8,7 +9,6 @@ type PlayerJoinRequest = {
 }
 
 const playerJoin = async ({ team, name, auth, password }: PlayerJoinRequest) => {
-
     const req: PlayerJoinRequest = {
         team,
         name,
@@ -16,5 +16,5 @@ const playerJoin = async ({ team, name, auth, password }: PlayerJoinRequest) => 
         password,
     }
 
-    await apiCall<PlayerJoinRequest>("player/join", "POST", req);
+    return await apiCall<StandardStatus>("player/join", "POST", req);
 }
