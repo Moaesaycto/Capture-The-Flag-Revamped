@@ -8,15 +8,15 @@ export type Flag = {
 }
 
 export type Team = {
-    id: String,
-    name: String,
-    color: String,
+    id: string,
+    name: string,
+    color: string,
     flag: Flag,
 }
 
 export type Player = {
-    id: String,
-    name: String,
+    id: string,
+    name: string,
     team: Team,
     auth: boolean,
 }

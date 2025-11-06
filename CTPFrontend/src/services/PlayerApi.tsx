@@ -1,14 +1,14 @@
 import type { StandardStatus } from "../types";
 import apiCall from "./api"
 
-type PlayerJoinRequest = {
+export type PlayerJoinRequest = {
     team: string,
     name: string,
     auth: boolean,
-    password?: string,
+    password: string,
 }
 
-const playerJoin = async ({ team, name, auth, password }: PlayerJoinRequest) => {
+export const playerJoin = async ({ team, name, auth, password }: PlayerJoinRequest) => {
     const req: PlayerJoinRequest = {
         team,
         name,
