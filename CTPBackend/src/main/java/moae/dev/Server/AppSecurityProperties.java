@@ -11,7 +11,8 @@ public class AppSecurityProperties {
   private List<String> publicPaths;
   private String authPw;
   private String jwtSecret;
-  private String expiryMinutes;
+  private Integer expiryMinutes;
+  private String frontend;
 
   public List<String> getPublicPaths() {
     return publicPaths;
@@ -42,11 +43,19 @@ public class AppSecurityProperties {
     this.jwtSecret = jwtSecret;
   }
 
-  public String getExpiryMinutes() {
+  public Integer getExpiryMinutes() {
     return expiryMinutes;
   }
 
-  public void setExpiryMinutes(String expiryMinutes) {
+  public void setExpiryMinutes(Integer expiryMinutes) {
     this.expiryMinutes = expiryMinutes;
+  }
+
+  public String getFrontend() {
+    return frontend;
+  }
+
+  public void setFrontend(String frontend) {
+    this.frontend = frontend;
   }
 }

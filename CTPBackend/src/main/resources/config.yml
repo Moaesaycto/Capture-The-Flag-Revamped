@@ -11,6 +11,6 @@ teams:
   - name: Yellow
     color: "#e1ff00"
   - name: Orange
-    color: "ff8300"
+    color: "#ff8300"
   - name: Pink
     color: "#ff00ee"
