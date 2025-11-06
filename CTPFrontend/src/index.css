@@ -32,3 +32,20 @@ a {
 a:hover {
   opacity: 0.8;
 }
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  display: inline-block;
+  width: var(--size);
+  height: var(--size);
+  border: var(--thickness) solid transparent;
+  border-top-color: currentColor;
+  border-right-color: currentColor;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
