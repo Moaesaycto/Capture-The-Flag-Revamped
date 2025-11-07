@@ -2,6 +2,7 @@ package moae.dev.Server;
 
 import jakarta.validation.Valid;
 import moae.dev.Game.Game;
+import moae.dev.Game.Player;
 import moae.dev.Requests.JoinRequest;
 import moae.dev.Requests.RemoveRequest;
 import moae.dev.Sockets.PlayerSocketConnectionHandler;
@@ -73,7 +74,7 @@ public class PlayerController {
     String token = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
 
     PlayerSocketConnectionHandler.broadcast(
-        body.getName(), body.getTeam(), body.isAuth(), "joined");
+        body.getName(), body.getTeam(), body.isAuth(), null, "joined");
 
     return Map.of("message", "success", "access_token", token, "token_type", "Bearer");
   }
@@ -101,6 +102,11 @@ public class PlayerController {
     if (playerId == null)
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player not found");
 
+    Player p = game.getPlayer(playerId);
+
+    PlayerSocketConnectionHandler.broadcast(
+        p.getName(), p.getTeam().toString(), p.isAuth(), p.getID().toString(), "left");
+
     boolean removed = game.removePlayer(playerId);
     if (!removed) throw new ResponseStatusException(HttpStatus.CONFLICT, "Player not found");
 
@@ -115,11 +121,16 @@ public class PlayerController {
       throw new ResponseStatusException(
           HttpStatus.UNAUTHORIZED, "You are not authorized to do this");
 
+    Player p = game.getPlayer(UUID.fromString(body.getId()));
+
     try {
       game.removePlayer(validator.ValidateUUID(body.getId(), "player"));
     } catch (NoSuchElementException e) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found");
     }
+
+    PlayerSocketConnectionHandler.broadcast(
+        p.getName(), p.getTeam().toString(), p.isAuth(), p.getID().toString(), "removed");
 
     return Map.of("message", "success");
   }

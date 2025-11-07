@@ -23,5 +23,6 @@ app:
       - /game/settings
       - /game/toggle-status
       - /player/join
+      - /team
     auth-pw: "oopygoopy"
     frontend: http://localhost:5173

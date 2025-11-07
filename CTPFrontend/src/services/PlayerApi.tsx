@@ -1,4 +1,4 @@
-import type { Player } from "../types"
+import { type StandardStatus, type Player } from "../types"
 import apiCall from "./api"
 
 export type PlayerJoinRequest = {
@@ -26,5 +26,13 @@ export const playerJoin = async ({ team, name, auth, password }: PlayerJoinReque
 }
 
 export const playerMe = async (jwt: string) => {
-    return await apiCall<Player>("player/me", "GET", undefined, jwt ?? "")
+    return await apiCall<Player>("player/me", "GET", undefined, jwt ?? "");
+}
+
+export const playerLeave = async (jwt: string | null) => {
+    return await apiCall<StandardStatus>("player/leave", "DELETE", undefined, jwt ?? "");
+}
+
+export const playerRemove = async (id: string, jwt: string | null) => {
+    return await apiCall<StandardStatus>("player/remove", "DELETE", { id }, jwt ?? "");
 }

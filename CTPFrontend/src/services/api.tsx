@@ -38,22 +38,11 @@ export function createWebSocket(
     onError?: (err: Event) => void
 ): WebSocket {
     const url = `${socketURL}/${path}`
-
-    console.log("Attempting to connect to", socketURL, path)
     const ws = new WebSocket(url);
 
-    ws.onopen = () => {
-        onOpen?.();
-        console.log(`Connected to ${url}`);
-    };
-
-    ws.onmessage = (event) => {
-        onMessage?.(event.data);
-    };
-
-    ws.onerror = (err) => {
-        onError?.(err);
-    };
+    ws.onopen = () => onOpen?.();
+    ws.onmessage = (event) => onMessage?.(event.data);
+    ws.onerror = (err) => onError?.(err);
 
     return ws;
 }

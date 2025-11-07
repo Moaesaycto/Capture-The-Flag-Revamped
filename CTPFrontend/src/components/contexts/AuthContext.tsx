@@ -1,7 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { apiHealth } from "../../services/api";
-import type { Player } from "../../types";
+import type { Player, Team } from "../../types";
 import { playerMe } from "../../services/PlayerApi";
+import { gameStatus } from "../../services/GameApi";
+import { teamGet } from "../../services/TeamApi";
 
 interface AuthContextValue {
     jwt: string | null,
@@ -16,6 +18,8 @@ interface AuthContextValue {
     hydrate: (token: string) => void;
     me: Player | null;
     setMe: (p: Player | null) => void;
+    myTeam: Team | null;
+    setMyTeam: (t: Team | null) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -26,6 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [jwt, setJwt] = useState<string | null>(null);
     const [loggedIn, setLoggedIn] = useState<boolean>(false);
     const [me, setMe] = useState<Player | null>(null);
+    const [myTeam, setMyTeam] = useState<Team | null>(null);
 
     const hydrate = (token: string) => {
         setJwt(token);
@@ -36,7 +41,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (!jwt) return;
 
         playerMe(jwt)
-            .then(p => setMe(p))
+            .then(p => {
+                setMe(p);
+                teamGet(p.team).then(t => setMyTeam(t))
+            })
             .catch(() => {
                 setLoggedIn(false);
                 setJwt(null);
@@ -57,8 +65,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const logout = useCallback(() => {
         setJwt(null);
+        setMe(null);
+        setMyTeam(null);
+        setLoggedIn(false);
         return;
-    }, [jwt])
+    }, [jwt, me, myTeam]);
 
     return (
         <AuthContext.Provider value={{
@@ -73,7 +84,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setLoggedIn,
             hydrate,
             setMe,
-            me
+            me,
+            myTeam,
+            setMyTeam,
         }}>
             {children}
         </AuthContext.Provider>

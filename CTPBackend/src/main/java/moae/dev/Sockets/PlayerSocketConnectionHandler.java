@@ -18,21 +18,21 @@ public class PlayerSocketConnectionHandler extends SocketConnectionHandler {
     instance = this;
   }
 
-    @Override
-    public void handleMessage(@NonNull WebSocketSession session, @NonNull WebSocketMessage<?> message)
-            throws Exception {
-      // Do nothing
-    }
+  @Override
+  public void handleMessage(@NonNull WebSocketSession session, @NonNull WebSocketMessage<?> message)
+      throws Exception {
+    // Do nothing
+  }
 
-  private record ChatMessage(String name, String team, boolean auth) {}
+  private record ChatMessage(String name, String team, boolean auth, String id) {}
 
-  public static void broadcast(String name, String team, boolean auth, String type) {
+  public static void broadcast(String name, String team, boolean auth,  String id, String type) {
     if (instance != null) {
       synchronized (instance.webSocketSessions) {
         for (WebSocketSession session : instance.webSocketSessions) {
           try {
             if (session.isOpen()) {
-              ChatMessage chatMessage = new ChatMessage(name, team, auth);
+              ChatMessage chatMessage = new ChatMessage(name, team, auth, id);
               ObjectMapper mapper = new ObjectMapper();
               String jsonMessage = mapper.writeValueAsString(chatMessage);
 
