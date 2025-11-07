@@ -35,14 +35,16 @@ export function createWebSocket(
     jwt?: string,
     onMessage?: (msg: string) => void,
     onOpen?: () => void,
-    onError?: (err: Event) => void
+    onError?: (err: Event) => void,
+    onClose?: (event: CloseEvent) => void
 ): WebSocket {
-    const url = `${socketURL}/${path}`
+    const url = `${socketURL}/${path}`;
     const ws = new WebSocket(url);
 
     ws.onopen = () => onOpen?.();
     ws.onmessage = (event) => onMessage?.(event.data);
     ws.onerror = (err) => onError?.(err);
+    ws.onclose = (event) => onClose?.(event);
 
     return ws;
 }

@@ -2,7 +2,6 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { apiHealth } from "../../services/api";
 import type { Player, Team } from "../../types";
 import { playerMe } from "../../services/PlayerApi";
-import { gameStatus } from "../../services/GameApi";
 import { teamGet } from "../../services/TeamApi";
 
 interface AuthContextValue {

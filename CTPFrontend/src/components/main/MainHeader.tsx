@@ -1,9 +1,9 @@
 import { PiFlagBannerFoldDuotone, PiWifiHighBold, PiWifiXBold } from "react-icons/pi";
 import Spinner from "./LoadingSpinner";
-import { useAuthContext } from "../contexts/AuthContext";
+import { useGameContext } from "../contexts/GameContext";
 
 const MainHeader = () => {
-    const { loading, healthy } = useAuthContext();
+    const { loading, health } = useGameContext();
 
     return (
         <header className="w-full bg-amber-400 text-5xl z-1" style={{ fontFamily: "American Captain" }}>
@@ -18,7 +18,7 @@ const MainHeader = () => {
                     {loading &&
                         <Spinner colorClass="text-black" thickness={4} />
                     }
-                    {!loading && (healthy ?
+                    {!loading && (health ?
                         <PiWifiHighBold className="h-full" /> :
                         <PiWifiXBold className="h-full" />
                     )}
