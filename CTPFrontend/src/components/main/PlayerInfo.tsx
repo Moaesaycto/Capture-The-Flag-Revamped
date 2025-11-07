@@ -26,7 +26,7 @@ const PlayerInfo = () => {
                     <span className="text-2xl px-1">{me?.name}</span>
                     <div className="flex flex-row items-center gap-2 px-3">
                         <FaFlag color={myTeam?.color} />
-                        <span className="text-white">You are playing for team </span>{myTeam?.name}
+                        <span className="text-white">You are playing for team:</span>{myTeam?.name}
                     </div>
                 </div>
                 <button

@@ -4,6 +4,7 @@ import { useAuthContext } from "../components/contexts/AuthContext";
 import PlayerList from "../components/main/PlayerList";
 import PlayerInfo from "../components/main/PlayerInfo";
 import { useMemo } from "react";
+import Map from "../components/main/Map";
 
 const HomePage = () => {
     const { loggedIn } = useAuthContext();
@@ -14,6 +15,7 @@ const HomePage = () => {
         <Page>
             <Controller />
             <PlayerList />
+            <Map />
         </Page>
     )
 }

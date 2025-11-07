@@ -79,9 +79,15 @@ const PlayerList = () => {
     const TeamDisplay = ({ team, players, maxSize }: { team: Team, players: Player[], maxSize: number }) => {
         const missingRows = maxSize - players.length;
 
+        const sortedPlayers = useMemo(() => {
+            return [...players].sort((a, b) =>
+                a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+            );
+        }, [players]);
+
         const placeholderRows = useMemo(() => {
             return Array.from({ length: missingRows }).map((_, i) => {
-                return <NameRow index={players.length + i} />
+                return <NameRow index={players.length + i} key={players.length + i} />
             });
         }, [players.length, maxSize]);
 
@@ -100,7 +106,7 @@ const PlayerList = () => {
                 >
                     {team.name}</h2>
                 <ul className="w-full">
-                    {players.map((p, i) => <NameRow player={p} index={i} key={i} />)}
+                    {sortedPlayers.map((p, i) => <NameRow player={p} index={i} key={i} />)}
                     {placeholderRows}
                 </ul>
             </div>

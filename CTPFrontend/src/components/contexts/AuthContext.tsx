@@ -4,6 +4,8 @@ import type { Player, Team } from "../../types";
 import { playerMe } from "../../services/PlayerApi";
 import { teamGet } from "../../services/TeamApi";
 
+const JWT_KEY = import.meta.env.VITE_JWT_KEY;
+
 interface AuthContextValue {
     jwt: string | null,
     setJwt: (jwt: string | null) => void;
@@ -26,7 +28,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [loading, setLoading] = useState<boolean>(true);
     const [healthy, setHealthy] = useState<boolean | null>(null);
-    const [jwt, setJwt] = useState<string | null>(null);
+    const [jwt, setJwt] = useState<string | null>(() => localStorage.getItem(JWT_KEY));
     const [loggedIn, setLoggedIn] = useState<boolean>(false);
     const [me, setMe] = useState<Player | null>(null);
     const [myTeam, setMyTeam] = useState<Team | null>(null);
@@ -52,7 +54,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setLoading(false);
                 setLoggedIn(true);
             });
-    }, [jwt])
+    }, [jwt]);
+
+    useEffect(() => {
+        if (jwt) localStorage.setItem(JWT_KEY, jwt);
+        else localStorage.removeItem(JWT_KEY);
+    }, [jwt]);
 
     useEffect(() => {
         apiHealth()
@@ -67,6 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setMe(null);
         setMyTeam(null);
         setLoggedIn(false);
+        localStorage.removeItem(JWT_KEY);
         return;
     }, [jwt, me, myTeam]);
 
