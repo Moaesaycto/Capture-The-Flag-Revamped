@@ -16,6 +16,10 @@ public class ConditionalBearerTokenResolver implements BearerTokenResolver {
 
   @Override
   public String resolve(HttpServletRequest request) {
+    if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+      return null;
+    }
+
     String servletPath = request.getServletPath();
     for (String p : publicPaths) {
       if (servletPath.equals(p) || servletPath.startsWith(p)) {

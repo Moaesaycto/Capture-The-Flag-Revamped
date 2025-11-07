@@ -10,7 +10,6 @@ import moae.dev.Game.Game;
 
 @SpringBootApplication
 @RestController
-@CrossOrigin(origins = "${app.security.frontend}", allowCredentials = "true")
 public class App {
 
   public static void main(String[] args) {

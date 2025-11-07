@@ -1,4 +1,5 @@
-import type { StandardStatus } from "../types";
+import { useAuthContext } from "../components/contexts/AuthContext"
+import type { Player } from "../types"
 import apiCall from "./api"
 
 export type PlayerJoinRequest = {
@@ -6,6 +7,12 @@ export type PlayerJoinRequest = {
     name: string,
     auth: boolean,
     password: string,
+}
+
+export type PlayerJoinResponse = {
+    message: string,
+    access_token: string,
+    token_type: string,
 }
 
 export const playerJoin = async ({ team, name, auth, password }: PlayerJoinRequest) => {
@@ -16,5 +23,10 @@ export const playerJoin = async ({ team, name, auth, password }: PlayerJoinReque
         password,
     }
 
-    return await apiCall<StandardStatus>("player/join", "POST", req);
+    return await apiCall<PlayerJoinResponse>("player/join", "POST", req);
+}
+
+export const playerMe = async (jwt: string) => {
+    console.log("JWT", jwt)
+    return await apiCall<Player>("player/me", "GET", undefined, jwt ?? "")
 }

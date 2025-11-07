@@ -38,6 +38,9 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
       @NonNull WebSocketHandler wsHandler,
       @NonNull Map<String, Object> attributes)
       throws Exception {
+    if ("OPTIONS".equalsIgnoreCase(request.getMethod().name())) {
+      return true;
+    }
 
     String token = null;
     if (request instanceof ServletServerHttpRequest servletReq) {

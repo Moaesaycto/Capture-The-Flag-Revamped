@@ -8,7 +8,6 @@ import moae.dev.Utils.Validation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.web.bind.annotation.*;
@@ -75,6 +74,7 @@ public class PlayerController {
     return Map.of("message", "success", "access_token", token, "token_type", "Bearer");
   }
 
+  @CrossOrigin
   @GetMapping("/me")
   public Map<String, Object> playerInfo(@AuthenticationPrincipal Jwt jwt) {
     UUID playerId = UUID.fromString(jwt.getSubject());

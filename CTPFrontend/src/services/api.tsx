@@ -4,22 +4,33 @@ async function apiCall<T>(
     route: string,
     method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET',
     data?: unknown,
+    jwt?: string,
 ): Promise<T> {
-
     const options: RequestInit = {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json',
+            ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+        },
         body: data ? JSON.stringify(data) : undefined,
+        credentials: "include",
     };
 
-    try {
-        const res = await fetch(`${apiUrl}/${route}`, options);
-        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        return await res.json() as T;
-    } catch (err) {
-        console.error(`API call failed (${method} ${route}):`, err);
-        throw err;
+    console.log(route, options)
+
+    const res = await fetch(`${apiUrl}/${route}`, options);
+
+    if (!res.ok) {
+        let msg = `Error ${res.status}: ${res.statusText}`;
+        try {
+            const body = await res.json();
+            if (body.message) msg = body.message;
+        } catch { }
+        throw new Error(msg);
     }
+
+    return await res.json() as T;
+
 }
 
 type HealthResponse = {
@@ -28,8 +39,6 @@ type HealthResponse = {
 
 export async function apiHealth(): Promise<HealthResponse> {
     const result = await apiCall<HealthResponse>("game", "GET");
-
-    console.log(result)
     return result;
 }
 
