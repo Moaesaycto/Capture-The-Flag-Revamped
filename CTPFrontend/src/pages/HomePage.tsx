@@ -5,14 +5,16 @@ import PlayerList from "../components/main/PlayerList";
 import PlayerInfo from "../components/main/PlayerInfo";
 import { useMemo } from "react";
 import Map from "../components/main/Map";
+import GameController from "../components/main/GameController";
 
 const HomePage = () => {
-    const { loggedIn } = useAuthContext();
+    const { loggedIn, me } = useAuthContext();
 
     const Controller = useMemo(() => (loggedIn ? PlayerInfo : JoinForm), [loggedIn]);
 
     return (
         <Page>
+            {me?.auth && <GameController />}
             <Controller />
             <PlayerList />
             <Map />
