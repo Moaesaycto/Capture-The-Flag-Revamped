@@ -130,6 +130,10 @@ public class Game {
       throw new IllegalArgumentException(
           "A player with the name " + name + "already exists in the game");
 
+    if (teams.stream().noneMatch(t -> t.getID().equals(team))) {
+      throw new IllegalArgumentException("Invalid team choice");
+    }
+
     Player newPlayer = new Player(name, team, auth);
     players.add(newPlayer);
     return newPlayer.getID();

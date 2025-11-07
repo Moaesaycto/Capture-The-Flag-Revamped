@@ -21,11 +21,15 @@ public class WebSocketConfig implements WebSocketConfigurer {
   @Override
   public void registerWebSocketHandlers(WebSocketHandlerRegistry webSocketHandlerRegistry) {
     webSocketHandlerRegistry
-        .addHandler(new StateSocketConnectionHandler(game), "/state")
+        .addHandler(new StateSocketConnectionHandler(game), "/socket/state")
         .setAllowedOrigins("*");
 
     webSocketHandlerRegistry
-        .addHandler(new SocketConnectionHandler(game), "/global-socket")
+        .addHandler(new PlayerSocketConnectionHandler(game), "/socket/players")
+        .setAllowedOrigins("*");
+
+    webSocketHandlerRegistry
+        .addHandler(new SocketConnectionHandler(game), "/socket/global")
         .addInterceptors(new JwtHandshakeInterceptor(jwtDecoder, null, game))
         .setAllowedOrigins("*");
 
@@ -34,7 +38,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
             t -> {
               webSocketHandlerRegistry
                   .addHandler(
-                      new SocketConnectionHandler(game), "/team-socket/" + t.getID().toString())
+                      new SocketConnectionHandler(game), "socket/team/" + t.getID().toString())
                   .addInterceptors(new JwtHandshakeInterceptor(jwtDecoder, t.getID(), game))
                   .setAllowedOrigins("*");
             });

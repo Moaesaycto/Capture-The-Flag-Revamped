@@ -1,4 +1,5 @@
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
+const socketURL = import.meta.env.VITE_BACKEND_SOCKET_URL;
 
 async function apiCall<T>(
     route: string,
@@ -15,9 +16,6 @@ async function apiCall<T>(
         body: data ? JSON.stringify(data) : undefined,
         credentials: "include",
     };
-
-    console.log(route, options)
-
     const res = await fetch(`${apiUrl}/${route}`, options);
 
     if (!res.ok) {
@@ -30,8 +28,36 @@ async function apiCall<T>(
     }
 
     return await res.json() as T;
-
 }
+
+export function createWebSocket(
+    path: string,
+    jwt?: string,
+    onMessage?: (msg: string) => void,
+    onOpen?: () => void,
+    onError?: (err: Event) => void
+): WebSocket {
+    const url = `${socketURL}/${path}`
+
+    console.log("Attempting to connect to", socketURL, path)
+    const ws = new WebSocket(url);
+
+    ws.onopen = () => {
+        onOpen?.();
+        console.log(`Connected to ${url}`);
+    };
+
+    ws.onmessage = (event) => {
+        onMessage?.(event.data);
+    };
+
+    ws.onerror = (err) => {
+        onError?.(err);
+    };
+
+    return ws;
+}
+
 
 type HealthResponse = {
     message: string,

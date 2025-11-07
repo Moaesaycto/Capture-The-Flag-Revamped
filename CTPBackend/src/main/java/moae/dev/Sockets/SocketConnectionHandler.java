@@ -44,7 +44,7 @@ public class SocketConnectionHandler extends TextWebSocketHandler {
     webSocketSessions.remove(session);
   }
 
-  public record ChatMessage(String playerName, String content, String team) {}
+  private record ChatMessage(String playerName, String content, String team) {}
 
   @Override
   public void handleMessage(@NonNull WebSocketSession session, @NonNull WebSocketMessage<?> message)

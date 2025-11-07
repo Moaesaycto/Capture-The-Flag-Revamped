@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import moae.dev.Game.Game;
 import moae.dev.Requests.JoinRequest;
 import moae.dev.Requests.RemoveRequest;
+import moae.dev.Sockets.PlayerSocketConnectionHandler;
 import moae.dev.Utils.Validation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -52,8 +53,7 @@ public class PlayerController {
       throw new ResponseStatusException(
           HttpStatus.UNAUTHORIZED, "You cannot join the game at this time");
     } catch (IllegalArgumentException e) {
-      throw new ResponseStatusException(
-          HttpStatus.CONFLICT, "You cannot join the game at this time");
+      throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
     }
 
     String jti = UUID.randomUUID().toString();
@@ -71,6 +71,10 @@ public class PlayerController {
 
     var header = JwsHeader.with(MacAlgorithm.HS256).build();
     String token = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
+
+    PlayerSocketConnectionHandler.broadcast(
+        body.getName(), body.getTeam(), body.isAuth(), "joined");
+
     return Map.of("message", "success", "access_token", token, "token_type", "Bearer");
   }
 

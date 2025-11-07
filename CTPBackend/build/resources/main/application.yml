@@ -16,8 +16,9 @@ app:
   security:
     public-paths:
       - /error
-      - /state
       - /game
+      - /socket/state
+      - /socket/players
       - /game/status
       - /game/settings
       - /game/toggle-status

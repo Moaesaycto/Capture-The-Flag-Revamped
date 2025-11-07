@@ -6,6 +6,7 @@ import Spinner from "../main/LoadingSpinner";
 import { ErrorMessage } from "../main/Messages";
 import { gameStatus } from "../../services/GameApi";
 import { useAuthContext } from "../contexts/AuthContext";
+import Color from "color";
 
 const JoinForm = () => {
     const [wantsAuth, setWantsAuth] = useState<boolean>(false);
@@ -35,19 +36,23 @@ const JoinForm = () => {
         const data = {
             team: submitter?.value ?? "",
             name: formData.get("name")?.toString() ?? "",
-            auth: formData.get("auth") === "on",
+            auth: wantsAuth,
             password: formData.get("password")?.toString() ?? ""
         }
 
         playerJoin(data)
             .then(e => hydrate(e.access_token))
-            .catch((e: any) => setError(e?.message ?? e));
+            .catch(
+                (e: any) => {
+                    setError(e?.message ?? e);
+                    setLoading(false);
+                });
     }
 
     const TeamButton = ({ team, disabled }: { team: Team, disabled?: boolean }) => {
         return (
             <button
-                style={{ color: team.color }}
+                style={{ color: team.color, backgroundColor: Color(team.color).alpha(0.25).toString() }}
                 className="px-5 py-1 font-semibold border-2 rounded flex gap-4 items-center transition duration-150
                            hover:scale-105 hover:cursor-pointer disabled:opacity-50 disabled:hover:scale-100 disabled:hover:cursor-not-allowed"
                 aria-label={`Team ${team.name}`}
@@ -85,6 +90,7 @@ const JoinForm = () => {
                             placeholder="Enter Name"
                             autoComplete="off"
                             onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
                         />
                         <input
                             className="appearance-none h-7 w-7 bg-black checked:bg-amber-300 rounded"
@@ -99,6 +105,7 @@ const JoinForm = () => {
                             placeholder="Password"
                             name="password"
                             type="password"
+                            onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
                         />}
                     <div className="flex flex-row w-full justify-around p-1">
                         {teams.map((t, key) => <TeamButton team={t} key={key} disabled={loading || name.length < 1} />)}

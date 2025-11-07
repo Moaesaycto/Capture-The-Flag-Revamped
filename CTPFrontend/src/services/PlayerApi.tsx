@@ -1,4 +1,3 @@
-import { useAuthContext } from "../components/contexts/AuthContext"
 import type { Player } from "../types"
 import apiCall from "./api"
 
@@ -27,6 +26,5 @@ export const playerJoin = async ({ team, name, auth, password }: PlayerJoinReque
 }
 
 export const playerMe = async (jwt: string) => {
-    console.log("JWT", jwt)
     return await apiCall<Player>("player/me", "GET", undefined, jwt ?? "")
 }

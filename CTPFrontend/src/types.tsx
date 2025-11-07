@@ -17,7 +17,7 @@ export type Team = {
 export type Player = {
     id: string,
     name: string,
-    team: Team,
+    team: string,
     auth: boolean,
 }
 
