@@ -8,9 +8,9 @@ type PageProps = {
 }
 
 const Page = ({ children }: PageProps) => {
-    const { loading, healthy } = useAuthContext();
+    const { authLoading, healthy } = useAuthContext();
 
-    if (loading) return <Loading />
+    if (authLoading) return <Loading />
     if (!healthy) return <NoConnection />
 
     return (

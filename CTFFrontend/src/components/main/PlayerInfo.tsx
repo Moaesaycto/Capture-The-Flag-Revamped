@@ -30,9 +30,8 @@ const PlayerInfo = () => {
                     </div>
                 </div>
                 <button
-                    className="h-full w-auto text-red-500 border-2 border-red-800 p-2 rounded flex 
+                    className="h-full w-auto text-red-500 border-2 border-red-800 bg-red-950 p-2 rounded flex 
                                hover:cursor-pointer items-center justify-center"
-                    style={{ backgroundColor: Color("#9F0712").alpha(0.2).toString() }}
                     onClick={onClick}
                 >
                     <RxExit className="h-8 w-8" />

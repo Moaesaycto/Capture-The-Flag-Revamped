@@ -10,10 +10,11 @@ import GameController from "../components/main/GameController";
 const HomePage = () => {
     const { loggedIn, me } = useAuthContext();
 
-    const Controller = useMemo(() => (loggedIn ? PlayerInfo : JoinForm), [loggedIn]);
+    const Controller = useMemo(() => (loggedIn ? PlayerInfo : JoinForm), [loggedIn, me]);
 
     return (
         <Page>
+            <GameController />
             {me?.auth && <GameController />}
             <Controller />
             <PlayerList />

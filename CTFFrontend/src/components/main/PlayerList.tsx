@@ -21,7 +21,7 @@ const NameRow = ({ player, index }: { player?: Player, index: number }) => {
             className={`
                 w-full flex items-center gap-1 px-2 py-0.5 h-7
                 ${index % 2 === 0 ? 'bg-neutral-800' : 'bg-neutral-900'}
-                `}
+            `}
         >
             {player && <div className="w-full flex items-center justify-between">
                 <div className="flex flex-row items-center gap-1">
