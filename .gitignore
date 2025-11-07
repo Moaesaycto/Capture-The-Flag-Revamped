@@ -1,0 +1,84 @@
+# ==========================
+# Root .gitignore for CTF project
+# Place this file at the repository root
+# ==========================
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+
+# Editor / IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.iml
+
+# --------------------------
+# Backend - Spring (CTFBackend)
+# --------------------------
+/CTFBackend/.gradle/
+/CTFBackend/build/
+/CTFBackend/out/
+/CTFBackend/target/
+/CTFBackend/.mvn/
+/CTFBackend/*.log
+/CTFBackend/logs/
+/CTFBackend/tmp/
+/CTFBackend/*.tmp
+/CTFBackend/application-*.yml
+/CTFBackend/application-*.properties
+/CTFBackend/.env
+/CTFBackend/.env.*
+
+# Gradle wrapper binaries are safe to keep in repo, but ignore these caches:
+# (if you prefer to keep gradle wrapper jar/properties, remove these lines)
+/CTFBackend/.gradle/
+/CTFBackend/build/
+
+# IDE and workspace local files
+/CTFBackend/.idea/
+/CTFBackend/*.iml
+/CTFBackend/.classpath
+/CTFBackend/.project
+/CTFBackend/.settings/
+
+# --------------------------
+# Frontend - React / Vite / TS (CTFFrontend)
+# --------------------------
+/CTFFrontend/node_modules/
+/CTFFrontend/dist/
+/CTFFrontend/dist-ssr/
+/CTFFrontend/logs/
+/CTFFrontend/*.log
+/CTFFrontend/npm-debug.log*
+/CTFFrontend/yarn-debug.log*
+/CTFFrontend/yarn-error.log*
+/CTFFrontend/pnpm-debug.log*
+/CTFFrontend/lerna-debug.log*
+/CTFFrontend/*.local
+/CTFFrontend/.env
+/CTFFrontend/.env.*
+
+# Editor / workspace
+/CTFFrontend/.vscode/*
+!/CTFFrontend/.vscode/extensions.json
+/CTFFrontend/.idea/
+/CTFFrontend/.DS_Store
+
+# TypeScript / Vite build caches
+/.parcel-cache/
+/.cache/
+/.vite/
+
+# --------------------------
+# Misc / Common
+# --------------------------
+/coverage/
+/reports/
+/tmp/
+/*.log
+*.swp
+*.swo
+*.bak
