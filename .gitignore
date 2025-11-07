@@ -1,8 +1,3 @@
-# ==========================
-# Root .gitignore for CTF project
-# Place this file at the repository root
-# ==========================
-
 # OS files
 .DS_Store
 Thumbs.db
@@ -15,9 +10,7 @@ Icon?
 .idea/
 *.iml
 
-# --------------------------
-# Backend - Spring (CTFBackend)
-# --------------------------
+# Backend
 /CTFBackend/.gradle/
 /CTFBackend/build/
 /CTFBackend/out/
@@ -31,9 +24,6 @@ Icon?
 /CTFBackend/application-*.properties
 /CTFBackend/.env
 /CTFBackend/.env.*
-
-# Gradle wrapper binaries are safe to keep in repo, but ignore these caches:
-# (if you prefer to keep gradle wrapper jar/properties, remove these lines)
 /CTFBackend/.gradle/
 /CTFBackend/build/
 
@@ -44,9 +34,7 @@ Icon?
 /CTFBackend/.project
 /CTFBackend/.settings/
 
-# --------------------------
-# Frontend - React / Vite / TS (CTFFrontend)
-# --------------------------
+# Frontend
 /CTFFrontend/node_modules/
 /CTFFrontend/dist/
 /CTFFrontend/dist-ssr/
@@ -61,20 +49,18 @@ Icon?
 /CTFFrontend/.env
 /CTFFrontend/.env.*
 
-# Editor / workspace
+# Editor
 /CTFFrontend/.vscode/*
 !/CTFFrontend/.vscode/extensions.json
 /CTFFrontend/.idea/
 /CTFFrontend/.DS_Store
 
-# TypeScript / Vite build caches
+# TypeScript
 /.parcel-cache/
 /.cache/
 /.vite/
 
-# --------------------------
-# Misc / Common
-# --------------------------
+# Misc
 /coverage/
 /reports/
 /tmp/
