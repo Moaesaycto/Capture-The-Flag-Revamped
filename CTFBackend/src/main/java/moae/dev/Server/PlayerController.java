@@ -74,7 +74,7 @@ public class PlayerController {
     String token = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
 
     PlayerSocketConnectionHandler.broadcast(
-        body.getName(), body.getTeam(), body.isAuth(), null, "joined");
+        body.getName(), body.getTeam(), body.isAuth(), joined.toString(), "joined");
 
     return Map.of("message", "success", "access_token", token, "token_type", "Bearer");
   }
@@ -104,11 +104,11 @@ public class PlayerController {
 
     Player p = game.getPlayer(playerId);
 
-    PlayerSocketConnectionHandler.broadcast(
-        p.getName(), p.getTeam().toString(), p.isAuth(), p.getID().toString(), "left");
-
     boolean removed = game.removePlayer(playerId);
     if (!removed) throw new ResponseStatusException(HttpStatus.CONFLICT, "Player not found");
+
+    PlayerSocketConnectionHandler.broadcast(
+        p.getName(), p.getTeam().toString(), p.isAuth(), p.getID().toString(), "removed");
 
     return Map.of("message", "success");
   }

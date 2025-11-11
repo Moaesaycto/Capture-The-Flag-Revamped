@@ -14,7 +14,6 @@ const HomePage = () => {
 
     return (
         <Page>
-            <GameController />
             {me?.auth && <GameController />}
             <Controller />
             <PlayerList />

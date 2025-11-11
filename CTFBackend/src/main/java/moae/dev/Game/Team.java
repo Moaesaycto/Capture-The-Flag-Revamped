@@ -9,7 +9,10 @@ public class Team {
   private final String color;
   private final Flag flag;
 
+  public record ChatMessage(String message, UUID player, Integer messageId) {}
+
   public Team(String name, String color) {
+
     this.id = UUID.randomUUID();
     this.name = name;
     this.color = color;

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { createWebSocket } from "../../services/api";
 
-type State = "WAITING_TO_START" | "GRACE_PERIOD" | "SCOUT_PERIOD" | "FFA_PERIOD" | "ENDED" | "PAUSED";
+type State = "ready" | "grace" | "scout" | "ffa" | "ended" | "paused" | "loading"
 
 interface GameContextValue {
     loading: boolean;

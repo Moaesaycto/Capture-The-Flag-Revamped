@@ -56,6 +56,8 @@ const PlayerList = () => {
         if (!match) return;
         const player: Player = JSON.parse(match[0])
 
+        console.log(player, newP);
+
         if (newP) {
             setPlayers(prev => [...prev, player]);
         } else {
