@@ -16,13 +16,11 @@ app:
   security:
     public-paths:
       - /error
-      - /game
-      - /socket/state
-      - /socket/players
+      - /game/health
+      - /socket/**
       - /game/status
       - /game/settings
-      - /game/toggle-status
       - /player/join
-      - /team
+      - /team/info/*
     auth-pw: "a"
     frontend: http://localhost:5173

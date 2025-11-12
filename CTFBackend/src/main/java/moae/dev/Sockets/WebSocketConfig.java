@@ -28,17 +28,20 @@ public class WebSocketConfig implements WebSocketConfigurer {
         .addHandler(new PlayerSocketConnectionHandler(game), "/socket/players")
         .setAllowedOrigins("*");
 
+    SocketConnectionHandler globalMessageHandler = new SocketConnectionHandler(game);
+    game.setWebSocketHandler(globalMessageHandler);
     webSocketHandlerRegistry
-        .addHandler(new SocketConnectionHandler(game), "/socket/global")
+        .addHandler(globalMessageHandler, "/socket/global")
         .addInterceptors(new JwtHandshakeInterceptor(jwtDecoder, null, game))
         .setAllowedOrigins("*");
 
     game.getTeams()
         .forEach(
             t -> {
+              SocketConnectionHandler handler = new SocketConnectionHandler(game);
+              t.setWebSocketHandler(handler);
               webSocketHandlerRegistry
-                  .addHandler(
-                      new SocketConnectionHandler(game), "socket/team/" + t.getID().toString())
+                  .addHandler(handler, "socket/team/" + t.getID().toString())
                   .addInterceptors(new JwtHandshakeInterceptor(jwtDecoder, t.getID(), game))
                   .setAllowedOrigins("*");
             });

@@ -2,10 +2,16 @@ package moae.dev.Server;
 
 import jakarta.validation.Valid;
 import moae.dev.Game.Game;
+import moae.dev.Requests.MessageRequest;
 import moae.dev.Requests.SettingsRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/game")
@@ -16,7 +22,7 @@ public class GameController {
     this.game = game;
   }
 
-  @GetMapping("")
+  @GetMapping("/health")
   public Map<String, String> health() {
     return Map.of("message", "success");
   }
@@ -32,14 +38,22 @@ public class GameController {
     return Map.of("message", "success");
   }
 
-  // TODO: REMOVE ME ONCE READY
-  @PatchMapping("/toggle-status")
-  public Map<String, Object> setStatus() {
-    if (game.getState() == Game.State.WAITING_TO_START) {
-      game.setState(Game.State.ENDED);
-    } else {
-      game.setState(Game.State.WAITING_TO_START);
+  @PostMapping("/message/global")
+  public Map<String, Integer> messageGlobal(
+      @RequestBody MessageRequest req, @AuthenticationPrincipal Jwt jwt) {
+    UUID playerId = UUID.fromString(jwt.getSubject());
+
+    if (!game.isValidPlayer(playerId)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player not found");
     }
-    return Map.of("message", "success");
+
+    Integer msgId;
+    try {
+      msgId = game.sendMessage(playerId, req.getContent());
+    } catch (Exception e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    return Map.of("id", msgId);
   }
 }

@@ -38,7 +38,10 @@ export function createWebSocket(
     onError?: (err: Event) => void,
     onClose?: (event: CloseEvent) => void
 ): WebSocket {
-    const url = `${socketURL}/${path}`;
+    const url = jwt
+        ? `${socketURL}/${path}?token=${encodeURIComponent(jwt)}`
+        : `${socketURL}/${path}`;
+
     const ws = new WebSocket(url);
 
     ws.onopen = () => onOpen?.();
@@ -55,7 +58,7 @@ type HealthResponse = {
 }
 
 export async function apiHealth(): Promise<HealthResponse> {
-    const result = await apiCall<HealthResponse>("game", "GET");
+    const result = await apiCall<HealthResponse>("game/health", "GET");
     return result;
 }
 

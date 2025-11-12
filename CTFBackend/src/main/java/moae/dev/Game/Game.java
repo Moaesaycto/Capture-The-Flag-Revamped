@@ -3,17 +3,24 @@ package moae.dev.Game;
 import jakarta.validation.Valid;
 import moae.dev.Requests.SettingsRequest;
 import moae.dev.Server.AppConfig;
+import moae.dev.Sockets.SocketConnectionHandler;
 import moae.dev.Sockets.StateSocketConnectionHandler;
+import moae.dev.Utils.ChatMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Game {
   private final AppConfig config;
 
   private final List<Team> teams;
   private final List<Player> players;
+
+  private final AtomicInteger counter = new AtomicInteger(0);
+  private final List<ChatMessage> messages = new ArrayList<>();
+  private SocketConnectionHandler webSocketHandler;
 
   private static State state;
 
@@ -47,6 +54,14 @@ public class Game {
     if (!registerNTeams(initConfig.getGame().getMaxTeams(), initConfig.getTeams())) {
       throw new RuntimeException("Failed to register teams. Check the configuration and retry");
     }
+  }
+
+  public void setWebSocketHandler(SocketConnectionHandler handler) {
+    this.webSocketHandler = handler;
+  }
+
+  public SocketConnectionHandler getWebSocketHandler() {
+    return this.webSocketHandler;
   }
 
   // ----- Gameplay -----
@@ -110,6 +125,19 @@ public class Game {
     config.merge(settings);
   }
 
+  public Integer sendMessage(UUID sender, String content) {
+    Player player = getPlayer(sender);
+    Integer newId = counter.incrementAndGet();
+    ChatMessage msg = new ChatMessage(content, player, newId, new Date(), player.getTeam());
+    messages.add(msg);
+
+    if (webSocketHandler != null) {
+      webSocketHandler.broadcastMessage(msg);
+    }
+
+    return newId;
+  }
+
   // ----- Players -----
   public Player getPlayer(UUID id) {
     Player player = players.stream().filter(p -> p.getID().equals(id)).findFirst().orElse(null);
@@ -149,13 +177,22 @@ public class Game {
     return players.stream().anyMatch(p -> p.getID().equals(player));
   }
 
+  public boolean isPlayerOnTeam(UUID playerId, UUID teamId) {
+    return players.stream()
+        .filter(p -> p.getID().equals(playerId))
+        .anyMatch(p -> p.getTeam().equals(teamId));
+  }
+
   // ----- Teams -----
   public List<Team> getTeams() {
     return teams;
   }
 
   public Team getTeam(UUID id) {
-    return teams.stream().filter(t -> t.getID().equals(id)).findFirst().orElse(null);
+    Team team = teams.stream().filter(t -> t.getID().equals(id)).findFirst().orElse(null);
+    if (team == null) throw new NoSuchElementException("Cannot find team");
+
+    return team;
   }
 
   private boolean registerNTeams(int n, List<AppConfig.TeamConfig> allTeams) {
@@ -177,6 +214,12 @@ public class Game {
     }
 
     return teams.add(new Team(name, color));
+  }
+
+  public Integer sendTeamMessage(UUID team, UUID sender, String content) {
+    Integer newId = counter.incrementAndGet();
+    getTeam(team).sendMessage(getPlayer(sender), content, newId);
+    return newId;
   }
 
   public boolean declareVictory(UUID team) {

@@ -79,7 +79,6 @@ public class PlayerController {
     return Map.of("message", "success", "access_token", token, "token_type", "Bearer");
   }
 
-  @CrossOrigin
   @GetMapping("/me")
   public Map<String, Object> playerInfo(@AuthenticationPrincipal Jwt jwt) {
     UUID playerId = UUID.fromString(jwt.getSubject());

@@ -1,15 +1,17 @@
 package moae.dev.Game;
 
-import java.util.Map;
-import java.util.UUID;
+import moae.dev.Sockets.SocketConnectionHandler;
+import moae.dev.Utils.ChatMessage;
+
+import java.util.*;
 
 public class Team {
   private final UUID id;
   private final String name;
   private final String color;
   private final Flag flag;
-
-  public record ChatMessage(String message, UUID player, Integer messageId) {}
+  private final List<ChatMessage> messages;
+  private SocketConnectionHandler webSocketHandler;
 
   public Team(String name, String color) {
 
@@ -17,6 +19,7 @@ public class Team {
     this.name = name;
     this.color = color;
     this.flag = new Flag();
+    this.messages = new ArrayList<ChatMessage>();
   }
 
   public UUID getID() {
@@ -37,5 +40,28 @@ public class Team {
         "name", this.name,
         "color", this.color,
         "flag", this.flag.toMap());
+  }
+
+  public void setWebSocketHandler(SocketConnectionHandler handler) {
+    this.webSocketHandler = handler;
+  }
+
+  public SocketConnectionHandler getWebSocketHandler() {
+    return this.webSocketHandler;
+  }
+
+  public void sendMessage(Player sender, String content, Integer id) {
+    ChatMessage msg = new ChatMessage(content, sender, id, new Date(), this.getID());
+    messages.add(msg);
+
+    if (webSocketHandler != null) {
+      webSocketHandler.broadcastMessage(msg);
+    }
+  }
+
+  public Map<Map<String, Object>, List<ChatMessage>> getMessages() {
+    Map<Map<String, Object>, List<ChatMessage>> map = new HashMap<>();
+    messages.forEach(m -> map.computeIfAbsent(m.player().toMap(), k -> new ArrayList<>()).add(m));
+    return map;
   }
 }

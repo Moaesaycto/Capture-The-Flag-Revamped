@@ -2,6 +2,7 @@ package moae.dev.Sockets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PreDestroy;
+import moae.dev.Utils.ChatMessage;
 import moae.dev.Game.Game;
 import moae.dev.Game.Player;
 import org.slf4j.Logger;
@@ -18,8 +19,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class SocketConnectionHandler extends TextWebSocketHandler {
+  private final AtomicLong messageIdCounter = new AtomicLong(0);
+
   public final List<WebSocketSession> webSocketSessions =
       Collections.synchronizedList(new ArrayList<>());
   protected final Logger logger = LoggerFactory.getLogger(SocketConnectionHandler.class);
@@ -32,7 +36,7 @@ public class SocketConnectionHandler extends TextWebSocketHandler {
   @Override
   public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
     super.afterConnectionEstablished(session);
-    System.out.println(session.getId() + " Connected");
+    System.out.println(session.getId() + " Connected to " + session.getUri());
     webSocketSessions.add(session);
   }
 
@@ -40,35 +44,60 @@ public class SocketConnectionHandler extends TextWebSocketHandler {
   public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus status)
       throws Exception {
     super.afterConnectionClosed(session, status);
-    System.out.println(session.getId() + " Disconnected");
+    System.out.println(session.getId() + " Disconnected from " + session.getUri());
     webSocketSessions.remove(session);
   }
-
-  private record ChatMessage(String playerName, String content, String team) {}
 
   @Override
   public void handleMessage(@NonNull WebSocketSession session, @NonNull WebSocketMessage<?> message)
       throws Exception {
 
-    Jwt jwt = (Jwt) session.getAttributes().get("jwt");
+    /* Jwt jwt = (Jwt) session.getAttributes().get("jwt");
     Player player = game.getPlayer(UUID.fromString(jwt.getSubject()));
 
-    ChatMessage chatMessage =
-        new ChatMessage(
-            player.getName(), message.getPayload().toString(), player.getTeam().toString());
+    long messageId = messageIdCounter.incrementAndGet();
+    ChatMessage chatMessage = new ChatMessage(
+            message.getPayload().toString(),
+            player.getID(),
+            (int) messageId,
+            new java.util.Date()
+    );
 
     ObjectMapper mapper = new ObjectMapper();
     String jsonMessage = mapper.writeValueAsString(chatMessage);
 
-    for (WebSocketSession webSocketSession : webSocketSessions) {
-      if (session == webSocketSession) continue;
-      if (webSocketSession.isOpen()) {
-        webSocketSession.sendMessage(new TextMessage(jsonMessage));
-      }
+    synchronized (webSocketSessions) {
+        for (WebSocketSession webSocketSession : webSocketSessions) {
+            if (session == webSocketSession) continue;
+            if (webSocketSession.isOpen()) {
+                webSocketSession.sendMessage(new TextMessage(jsonMessage));
+            }
+        }
     }
 
     if (session.isOpen()) {
-      session.sendMessage(new TextMessage(jsonMessage));
+        session.sendMessage(new TextMessage(jsonMessage));
+    } */
+  }
+
+  public void broadcastMessage(ChatMessage message) {
+    ObjectMapper mapper = new ObjectMapper();
+    String json;
+    try {
+      json = mapper.writeValueAsString(message);
+    } catch (Exception e) {
+      return;
+    }
+
+    synchronized (webSocketSessions) {
+      for (WebSocketSession session : webSocketSessions) {
+        if (session.isOpen()) {
+          try {
+            session.sendMessage(new TextMessage(json));
+          } catch (Exception ignored) {
+          }
+        }
+      }
     }
   }
 

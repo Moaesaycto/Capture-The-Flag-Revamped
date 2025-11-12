@@ -1,13 +1,12 @@
 import { PiChatsCircleBold, PiFlagBannerFoldDuotone, PiHouseBold } from "react-icons/pi";
 import { useAuthContext } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
+import { useMessageContext } from "../contexts/MessageContext";
 
 
 const MainHeader = () => {
-
     const { loggedIn } = useAuthContext();
-
-    const hasMessage = true;
+    const {dirtyTeams, dirtyGlobal} = useMessageContext();
 
     return (
         <header className="w-full bg-amber-400 text-4xl sm:text-5xl z-1" style={{ fontFamily: "American Captain" }}>
@@ -28,7 +27,7 @@ const MainHeader = () => {
                             </Link>
                             <Link to="/message">
                                 <div className="m-1 text-2xl border-3 rounded-xl relative p-0.5 hover:cursor-pointer">
-                                    {(hasMessage) && <div className="w-3 h-3 bg-red-500 border-red-900 rounded-full absolute -top-1.5 -left-1.5" />}
+                                    {(dirtyTeams || dirtyGlobal) && <div className="w-3 h-3 bg-red-500 border-red-900 rounded-full absolute -top-1.5 -left-1.5" />}
                                     <PiChatsCircleBold />
                                 </div>
                             </Link>

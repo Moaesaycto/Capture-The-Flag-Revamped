@@ -15,6 +15,8 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -42,15 +44,7 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
       return true;
     }
 
-    String token = null;
-    if (request instanceof ServletServerHttpRequest servletReq) {
-      HttpServletRequest httpReq = servletReq.getServletRequest();
-      String auth = httpReq.getHeader("Authorization");
-      if (auth != null && auth.startsWith("Bearer ")) {
-        token = auth.substring(7);
-      }
-    }
-
+    String token = getToken(request);
     if (token == null || token.isBlank()) return false;
 
     Jwt jwt;
@@ -66,6 +60,27 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
     Player player = game.getPlayer(UUID.fromString(jwt.getSubject()));
     return player.isAuth() || (team == null || player.isOnTeam(team));
+  }
+
+  private static String getToken(ServerHttpRequest request) {
+    List<String> authHeaders = request.getHeaders().get("Authorization");
+    if (authHeaders != null) {
+      for (String h : authHeaders) {
+        if (h.startsWith("Bearer ")) return h.substring(7);
+      }
+    }
+
+    String query = request.getURI().getQuery();
+    if (query != null) {
+      for (String param : query.split("&")) {
+        String[] pair = param.split("=", 2);
+        if (pair.length == 2 && "token".equals(pair[0])) {
+          return java.net.URLDecoder.decode(pair[1], java.nio.charset.StandardCharsets.UTF_8);
+        }
+      }
+    }
+
+    return null;
   }
 
   @Override

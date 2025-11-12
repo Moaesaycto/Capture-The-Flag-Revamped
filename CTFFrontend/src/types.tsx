@@ -41,3 +41,18 @@ export type GameStatus = {
     state: GameState,
     teams: Team[],
 }
+
+type DeliveryStatus = "pending" | "delivered" | "failed";
+
+export type ChatMessage = {
+    player: Player,
+    message: string,
+    team: string,
+    messageId: number,
+    time: number,
+    status?: DeliveryStatus,
+}
+
+export type MessageResponse = {
+    id: number,
+}
