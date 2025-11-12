@@ -10,7 +10,7 @@ function App() {
     <BrowserRouter>
       <div className="flex flex-col min-h-screen w-full">
         <MainHeader />
-        <main className="flex-1 w-full flex bg-neutral-900">
+        <main className="flex-1 min-h-0 w-full flex bg-neutral-900">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/message" element={<MessagesPage />} />

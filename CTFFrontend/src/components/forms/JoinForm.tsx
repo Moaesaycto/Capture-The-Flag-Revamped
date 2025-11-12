@@ -4,25 +4,26 @@ import { playerJoin } from "../../services/PlayerApi";
 import { FaFlag } from "react-icons/fa";
 import Spinner from "../main/LoadingSpinner";
 import { ErrorMessage } from "../main/Messages";
-import { gameStatus } from "../../services/GameApi";
 import { useAuthContext } from "../contexts/AuthContext";
 import Color from "color";
+import { useGameContext } from "../contexts/GameContext";
 
 const JoinForm = () => {
     const [wantsAuth, setWantsAuth] = useState<boolean>(false);
-    const [teams, setTeams] = useState<Team[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [name, setName] = useState<string>("");
 
     const { hydrate } = useAuthContext();
+    const { teams, loading: gameLoading } = useGameContext();
 
     useEffect(() => {
-        gameStatus().then(r => {
+        if (gameLoading && !teams) {
+            setError("Unable to collect team information");
+        } else {
             setLoading(false);
-            setTeams(r.teams);
-        }).catch(() => { setError("Cannot retrieve teams") });
-    }, []);
+        }
+    }, [teams, gameLoading]);
 
     const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -53,16 +54,17 @@ const JoinForm = () => {
         return (
             <button
                 style={{ color: team.color, backgroundColor: Color(team.color).alpha(0.25).toString() }}
-                className="px-5 py-1 font-semibold border-2 rounded flex gap-4 items-center transition duration-150
+                className="flex-1 justify-center 
+                           px-5 py-1 font-semibold border-2 rounded flex gap-2 items-center transition duration-150
                            hover:scale-105 hover:cursor-pointer disabled:opacity-50 disabled:hover:scale-100 disabled:hover:cursor-not-allowed"
-                aria-label={`Team ${team.name}`}
+                aria-label={`Join Team ${team.name}`}
                 type="submit"
                 value={team.id}
                 disabled={disabled}
             >
                 <FaFlag />
                 <span>
-                    {team.name}
+                    Join Team {team.name}
                 </span>
             </button>
         )
@@ -107,7 +109,7 @@ const JoinForm = () => {
                             type="password"
                             onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
                         />}
-                    <div className="flex flex-row w-full justify-around p-1">
+                    <div className="flex flex-row w-full justify-around p-1 gap-4">
                         {teams.map((t, key) => <TeamButton team={t} key={key} disabled={loading || name.length < 1} />)}
                     </div>
                 </div>
