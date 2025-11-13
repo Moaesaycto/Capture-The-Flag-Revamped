@@ -138,6 +138,34 @@ public class Game {
     return newId;
   }
 
+  public record MessagePage(List<ChatMessage> messages, boolean end) {}
+
+  public MessagePage getMessages(Integer start, Integer count) {
+    List<ChatMessage> result = new ArrayList<>();
+    if (messages.isEmpty() || count <= 0) return new MessagePage(result, true);
+
+    // Find the starting position (highest message with id <= start)
+    int startIdx = -1;
+    for (int i = messages.size() - 1; i >= 0; i--) {
+      if (messages.get(i).messageId() <= start) {
+        startIdx = i;
+        break;
+      }
+    }
+
+    // If no messages found <= start, we're at the end
+    if (startIdx == -1) return new MessagePage(result, true);
+
+    // Collect messages going backwards from startIdx
+    for (int i = startIdx; i >= 0 && result.size() < count; i--) {
+      result.addFirst(messages.get(i)); // Add to front to maintain order
+    }
+
+    // We've reached the end if we started from index 0 or collected fewer than requested
+    boolean atEnd = (startIdx - count + 1 <= 0);
+    return new MessagePage(result, atEnd);
+  }
+
   // ----- Players -----
   public Player getPlayer(UUID id) {
     Player player = players.stream().filter(p -> p.getID().equals(id)).findFirst().orElse(null);

@@ -1,11 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createWebSocket } from "../../services/api";
 import { useAuthContext } from "./AuthContext";
 import { teamMessage } from "../../services/TeamApi";
-import type { ChatMessage, MessageResponse } from "../../types";
-import { globalMessage } from "../../services/GameApi";
-
-export type ChatType = "global" | "team";
+import type { ChatMessage, ChatType, MessageResponse } from "../../types";
+import { getGlobalMessages, globalMessage } from "../../services/GameApi";
 
 interface MessageContextValue {
     openChat: ChatType | null,
@@ -20,6 +18,14 @@ interface MessageContextValue {
     pendingTeamMessages: ChatMessage[],
     pendingGlobalMessages: ChatMessage[],
     restoreOpen: () => void,
+    loadingGlobalChats: boolean,
+    loadingTeamChats: boolean,
+    errorGlobal: string | null,
+    errorTeam: string | null,
+    canLoadMoreGlobal: boolean,
+    canLoadMoreTeam: boolean,
+    displayChats: ChatMessage[],
+    pendingChats: ChatMessage[],
 }
 
 const MessageContext = createContext<MessageContextValue | undefined>(undefined);
@@ -29,16 +35,36 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
 
     const [openChat, setOpenChat] = useState<ChatType | null>(null);
     const [lastOpenChat, setLastOpenChat] = useState<ChatType | null>(null);
+
+    // Global chat params
     const [globalChats, setGlobalChats] = useState<ChatMessage[]>([]);
+    const [dirtyGlobal, setDirtyGlobal] = useState<boolean>(false);
+    const [loadingGlobalChats, setLoadingGlobalChats] = useState<boolean>(true);
+    const [errorGlobal, setErrorGlobal] = useState<string | null>(null);
+    const [canLoadMoreGlobal, setCanLoadMoreGlobal] = useState<boolean>(false);
+
+    // Team chat params
     const [teamChats, setTeamChats] = useState<ChatMessage[]>([]);
     const [dirtyTeams, setDirtyTeams] = useState<boolean>(false);
-    const [dirtyGlobal, setDirtyGlobal] = useState<boolean>(false);
+    const [loadingTeamChats, setLoadingTeamChats] = useState<boolean>(true);
+    const [errorTeam, setErrorTeam] = useState<string | null>(null);
+    const [canLoadMoreTeam, setCanLoadMoreTeam] = useState<boolean>(false);
 
     const [pendingTeamMessages, setPendingTeamMessages] = useState<ChatMessage[]>([]);
     const [pendingGlobalMessages, setPendingGlobalMessages] = useState<ChatMessage[]>([]);
 
     const wsGlobalRef = useRef<WebSocket | null>(null);
     const wsTeamRef = useRef<WebSocket | null>(null);
+
+    useEffect(() => {
+        getGlobalMessages(2147483647, 20, jwt!)
+            .then((e) => {
+                setGlobalChats(e.messages);
+                setCanLoadMoreGlobal(!e.end);
+            })
+            .catch((e) => setErrorGlobal(e.message))
+            .finally(() => setLoadingGlobalChats(false));
+    }, []);
 
     useEffect(() => {
         const wsGlobal = createWebSocket(
@@ -153,7 +179,7 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         if (openChat) setLastOpenChat(openChat);
-    }, [openChat])
+    }, [openChat]);
 
     const restoreOpen = useCallback(() => {
         if (lastOpenChat) {
@@ -169,6 +195,23 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
         };
     }, [lastOpenChat]);
 
+
+    const displayChats = useMemo<ChatMessage[]>(() => {
+        switch (openChat) {
+            case "global": return globalChats;
+            case "team": return teamChats;
+            default: return [];
+        }
+    }, [openChat, globalChats, teamChats]);
+
+    const pendingChats = useMemo<ChatMessage[]>(() => {
+        switch (openChat) {
+            case "global": return pendingGlobalMessages;
+            case "team": return pendingTeamMessages;
+            default: return [];
+        }
+    }, [openChat, pendingGlobalMessages, pendingTeamMessages]);
+
     return (
         <MessageContext.Provider value={{
             openChat,
@@ -183,6 +226,14 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
             pendingTeamMessages,
             pendingGlobalMessages,
             restoreOpen,
+            loadingGlobalChats,
+            loadingTeamChats,
+            errorGlobal,
+            errorTeam,
+            canLoadMoreGlobal,
+            canLoadMoreTeam,
+            displayChats,
+            pendingChats,
         }}>
             {children}
         </MessageContext.Provider>

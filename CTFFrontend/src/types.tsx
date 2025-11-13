@@ -1,3 +1,5 @@
+import type { IconType } from "react-icons";
+
 export type StandardStatus = {
     message: string,
 }
@@ -44,6 +46,17 @@ export type GameStatus = {
 
 type DeliveryStatus = "pending" | "delivered" | "failed";
 
+export type ChatType = "global" | "team";
+
+export type Chat = {
+    icon: IconType,
+    title: string,
+    path: string,
+    type: ChatType,
+    dirty: boolean,
+    setDirty: (dirty: boolean) => void
+}
+
 export type ChatMessage = {
     player: Player,
     message: string,
@@ -57,4 +70,9 @@ export type ChatMessage = {
 
 export type MessageResponse = {
     id: number,
+}
+
+export type MessageChunk = {
+    messages: ChatMessage[],
+    end: true,
 }

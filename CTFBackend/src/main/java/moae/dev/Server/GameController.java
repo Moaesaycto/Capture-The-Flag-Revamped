@@ -56,4 +56,17 @@ public class GameController {
 
     return Map.of("id", msgId);
   }
+
+  @GetMapping("/message/global")
+  public Map<String, Object> getMessages(
+      @RequestParam(name = "start", defaultValue = "0") Integer start,
+      @RequestParam(name = "count", defaultValue = "10") Integer count,
+      @AuthenticationPrincipal Jwt jwt) {
+
+    Game.MessagePage page = game.getMessages(start, count);
+
+    return Map.of(
+        "messages", page.messages(),
+        "end", page.end());
+  }
 }
