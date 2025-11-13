@@ -12,7 +12,7 @@ import Color from "color";
 import { useMessageContext, type ChatType } from "../components/contexts/MessageContext";
 import type { ChatMessage } from "../types";
 import Spinner from "../components/main/LoadingSpinner";
-import { BiCheck } from "react-icons/bi";
+import { BiCheck, BiChevronDown } from "react-icons/bi";
 
 type Chat = {
     icon: IconType,
@@ -91,21 +91,16 @@ const MessagesPage = () => {
     } = useMessageContext();
     const navigate = useNavigate();
     const inputRef = useRef<HTMLInputElement>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messageContainerRef = useRef<HTMLUListElement>(null);
+    const latestIsAtBottomRef = useRef<boolean>(true);
+    const prevMessagesCountRef = useRef<number>(0);
 
     const [chats, setChats] = useState<Chat[]>([]);
     const [currMessage, setCurrMessage] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        restoreOpen();
-    }, []);
-
-    useEffect(() => {
-        return () => {
-            setOpenChat(null);
-        };
-    }, [setOpenChat]);
+    const [newMessageAlert, setNewMessageAlert] = useState<boolean>(false);
 
     const canSend = useMemo<boolean>(() => {
         const message = currMessage.trim();
@@ -129,9 +124,34 @@ const MessagesPage = () => {
             case "team": return pendingTeamMessages;
             default: return [];
         }
-    }, [openChat, pendingGlobalMessages, pendingTeamMessages])
+    }, [openChat, pendingGlobalMessages, pendingTeamMessages]);
 
+    const onSubmit = useCallback(() => {
+        setLoading(true);
+        setError(null);
+        sendMessage(currMessage)
+            .then(() => {
+                setCurrMessage("");
+                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            })
+            .catch(e => setError(e?.message ?? e))
+            .finally(() => {
+                setLoading(false);
+            });
+    }, [sendMessage, currMessage]);
 
+    // Returning to last viewed page
+    useEffect(() => {
+        restoreOpen();
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            setOpenChat(null);
+        };
+    }, [setOpenChat]);
+
+    // TODO: Maybe remove this, I do not think it is
     useEffect(() => {
         if (!loggedIn) navigate("/");
     }, [loggedIn, navigate])
@@ -162,24 +182,66 @@ const MessagesPage = () => {
         setChats(newChats);
     }, [myTeam, openChat, setOpenChat, globalChats, teamChats, dirtyGlobal, setDirtyGlobal, dirtyTeams, setDirtyTeams]);
 
-    const onSubmit = useCallback(() => {
-        setLoading(true);
-        setError(null);
-        sendMessage(currMessage)
-            .then(() => {
-                setCurrMessage("");
-            })
-            .catch(e => setError(e?.message ?? e))
-            .finally(() => {
-                setLoading(false);
-            });
-    }, [sendMessage, currMessage]);
-
+    // Reset to focus on input after sent
     useEffect(() => {
         if (inputRef.current) {
             inputRef.current.focus();
         }
     }, [currMessage]);
+
+    // Scroll to the bottom
+    useEffect(() => {
+        const total = displayChats.length + pendingChats.length;
+        if (total === prevMessagesCountRef.current) return;
+
+        const container = messageContainerRef.current;
+        const tolerance = 10;
+        const atBottomLive = !!container && (container.scrollHeight - container.scrollTop <= container.clientHeight + tolerance);
+
+        const lastPending = pendingChats.length ? pendingChats[pendingChats.length - 1] : null;
+        const lastDisplayed = displayChats.length ? displayChats[displayChats.length - 1] : null;
+        const last = lastPending ?? lastDisplayed;
+        const isFromMe = !!last && last.player?.id === me?.id;
+
+        if (isFromMe || latestIsAtBottomRef.current) {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            setNewMessageAlert(false);
+        } else if (atBottomLive) {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            setNewMessageAlert(false);
+        } else {
+            setNewMessageAlert(true);
+        }
+
+        prevMessagesCountRef.current = total;
+    }, [displayChats, pendingChats, me]);
+
+
+    // Event listener for new messages
+    useEffect(() => {
+        const container = messageContainerRef.current;
+        if (!container) return;
+
+        const tolerance = 4; // px
+        const onScroll = () => {
+            const atBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - tolerance;
+
+            latestIsAtBottomRef.current = atBottom;
+
+            if (atBottom) {
+                // manually scrolled to the bottom
+                setNewMessageAlert(false);
+                prevMessagesCountRef.current = displayChats.length + pendingChats.length;
+            }
+        };
+
+        container.addEventListener("scroll", onScroll, { passive: true });
+        onScroll();
+
+        return () => container.removeEventListener("scroll", onScroll);
+    }, [openChat, displayChats.length, pendingChats.length]);
+
+
 
     return (
         <Page>
@@ -201,7 +263,7 @@ const MessagesPage = () => {
                     </li>
                 )}
             </div>
-            <div className="bg-neutral-950 w-full h-full rounded-b-md flex flex-col">
+            <div className="relative bg-neutral-950 w-full h-full rounded-b-md flex flex-col">
                 {openChat ? (
                     displayChats.length + pendingChats.length === 0 ?
                         <div className="w-full flex-1 flex items-center justify-center flex-col gap-5">
@@ -210,10 +272,15 @@ const MessagesPage = () => {
                                 Nobody has messaged in {openChat} chat
                             </span>
                         </div> :
-                        <ul className="flex-1 p-5 flex flex-col gap-4">
+                        <ul
+                            ref={messageContainerRef}
+                            className="flex-1 p-5 flex flex-col gap-4 overflow-y-scroll grow shrink basis-0"
+                        >
                             {displayChats.map((m) => <Message message={m} key={`msg-${m.messageId}`} />)}
                             {pendingChats.map((m) => <Message message={m} key={`pending-${m.clientId}`} pending />)}
-                        </ul>)
+                            <div ref={messagesEndRef} />
+                        </ul>
+                )
                     :
                     <div className="w-full flex-1 flex items-center justify-center flex-col gap-5">
                         <HiMiniChatBubbleBottomCenterText size={128} color={"#171717"} />
@@ -233,8 +300,25 @@ const MessagesPage = () => {
                         </div>
                     }
                     <div
-                        className="py-4 px-4 flex flex-row gap-4 items-center"
+                        className="relative py-4 px-4 flex flex-row gap-4 items-center"
                     >
+                        {newMessageAlert && (
+                            <div
+                                className="absolute -top-10 left-1/2 -translate-x-1/2 bg-red-700 hover:bg-red-600 shadow-2xl text-center px-5 py-1
+                                rounded-full cursor-pointer flex flex-row items-center gap-1"
+                                onClick={() => {
+                                    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+                                    setNewMessageAlert(false);
+                                    latestIsAtBottomRef.current = true;
+                                    prevMessagesCountRef.current = displayChats.length + pendingChats.length;
+                                }}
+                            >
+                                <span>
+                                    New Messages
+                                </span>
+                                <BiChevronDown size={20} />
+                            </div>
+                        )}
                         <input
                             ref={inputRef}
                             className={`bg-neutral-900 w-full py-1 px-2 rounded focus:ring-2 focus:ring-amber-400 focus:outline-none
