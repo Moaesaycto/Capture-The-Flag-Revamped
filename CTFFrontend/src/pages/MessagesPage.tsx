@@ -12,7 +12,8 @@ import Color from "color";
 import { useMessageContext, type ChatType } from "../components/contexts/MessageContext";
 import type { ChatMessage } from "../types";
 import Spinner from "../components/main/LoadingSpinner";
-import { BiCheck, BiChevronDown } from "react-icons/bi";
+import { BiCheck, BiChevronDown, BiSolidStar } from "react-icons/bi";
+import { RiAdminFill } from "react-icons/ri";
 
 type Chat = {
     icon: IconType,
@@ -44,10 +45,12 @@ const Message = ({ message, pending }: { message: ChatMessage, pending?: boolean
             className="flex justify-between h-4 text-xs"
             style={{ color: Color(teamColor).lighten(0.25).toString() }}
         >
-            <div className="flex flex-row gap-1.5">
+            <div className="flex flex-row gap-1.5 items-center">
+                {message.player.id === me?.id ? <BiSolidStar style={{ color: "gold" }} /> : null}
                 <span>
                     {message.player.name}
                 </span>
+                {message.player.auth ? <RiAdminFill style={{ color: "#FFB900" }} /> : null}
                 <span className="text-neutral-400">
                     {new Date(message.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
@@ -240,7 +243,10 @@ const MessagesPage = () => {
         return () => container.removeEventListener("scroll", onScroll);
     }, [openChat, displayChats.length, pendingChats.length]);
 
-
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        setNewMessageAlert(false);
+    }, [openChat]);
 
     return (
         <Page>
