@@ -33,12 +33,11 @@ const Message = ({ message, pending }: { message: ChatMessage, pending?: boolean
     const teamColor = getTeamFromId(message.team)?.color ?? "#ffffff"
 
     return <li
-        className={`py-2 pl-4 pr-2 rounded-2xl flex flex-col
+        className={`py-2 pl-4 pr-2 rounded-2xl flex flex-col bg-neutral-800
             ${isMe ? "ml-[20%] rounded-br-sm" : "mr-10 rounded-bl-sm"}
             `}
         style={{
-            backgroundColor: Color(teamColor).alpha(0.25).toString(),
-            opacity: pending ? 0.5 : 1
+            opacity: pending ? 0.2 : 1
         }}
     >
         <div
@@ -274,7 +273,7 @@ const MessagesPage = () => {
                         </div> :
                         <ul
                             ref={messageContainerRef}
-                            className="flex-1 p-5 flex flex-col gap-4 overflow-y-scroll grow shrink basis-0"
+                            className="flex-1 p-5 flex flex-col gap-4 overflow-y-scroll grow shrink basis-0 custom-scroll"
                         >
                             {displayChats.map((m) => <Message message={m} key={`msg-${m.messageId}`} />)}
                             {pendingChats.map((m) => <Message message={m} key={`pending-${m.clientId}`} pending />)}
