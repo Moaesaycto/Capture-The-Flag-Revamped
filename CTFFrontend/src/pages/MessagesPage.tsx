@@ -248,13 +248,24 @@ const MessagesPage = () => {
         setNewMessageAlert(false);
     }, [openChat]);
 
+    useEffect(() => {
+        switch (openChat) {
+            case "team":
+                setDirtyTeams(newMessageAlert);
+                break;
+            case "global":
+                setDirtyGlobal(newMessageAlert);
+                break;
+        }
+    }, [newMessageAlert])
+
     return (
         <Page>
             <div className="bg-amber-400 h-8 w-full rounded-t-md flex flex-row items-center justify-around text-black text-lg gap-2 px-1">
                 {chats.map((c, k) =>
                     <li
                         className={`list-none flex items-center gap-2 h-6 justify-center rounded-md flex-1 hover:cursor-pointer
-                            ${openChat == c.type ? "bg-amber-500 hover:bg-orange-400 shadow-xl" : "hover:bg-amber-300 "}
+                            ${openChat == c.type ? "bg-amber-600 shadow-xl" : "hover:bg-amber-300"}
                             `}
                         onClick={() => {
                             setOpenChat(c.type);
@@ -329,7 +340,7 @@ const MessagesPage = () => {
                             className={`bg-neutral-900 w-full py-1 px-2 rounded focus:ring-2 focus:ring-amber-400 focus:outline-none
                             disabled:hover:cursor-not-allowed disabled:opacity-50`}
                             value={currMessage}
-                            placeholder={`Message as ${me?.name}`}
+                            placeholder={openChat ? `Message ${openChat} chat as ${me?.name}` : `Select a channel to message`}
                             disabled={!openChat || loading}
                             onChange={(e) => setCurrMessage(e.target.value)}
                             onKeyDown={(e) => {
