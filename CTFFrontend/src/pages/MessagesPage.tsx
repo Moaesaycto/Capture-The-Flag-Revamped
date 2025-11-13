@@ -11,6 +11,8 @@ import { useGameContext } from "../components/contexts/GameContext";
 import Color from "color";
 import { useMessageContext, type ChatType } from "../components/contexts/MessageContext";
 import type { ChatMessage } from "../types";
+import Spinner from "../components/main/LoadingSpinner";
+import { BiCheck } from "react-icons/bi";
 
 type Chat = {
     icon: IconType,
@@ -23,7 +25,7 @@ type Chat = {
 
 const MAX_MESSAGE_LENGTH = import.meta.env.VITE_MAX_MESSAGE_LENGTH ?? 256;
 
-const Message = ({ message }: { message: ChatMessage }) => {
+const Message = ({ message, pending }: { message: ChatMessage, pending?: boolean }) => {
     const { me } = useAuthContext();
     const { getTeamFromId } = useGameContext();
 
@@ -31,40 +33,83 @@ const Message = ({ message }: { message: ChatMessage }) => {
     const teamColor = getTeamFromId(message.team)?.color ?? "#ffffff"
 
     return <li
-        className={`py-2 px-4 rounded-2xl flex flex-col
-            ${isMe ? "ml-10 rounded-br-sm" : "mr-10 rounded-bl-sm"}
+        className={`py-2 pl-4 pr-2 rounded-2xl flex flex-col
+            ${isMe ? "ml-[20%] rounded-br-sm" : "mr-10 rounded-bl-sm"}
             `}
         style={{
             backgroundColor: Color(teamColor).alpha(0.25).toString(),
-            opacity: "100%" // TODO: Fix this
+            opacity: pending ? 0.5 : 1
         }}
     >
-        <span
-            className="text-xs"
+        <div
+            className="flex justify-between h-4 text-xs"
             style={{ color: Color(teamColor).lighten(0.25).toString() }}
         >
-            {message.player.name}
-        </span>
+            <div className="flex flex-row gap-1.5">
+                <span>
+                    {message.player.name}
+                </span>
+                <span className="text-neutral-400">
+                    {new Date(message.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+            </div>
+            <div>
+                {pending ?
+                    <span>
+                        <Spinner size={20} />
+                    </span> :
+                    <span>
+                        <BiCheck size={20} />
+                    </span>
+                }
+            </div>
+        </div>
         <span>
             {message.message}
         </span>
+        <div className="">
+
+        </div>
     </li>
 }
 
 const MessagesPage = () => {
     const { loggedIn, me, myTeam } = useAuthContext();
-    const { openChat, setOpenChat, globalChats, teamChats, dirtyGlobal, setDirtyGlobal, dirtyTeams, setDirtyTeams } = useMessageContext();
+    const {
+        sendMessage,
+        openChat,
+        setOpenChat,
+        globalChats,
+        teamChats,
+        dirtyGlobal,
+        setDirtyGlobal,
+        dirtyTeams,
+        setDirtyTeams,
+        pendingTeamMessages,
+        pendingGlobalMessages,
+        restoreOpen,
+    } = useMessageContext();
     const navigate = useNavigate();
 
     const [chats, setChats] = useState<Chat[]>([]);
     const [currMessage, setCurrMessage] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const { sendMessage } = useMessageContext();
+
+    useEffect(() => {
+        restoreOpen();
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            setOpenChat(null);
+        };
+    }, [setOpenChat]);
 
     const canSend = useMemo<boolean>(() => {
+        const message = currMessage.trim();
         const rightState = !!openChat;
-        const textOk = currMessage.length < 1 || currMessage.length > MAX_MESSAGE_LENGTH;
+        const textOk = message.length < 1 || message.length > MAX_MESSAGE_LENGTH;
 
         return !loading && rightState && textOk;
     }, [openChat, currMessage, loading]);
@@ -76,6 +121,15 @@ const MessagesPage = () => {
             default: return [];
         }
     }, [openChat, globalChats, teamChats]);
+
+    const pendingChats = useMemo<ChatMessage[]>(() => {
+        switch (openChat) {
+            case "global": return pendingGlobalMessages;
+            case "team": return pendingTeamMessages;
+            default: return [];
+        }
+    }, [openChat, pendingGlobalMessages, pendingTeamMessages])
+
 
     useEffect(() => {
         if (!loggedIn) navigate("/");
@@ -110,15 +164,15 @@ const MessagesPage = () => {
     const onSubmit = useCallback(() => {
         setLoading(true);
         setError(null);
-
         sendMessage(currMessage)
-            .then(e => console.log(e))
+            .then(() => {
+                setCurrMessage("");
+            })
             .catch(e => setError(e?.message ?? e))
             .finally(() => {
                 setLoading(false);
-                setCurrMessage("");
             });
-    }, [sendMessage, currMessage])
+    }, [sendMessage, currMessage]);
 
     return (
         <Page>
@@ -141,10 +195,19 @@ const MessagesPage = () => {
                 )}
             </div>
             <div className="bg-neutral-950 w-full h-full rounded-b-md flex flex-col">
-                {openChat ?
-                    <ul className="flex-1 p-5 flex flex-col gap-4">
-                        {displayChats.map((m, k) => <Message message={m} key={k} />)}
-                    </ul> :
+                {openChat ? (
+                    displayChats.length + pendingChats.length === 0 ?
+                        <div className="w-full flex-1 flex items-center justify-center flex-col gap-5">
+                            {openChat === "global" ? <PiGlobeBold size={128} color={"#171717"} /> : <FaFlag size={128} color={"#171717"} />}
+                            <span className="text-neutral-500 w-1/2 text-center">
+                                Nobody has messaged in {openChat} chat
+                            </span>
+                        </div> :
+                        <ul className="flex-1 p-5 flex flex-col gap-4">
+                            {displayChats.map((m) => <Message message={m} key={`msg-${m.messageId}`} />)}
+                            {pendingChats.map((m) => <Message message={m} key={`pending-${m.clientId}`} pending />)}
+                        </ul>)
+                    :
                     <div className="w-full flex-1 flex items-center justify-center flex-col gap-5">
                         <HiMiniChatBubbleBottomCenterText size={128} color={"#171717"} />
                         <span className="text-neutral-500 w-1/2 text-center">
@@ -171,7 +234,7 @@ const MessagesPage = () => {
                             value={currMessage}
                             placeholder={`Message as ${me?.name}`}
                             disabled={!openChat || loading}
-                            onChange={(e) => setCurrMessage(e.target.value.trim())}
+                            onChange={(e) => setCurrMessage(e.target.value)}
                             onKeyDown={(e) => { if (e.key === "Enter") onSubmit(); }}
                         />
                         <button

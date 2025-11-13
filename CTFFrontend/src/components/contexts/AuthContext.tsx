@@ -3,6 +3,7 @@ import { apiHealth } from "../../services/api";
 import type { Player, Team } from "../../types";
 import { playerMe } from "../../services/PlayerApi";
 import { teamGet } from "../../services/TeamApi";
+import { useNavigate } from "react-router-dom";
 
 const JWT_KEY = import.meta.env.VITE_JWT_KEY;
 
@@ -23,6 +24,8 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+    const navigate = useNavigate();
+    
     const [healthy, setHealthy] = useState<boolean | null>(null);
     const [jwt, setJwt] = useState<string | null>(() => localStorage.getItem(JWT_KEY));
     const [loggedIn, setLoggedIn] = useState<boolean>(false);
@@ -43,6 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setMyTeam(null);
         setLoggedIn(false);
         localStorage.removeItem(JWT_KEY);
+        navigate("/");
     }, []);
 
     useEffect(() => {

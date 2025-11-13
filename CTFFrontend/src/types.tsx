@@ -49,8 +49,10 @@ export type ChatMessage = {
     message: string,
     team: string,
     messageId: number,
+    clientId?: number,
+    serverId?: number,
     time: number,
-    status?: DeliveryStatus,
+    pending?: DeliveryStatus,
 }
 
 export type MessageResponse = {

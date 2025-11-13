@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { Player, Team } from "../../types";
-import { gameStatus } from "../../services/GameApi";
-import { createWebSocket } from "../../services/api";
 import Color from "color";
 import { RiAdminFill } from "react-icons/ri";
 import { useAuthContext } from "../contexts/AuthContext";
 import { BiSolidStar } from "react-icons/bi";
 import { TbTrash } from "react-icons/tb";
 import { playerRemove } from "../../services/PlayerApi";
+import { useGameContext } from "../contexts/GameContext";
 
 const NameRow = ({ player, index }: { player?: Player, index: number }) => {
     const { me, jwt } = useAuthContext();
@@ -38,45 +37,7 @@ const NameRow = ({ player, index }: { player?: Player, index: number }) => {
 }
 
 const PlayerList = () => {
-    const [teams, setTeams] = useState<Team[]>([]);
-    const [players, setPlayers] = useState<Player[]>([]);
-    const { logout, me } = useAuthContext();
-
-    useEffect(() => {
-        gameStatus().then(res => {
-            setTeams(res.teams);
-            setPlayers(res.players);
-        });
-    }, [])
-
-    const parseMessage = (msg: string) => {
-        const newP = msg.startsWith("joined");
-        const match = msg.match(/\{.*$/s);
-
-        if (!match) return;
-        const player: Player = JSON.parse(match[0])
-
-        console.log(player, newP);
-
-        if (newP) {
-            setPlayers(prev => [...prev, player]);
-        } else {
-            setPlayers(prev => prev.filter(p => p.id !== player.id));
-            if (player.id === me?.id) logout();
-        }
-    }
-
-    useEffect(() => {
-        const socket = createWebSocket(
-            "players",
-            undefined,
-            parseMessage
-        );
-
-        return () => {
-            socket.close();
-        };
-    }, []);
+    const { players, teams } = useGameContext();
 
     const TeamDisplay = ({ team, players, maxSize }: { team: Team, players: Player[], maxSize: number }) => {
         const missingRows = maxSize - players.length;
