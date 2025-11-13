@@ -3,41 +3,48 @@ import { useAuthContext } from "../contexts/AuthContext";
 import Color from "color";
 import { RxExit } from "react-icons/rx";
 import { playerLeave } from "../../services/PlayerApi";
+import { useCallback } from "react";
+import Spinner from "./LoadingSpinner";
 
 const PlayerInfo = () => {
     const { me, myTeam, jwt, logout } = useAuthContext();
 
-    const onClick = () => {
+    const onClick = useCallback(() => {
         playerLeave(jwt);
         logout();
-    }
+    }, [jwt, logout])
 
     return (
-        <div
-            className="bg-neutral-800 p-2 rounded border-2"
-            style={{
-                color: myTeam?.color,
-                borderColor: myTeam?.color,
-                backgroundColor: Color(myTeam?.color).alpha(0.25).toString(),
-            }}
-        >
-            <div className="flex flex-row justify-between items-center">
-                <div className="flex flex-col items-left">
-                    <span className="text-2xl px-1">{me?.name}</span>
-                    <div className="flex flex-row items-center gap-2 px-3">
-                        <FaFlag color={myTeam?.color} />
-                        <span className="text-white">You are playing for team:</span>{myTeam?.name}
+        (myTeam && me ?
+            <div
+                className="bg-neutral-800 p-2 rounded border-2"
+                style={{
+                    color: myTeam?.color,
+                    borderColor: myTeam?.color,
+                    backgroundColor: Color(myTeam?.color).alpha(0.25).toString(),
+                }}
+            >
+                <div className="flex flex-row justify-between items-center">
+                    <div className="flex flex-col items-left">
+                        <span className="text-2xl px-1">{me?.name}</span>
+                        <div className="flex flex-row items-center gap-2 px-3">
+                            <FaFlag color={myTeam?.color} />
+                            <span className="text-white">You are playing for team:</span>{myTeam?.name}
+                        </div>
                     </div>
-                </div>
-                <button
-                    className="h-full w-auto text-red-500 border-2 border-red-800 bg-red-950 p-2 rounded flex 
+                    <button
+                        className="h-full w-auto text-red-500 border-2 border-red-800 bg-red-950 p-2 rounded flex 
                                hover:cursor-pointer items-center justify-center"
-                    onClick={onClick}
-                >
-                    <RxExit className="h-8 w-8" />
-                </button>
+                        onClick={onClick}
+                    >
+                        <RxExit className="h-8 w-8" />
+                    </button>
+                </div>
+            </div> :
+            <div className="w-full flex items-center justify-center">
+                <Spinner />
             </div>
-        </div>
+        )
     )
 }
 

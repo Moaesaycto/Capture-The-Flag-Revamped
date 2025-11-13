@@ -73,7 +73,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             socket.close();
         };
-    }, []);
+    }, [logout, me]);
 
     const getTeamFromId = useCallback((teamId: string) => {
         return teams.find(t => t.id === teamId) ?? null;

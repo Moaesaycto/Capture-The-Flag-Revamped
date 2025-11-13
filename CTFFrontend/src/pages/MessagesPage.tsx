@@ -1,6 +1,6 @@
 import Page from "../components/main/Page";
 import { useAuthContext } from "../components/contexts/AuthContext";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PiGlobeBold } from "react-icons/pi";
 import type { IconType } from "react-icons";
@@ -90,6 +90,7 @@ const MessagesPage = () => {
         restoreOpen,
     } = useMessageContext();
     const navigate = useNavigate();
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const [chats, setChats] = useState<Chat[]>([]);
     const [currMessage, setCurrMessage] = useState<string>("");
@@ -109,9 +110,9 @@ const MessagesPage = () => {
     const canSend = useMemo<boolean>(() => {
         const message = currMessage.trim();
         const rightState = !!openChat;
-        const textOk = message.length < 1 || message.length > MAX_MESSAGE_LENGTH;
-
+        const textOk = message.length > 0 && message.length <= MAX_MESSAGE_LENGTH;
         return !loading && rightState && textOk;
+
     }, [openChat, currMessage, loading]);
 
     const displayChats = useMemo<ChatMessage[]>(() => {
@@ -174,6 +175,12 @@ const MessagesPage = () => {
             });
     }, [sendMessage, currMessage]);
 
+    useEffect(() => {
+        if (inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [currMessage]);
+
     return (
         <Page>
             <div className="bg-amber-400 h-8 w-full rounded-t-md flex flex-row items-center justify-around text-black text-lg gap-2 px-1">
@@ -229,19 +236,23 @@ const MessagesPage = () => {
                         className="py-4 px-4 flex flex-row gap-4 items-center"
                     >
                         <input
+                            ref={inputRef}
                             className={`bg-neutral-900 w-full py-1 px-2 rounded focus:ring-2 focus:ring-amber-400 focus:outline-none
                             disabled:hover:cursor-not-allowed disabled:opacity-50`}
                             value={currMessage}
                             placeholder={`Message as ${me?.name}`}
                             disabled={!openChat || loading}
                             onChange={(e) => setCurrMessage(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === "Enter") onSubmit(); }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && !canSend) return;
+                                if (e.key === "Enter") onSubmit();
+                            }}
                         />
                         <button
                             className={`bg-amber-400 text-black w-10 h-7.5 rounded flex justify-center items-center
                             hover:bg-amber-500 hover:cursor-pointer disabled:hover:cursor-not-allowed
                             disabled:hover:bg-amber-400 disabled:opacity-50`}
-                            disabled={canSend}
+                            disabled={!canSend}
                             onClick={onSubmit}
                         >
                             <FaPaperPlane />

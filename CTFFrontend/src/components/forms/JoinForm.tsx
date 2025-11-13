@@ -93,6 +93,7 @@ const JoinForm = () => {
                             autoComplete="off"
                             onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
                             onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
+                            value={name.slice(0, 32)}
                         />
                         <input
                             className="appearance-none h-7 w-7 bg-black checked:bg-amber-300 rounded"
