@@ -38,7 +38,6 @@ const MessageInner = ({ message, pending }: { message: ChatMessage, pending?: bo
                     <span>{message.player.name}</span>
                     {message.player.auth ? <RiAdminFill style={{ color: "#FFB900" }} /> : null}
                     <span className="text-neutral-400">{formattedTime}</span>
-                    <span className="text-neutral-400">{message.messageId}</span>
                 </div>
                 <div>{pending ? <Spinner size={20} /> : <BiCheck size={20} />}</div>
             </div>
