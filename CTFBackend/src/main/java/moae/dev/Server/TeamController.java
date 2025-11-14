@@ -6,6 +6,7 @@ import moae.dev.Game.Team;
 import moae.dev.Requests.DeclareVictoryRequest;
 import moae.dev.Requests.MessageRequest;
 import moae.dev.Requests.TeamGetRequest;
+import moae.dev.Utils.MessagePage;
 import moae.dev.Utils.Validation;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -59,7 +60,7 @@ public class TeamController {
     UUID playerId = UUID.fromString(jwt.getSubject());
 
     if (!game.isValidPlayer(playerId)) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player not found");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player not found");
     }
 
     if (!game.isPlayerOnTeam(playerId, teamId)) {
@@ -74,5 +75,31 @@ public class TeamController {
     }
 
     return Map.of("id", msgId);
+  }
+
+  @GetMapping("/message/{teamId}")
+  public Map<String, Object> getMessages(
+      @PathVariable("teamId") UUID teamId,
+      @RequestParam(name = "start", defaultValue = "0") Integer start,
+      @RequestParam(name = "count", defaultValue = "0") Integer count,
+      @AuthenticationPrincipal Jwt jwt) {
+    UUID playerId = UUID.fromString(jwt.getSubject());
+
+    if (!game.isValidPlayer(playerId)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player not found");
+    }
+
+    if (!game.isValidTeam(teamId)) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team not found");
+    }
+
+    game.isPlayerOnTeam(playerId, teamId);
+
+    Team team = game.getTeam(teamId);
+    MessagePage page = team.getMessages(start, count);
+
+    return Map.of(
+        "messages", page.messages(),
+        "end", page.end());
   }
 }

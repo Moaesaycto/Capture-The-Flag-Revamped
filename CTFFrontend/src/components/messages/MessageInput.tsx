@@ -1,6 +1,7 @@
 import { FaPaperPlane } from "react-icons/fa";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FC } from "react";
+import { useMessageContext } from "../contexts/MessageContext";
 
 interface MessageInputProps<T = any> {
     value: string;
@@ -19,15 +20,17 @@ const MessageInput: FC<MessageInputProps> = ({
     maxLength = 256,
     placeholder = "",
 }) => {
+    const { isOpenChatLoading, chatError } = useMessageContext();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const inputRef = useRef<HTMLInputElement | null>(null);
 
     const canSend = useMemo(() => {
+        if (isOpenChatLoading || chatError) return false;
         const message = value.trim();
         const textOk = message.length > 0 && message.length <= maxLength;
         return !loading && !disabled && textOk;
-    }, [value, loading, disabled, maxLength]);
+    }, [value, loading, disabled, maxLength, isOpenChatLoading, chatError]);
 
     // Reset focus after sent
     useEffect(() => {

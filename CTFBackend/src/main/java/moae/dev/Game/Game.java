@@ -6,6 +6,8 @@ import moae.dev.Server.AppConfig;
 import moae.dev.Sockets.SocketConnectionHandler;
 import moae.dev.Sockets.StateSocketConnectionHandler;
 import moae.dev.Utils.ChatMessage;
+import moae.dev.Utils.MessagePage;
+import moae.dev.Utils.MessageUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -138,32 +140,8 @@ public class Game {
     return newId;
   }
 
-  public record MessagePage(List<ChatMessage> messages, boolean end) {}
-
   public MessagePage getMessages(Integer start, Integer count) {
-    List<ChatMessage> result = new ArrayList<>();
-    if (messages.isEmpty() || count <= 0) return new MessagePage(result, true);
-
-    // Find the starting position (highest message with id <= start)
-    int startIdx = -1;
-    for (int i = messages.size() - 1; i >= 0; i--) {
-      if (messages.get(i).messageId() <= start) {
-        startIdx = i;
-        break;
-      }
-    }
-
-    // If no messages found <= start, we're at the end
-    if (startIdx == -1) return new MessagePage(result, true);
-
-    // Collect messages going backwards from startIdx
-    for (int i = startIdx; i >= 0 && result.size() < count; i--) {
-      result.addFirst(messages.get(i)); // Add to front to maintain order
-    }
-
-    // We've reached the end if we started from index 0 or collected fewer than requested
-    boolean atEnd = (startIdx - count + 1 <= 0);
-    return new MessagePage(result, atEnd);
+    return MessageUtils.getMessages(start, count, messages);
   }
 
   // ----- Players -----
@@ -248,6 +226,10 @@ public class Game {
     Integer newId = counter.incrementAndGet();
     getTeam(team).sendMessage(getPlayer(sender), content, newId);
     return newId;
+  }
+
+  public boolean isValidTeam(UUID team) {
+      return teams.stream().anyMatch(p -> p.getID().equals(team));
   }
 
   public boolean declareVictory(UUID team) {

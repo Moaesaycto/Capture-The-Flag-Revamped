@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createWebSocket } from "../../services/api";
 import { useAuthContext } from "./AuthContext";
-import { teamMessage } from "../../services/TeamApi";
+import { getTeamMessages, teamMessage } from "../../services/TeamApi";
 import type { ChatMessage, ChatType, MessageResponse } from "../../types";
 import { getGlobalMessages, globalMessage } from "../../services/GameApi";
 
@@ -20,12 +20,13 @@ interface MessageContextValue {
     restoreOpen: () => void,
     loadingGlobalChats: boolean,
     loadingTeamChats: boolean,
-    errorGlobal: string | null,
-    errorTeam: string | null,
+    chatError: string | null,
     canLoadMoreGlobal: boolean,
     canLoadMoreTeam: boolean,
     displayChats: ChatMessage[],
     pendingChats: ChatMessage[],
+    isOpenChatLoading: boolean,
+    setOpenChatDirty: (dirty: boolean) => void;
 }
 
 const MessageContext = createContext<MessageContextValue | undefined>(undefined);
@@ -57,6 +58,7 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
     const wsTeamRef = useRef<WebSocket | null>(null);
 
     useEffect(() => {
+        if (!myTeam) return;
         getGlobalMessages(2147483647, 20, jwt!)
             .then((e) => {
                 setGlobalChats(e.messages);
@@ -64,7 +66,15 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
             })
             .catch((e) => setErrorGlobal(e.message))
             .finally(() => setLoadingGlobalChats(false));
-    }, []);
+
+        getTeamMessages(2147483647, 20, myTeam?.id!, jwt!)
+            .then((e) => {
+                setTeamChats(e.messages);
+                setCanLoadMoreTeam(!e.end);
+            })
+            .catch((e) => setErrorTeam(e.message))
+            .finally(() => setLoadingTeamChats(false));
+    }, [myTeam]);
 
     useEffect(() => {
         const wsGlobal = createWebSocket(
@@ -79,7 +89,7 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
                     )
                 ));
                 setGlobalChats(prev => [...prev, msg]);
-                setDirtyGlobal(openChat !== "global");
+                if (msg.player?.id !== me?.id) setDirtyGlobal(openChat !== "global");
             }
         );
         wsGlobalRef.current = wsGlobal;
@@ -98,7 +108,7 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
                         )
                     ));
                     setTeamChats(prev => [...prev, msg]);
-                    setDirtyTeams(openChat !== "team");
+                    if (msg.player?.id !== me?.id) setDirtyTeams(openChat !== "team");
                 }
             );
             wsTeamRef.current = wsTeam;
@@ -110,7 +120,7 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
             wsGlobalRef.current = null;
             wsTeamRef.current = null;
         }
-    }, [jwt, myTeam, openChat]);
+    }, [jwt, myTeam]);
 
 
     const sendMessage = useCallback(async (message: string): Promise<MessageResponse> => {
@@ -195,7 +205,6 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
         };
     }, [lastOpenChat]);
 
-
     const displayChats = useMemo<ChatMessage[]>(() => {
         switch (openChat) {
             case "global": return globalChats;
@@ -212,29 +221,60 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [openChat, pendingGlobalMessages, pendingTeamMessages]);
 
+    const isOpenChatLoading = useMemo<boolean>(() => {
+        switch (openChat) {
+            case "global": return loadingGlobalChats;
+            case "team": return loadingTeamChats;
+            default: return false;
+        }
+    }, [openChat, loadingGlobalChats, loadingTeamChats]);
+
+    const setOpenChatDirty = useCallback((dirty: boolean) => {
+        switch (openChat) {
+            case "global": return setDirtyGlobal(dirty);
+            case "team": return setDirtyTeams(dirty);
+        }
+    }, [openChat, setDirtyGlobal, setDirtyTeams]);
+
+    const chatError = useMemo<string | null>(() => {
+        switch (openChat) {
+            case "global": return errorGlobal;
+            case "team": return errorTeam;
+            default: return null;
+        }
+    }, [openChat, errorTeam, errorGlobal]);
+
+
+    const providerValue = useMemo(() => ({
+        openChat,
+        setOpenChat,
+        sendMessage,
+        dirtyTeams,
+        setDirtyTeams,
+        dirtyGlobal,
+        setDirtyGlobal,
+        globalChats,
+        teamChats,
+        pendingTeamMessages,
+        pendingGlobalMessages,
+        restoreOpen,
+        loadingGlobalChats,
+        loadingTeamChats,
+        canLoadMoreGlobal,
+        canLoadMoreTeam,
+        displayChats,
+        pendingChats,
+        isOpenChatLoading,
+        setOpenChatDirty,
+        chatError,
+    }), [
+        openChat, sendMessage, dirtyTeams, dirtyGlobal, globalChats, teamChats,
+        pendingTeamMessages, pendingGlobalMessages, loadingGlobalChats, loadingTeamChats,
+        canLoadMoreGlobal, canLoadMoreTeam, displayChats, pendingChats, isOpenChatLoading,
+        chatError
+    ]);
     return (
-        <MessageContext.Provider value={{
-            openChat,
-            setOpenChat,
-            sendMessage,
-            dirtyTeams,
-            setDirtyTeams,
-            dirtyGlobal,
-            setDirtyGlobal,
-            globalChats,
-            teamChats,
-            pendingTeamMessages,
-            pendingGlobalMessages,
-            restoreOpen,
-            loadingGlobalChats,
-            loadingTeamChats,
-            errorGlobal,
-            errorTeam,
-            canLoadMoreGlobal,
-            canLoadMoreTeam,
-            displayChats,
-            pendingChats,
-        }}>
+        <MessageContext.Provider value={providerValue}>
             {children}
         </MessageContext.Provider>
 

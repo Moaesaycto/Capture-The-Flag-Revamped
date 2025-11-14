@@ -2,6 +2,8 @@ package moae.dev.Game;
 
 import moae.dev.Sockets.SocketConnectionHandler;
 import moae.dev.Utils.ChatMessage;
+import moae.dev.Utils.MessagePage;
+import moae.dev.Utils.MessageUtils;
 
 import java.util.*;
 
@@ -59,9 +61,7 @@ public class Team {
     }
   }
 
-  public Map<Map<String, Object>, List<ChatMessage>> getMessages() {
-    Map<Map<String, Object>, List<ChatMessage>> map = new HashMap<>();
-    messages.forEach(m -> map.computeIfAbsent(m.player().toMap(), k -> new ArrayList<>()).add(m));
-    return map;
+  public MessagePage getMessages(Integer start, Integer count) {
+    return MessageUtils.getMessages(start, count, messages);
   }
 }

@@ -1,4 +1,4 @@
-import { PiGlobeBold } from "react-icons/pi";
+import { PiGlobeBold, PiWifiXBold } from "react-icons/pi";
 import type { ChatMessage } from "../../types";
 import { FaFlag } from "react-icons/fa";
 import { useAuthContext } from "../contexts/AuthContext";
@@ -7,57 +7,56 @@ import Color from "color";
 import { BiCheck, BiChevronDown, BiSolidStar } from "react-icons/bi";
 import { RiAdminFill } from "react-icons/ri";
 import Spinner from "../main/LoadingSpinner";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMessageContext } from "../contexts/MessageContext";
 
-const Message = ({ message, pending }: { message: ChatMessage, pending?: boolean }) => {
+const MessageInner = ({ message, pending }: { message: ChatMessage, pending?: boolean }) => {
     const { me } = useAuthContext();
     const { getTeamFromId } = useGameContext();
 
     const isMe = me?.id === message.player.id;
-    const teamColor = getTeamFromId(message.team)?.color ?? "#ffffff"
+    const teamColor = getTeamFromId(message.team)?.color ?? "#ffffff";
 
-    return <li
-        className={`py-2 pl-4 pr-2 rounded-2xl flex flex-col bg-neutral-800
-            ${isMe ? "ml-[20%] rounded-br-sm" : "mr-10 rounded-bl-sm"}
-            `}
-        style={{
-            opacity: pending ? 0.2 : 1
-        }}
-    >
-        <div
-            className="flex justify-between h-4 text-xs"
-            style={{ color: Color(teamColor).lighten(0.25).toString() }}
+    const lightColor = useMemo(() => Color(teamColor).lighten(0.25).toString(), [teamColor]);
+    const formattedTime = useMemo(
+        () => new Date(message.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        [message.time]
+    );
+    const containerStyle = useMemo(() => ({ opacity: pending ? 0.2 : 1 }), [pending]);
+    const headerStyle = useMemo(() => ({ color: lightColor }), [lightColor]);
+
+    return (
+        <li
+            className={`py-2 pl-4 pr-2 rounded-2xl flex flex-col bg-neutral-800
+        ${isMe ? "ml-[20%] rounded-br-sm" : "mr-10 rounded-bl-sm"}`}
+            style={containerStyle}
         >
-            <div className="flex flex-row gap-1.5 items-center">
-                {message.player.id === me?.id ? <BiSolidStar style={{ color: "gold" }} /> : null}
-                <span>
-                    {message.player.name}
-                </span>
-                {message.player.auth ? <RiAdminFill style={{ color: "#FFB900" }} /> : null}
-                <span className="text-neutral-400">
-                    {new Date(message.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
+            <div className="flex justify-between h-4 text-xs" style={headerStyle}>
+                <div className="flex flex-row gap-1.5 items-center">
+                    {message.player.id === me?.id ? <BiSolidStar style={{ color: "gold" }} /> : null}
+                    <span>{message.player.name}</span>
+                    {message.player.auth ? <RiAdminFill style={{ color: "#FFB900" }} /> : null}
+                    <span className="text-neutral-400">{formattedTime}</span>
+                    <span className="text-neutral-400">{message.messageId}</span>
+                </div>
+                <div>{pending ? <Spinner size={20} /> : <BiCheck size={20} />}</div>
             </div>
-            <div>
-                {pending ?
-                    <span>
-                        <Spinner size={20} />
-                    </span> :
-                    <span>
-                        <BiCheck size={20} />
-                    </span>
-                }
-            </div>
-        </div>
-        <span>
-            {message.message}
-        </span>
-        <div className="">
+            <span>{message.message}</span>
+        </li>
+    );
+};
 
-        </div>
-    </li>
-}
+const Message = React.memo(MessageInner, (prev, next) => {
+    return (
+        prev.pending === next.pending &&
+        prev.message.messageId === next.message.messageId &&
+        prev.message.clientId === next.message.clientId &&
+        prev.message.message === next.message.message &&
+        prev.message.time === next.message.time &&
+        prev.message.player?.id === next.message.player?.id &&
+        prev.message.team === next.message.team
+    );
+});
 
 
 interface ChatWindowProps {
@@ -74,7 +73,7 @@ export const ChatWindow = ({
     openChat
 }: ChatWindowProps) => {
     const { me } = useAuthContext();
-    const { setDirtyTeams, setDirtyGlobal } = useMessageContext();
+    const { setOpenChatDirty, isOpenChatLoading, chatError } = useMessageContext();
 
     const [newMessageAlert, setNewMessageAlert] = useState<boolean>(false);
 
@@ -85,13 +84,13 @@ export const ChatWindow = ({
 
     const totalMessages = messages.length + pendingMessages.length;
 
-    const sortedMessages = useMemo(() => {
-        return [...messages].sort((a, b) => a.messageId - b.messageId);
-    }, [messages]);
-
-    const sortedPending = useMemo(() => {
-        return [...pendingMessages].sort((a, b) => a.messageId - b.messageId);
-    }, [pendingMessages]);
+    const allSorted = useMemo(() => {
+        const visible = messages.map((m) => ({ ...m, __pending: false }));
+        const pending = pendingMessages.map((m) => ({ ...m, __pending: true }));
+        const merged = visible.concat(pending);
+        merged.sort((a, b) => a.messageId - b.messageId);
+        return merged;
+    }, [messages, pendingMessages]);
 
     // Scroll to bottom when messages change
     useEffect(() => {
@@ -106,6 +105,7 @@ export const ChatWindow = ({
         if (isFromMe || latestIsAtBottomRef.current) {
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
             setNewMessageAlert(false);
+            setOpenChatDirty(false);
         } else {
             // User scrolled up, do not scroll
             setNewMessageAlert(true);
@@ -118,27 +118,31 @@ export const ChatWindow = ({
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
-
         const tolerance = 4;
         const onScroll = () => {
             const atBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - tolerance;
             latestIsAtBottomRef.current = atBottom;
-
-            // If user scrolls to bottom, hide new message alert
-            if (atBottom && newMessageAlert) {
+            // Dismiss badge whenever the user actually reaches the bottom
+            if (atBottom) {
                 setNewMessageAlert(false);
+                setOpenChatDirty(false);
             }
         };
-
         container.addEventListener("scroll", onScroll, { passive: true });
+        // set initial value
+        latestIsAtBottomRef.current = container.scrollTop + container.clientHeight >= container.scrollHeight - tolerance;
         return () => container.removeEventListener("scroll", onScroll);
-    }, [newMessageAlert]);
+    }, []);
 
     // Handler for clicking "New Messages" badge
     const handleNewMessageAlertClick = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-        latestIsAtBottomRef.current = true;
-        prevMessagesCountRef.current = messages.length + pendingMessages.length;
+        requestAnimationFrame(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+            latestIsAtBottomRef.current = true;
+            setNewMessageAlert(false);
+            setOpenChatDirty(false);
+            prevMessagesCountRef.current = messages.length + pendingMessages.length;
+        });
     };
 
     useEffect(() => {
@@ -146,17 +150,29 @@ export const ChatWindow = ({
         setNewMessageAlert(false);
     }, [openChat]);
 
-    useEffect(() => {
-        switch (openChat) {
-            case "team":
-                setDirtyTeams(newMessageAlert);
-                break;
-            case "global":
-                setDirtyGlobal(newMessageAlert);
-                break;
-        }
-    }, [newMessageAlert]);
 
+
+    if (chatError) {
+        return (
+            <div className="w-full flex-1 flex items-center justify-center flex-col gap-5">
+                <PiWifiXBold size={128} className="text-red-500 mb-4 opacity-30" />
+                <span className="text-neutral-500 w-1/2 text-center">
+                    Cannot connect to {openChat} message server...
+                </span>
+            </div>
+        )
+    }
+
+    if (isOpenChatLoading) {
+        return (
+            <div className="w-full flex-1 flex items-center justify-center flex-col gap-5">
+                <Spinner size={128} />
+                <span className="text-neutral-500 w-1/2 text-center">
+                    Retrieving {openChat} chats...
+                </span>
+            </div>
+        );
+    }
 
     if (totalMessages === 0) {
         return (
@@ -179,12 +195,15 @@ export const ChatWindow = ({
                 ref={containerRef}
                 className="flex-1 p-5 flex flex-col gap-4 overflow-y-scroll grow shrink basis-0 custom-scroll"
             >
-                {canLoadMore && <button>Load more</button>}
-                {sortedMessages.map((m) => (
-                    <Message message={m} key={`msg-${m.messageId}`} />
-                ))}
-                {sortedPending.map((m) => (
-                    <Message message={m} key={`pending-${m.clientId}`} pending />
+                {canLoadMore && <button className="w-full bg-neutral-900 hover:bg-neutral-800 hover:cursor-pointer rounded-full" >
+                    Load more
+                </button>}
+                {allSorted.map((m) => (
+                    <Message
+                        message={m}
+                        key={m.__pending ? `pending-${m.clientId}` : `msg-${m.messageId}`}
+                        pending={m.__pending}
+                    />
                 ))}
                 <div ref={messagesEndRef} />
             </ul>

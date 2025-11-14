@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import moae.dev.Game.Game;
 import moae.dev.Requests.MessageRequest;
 import moae.dev.Requests.SettingsRequest;
+import moae.dev.Utils.MessagePage;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -63,7 +64,7 @@ public class GameController {
       @RequestParam(name = "count", defaultValue = "10") Integer count,
       @AuthenticationPrincipal Jwt jwt) {
 
-    Game.MessagePage page = game.getMessages(start, count);
+    MessagePage page = game.getMessages(start, count);
 
     return Map.of(
         "messages", page.messages(),
