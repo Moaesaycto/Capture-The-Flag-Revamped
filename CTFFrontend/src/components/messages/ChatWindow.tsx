@@ -10,6 +10,7 @@ import Spinner from "../main/LoadingSpinner";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMessageContext } from "../contexts/MessageContext";
 
+
 const MessageInner = ({ message, pending }: { message: ChatMessage, pending?: boolean }) => {
     const { me } = useAuthContext();
     const { getTeamFromId } = useGameContext();
@@ -73,33 +74,49 @@ export const ChatWindow = ({
     openChat
 }: ChatWindowProps) => {
     const { me } = useAuthContext();
-    const { setOpenChatDirty, isOpenChatLoading, chatError } = useMessageContext();
+    const { setOpenChatDirty, isOpenChatLoading, chatError, getMoreMessagesOpenChat, isLoadingMore } = useMessageContext();
 
     const [newMessageAlert, setNewMessageAlert] = useState<boolean>(false);
 
-    const containerRef = useRef<HTMLUListElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const latestIsAtBottomRef = useRef<boolean>(true);
     const prevMessagesCountRef = useRef<number>(0);
+    const prevLastMessageIdRef = useRef<number | null>(null);
+    const isLoadingMoreRef = useRef(false);
+    const isScrollbarDraggingRef = useRef(false);
+    const pendingLoadRef = useRef(false);
 
     const totalMessages = messages.length + pendingMessages.length;
 
+    // Sorted list of messages
     const allSorted = useMemo(() => {
-        const visible = messages.map((m) => ({ ...m, __pending: false }));
-        const pending = pendingMessages.map((m) => ({ ...m, __pending: true }));
-        const merged = visible.concat(pending);
-        merged.sort((a, b) => a.messageId - b.messageId);
+        const visible = messages.map(m => ({ ...m, __pending: false }));
+        const pending = pendingMessages.map(m => ({ ...m, __pending: true }));
+
+        const merged = [...visible, ...pending].filter((v, i, arr) =>
+            arr.findIndex(x => x.messageId === v.messageId && x.clientId === v.clientId) === i
+        );
+
+        merged.sort((a, b) => (a.serverId ?? a.messageId) - (b.serverId ?? b.messageId));
         return merged;
     }, [messages, pendingMessages]);
 
-    // Scroll to bottom when messages change
+
+    // Handle logic for scrolling and notifying when new messages come in
     useEffect(() => {
-        const total = messages.length + pendingMessages.length;
+        const total = allSorted.length;
         if (total === prevMessagesCountRef.current) return;
 
-        const lastPending = pendingMessages.length ? pendingMessages[pendingMessages.length - 1] : null;
-        const lastDisplayed = messages.length ? messages[messages.length - 1] : null;
-        const last = lastPending ?? lastDisplayed;
+        const last = allSorted.length ? allSorted[allSorted.length - 1] : null;
+        const lastId = last?.messageId ?? null;
+
+        const prevLastId = prevLastMessageIdRef.current;
+        if (prevLastId !== null && lastId === prevLastId) {
+            prevMessagesCountRef.current = total;
+            return;
+        }
+
         const isFromMe = !!last && last.player?.id === me?.id;
 
         if (isFromMe || latestIsAtBottomRef.current) {
@@ -107,50 +124,109 @@ export const ChatWindow = ({
             setNewMessageAlert(false);
             setOpenChatDirty(false);
         } else {
-            // User scrolled up, do not scroll
+            // No scrolling
             setNewMessageAlert(true);
         }
 
         prevMessagesCountRef.current = total;
-    }, [messages, pendingMessages, me]);
+        prevLastMessageIdRef.current = lastId;
+    }, [allSorted, me]);
 
-    // Track manual scroll to update latestIsAtBottomRef
+    // The infinite scroll logic
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
-        const tolerance = 4;
+
+        const bottomTolerance = 4;
+
+        // Track scrollbar dragging
+        const onMouseDown = (e: MouseEvent) => {
+            // If the user clicked on the scrollbar (thumb or background)
+            const target = e.target as HTMLElement;
+            if (target === container) {
+                const rect = container.getBoundingClientRect();
+                const clickX = e.clientX;
+                if (clickX > rect.right - 20) {
+                    // Freeze infinite load
+                    isScrollbarDraggingRef.current = true;
+                }
+            }
+        };
+
+        const onMouseUp = () => {
+            if (isScrollbarDraggingRef.current) {
+                isScrollbarDraggingRef.current = false;
+                // Check if we should load more now that dragging is done
+                if (pendingLoadRef.current) {
+                    pendingLoadRef.current = false;
+                    triggerLoad();
+                }
+            }
+        };
+
+        const triggerLoad = () => {
+            if (isLoadingMoreRef.current || !canLoadMore || isLoadingMore || allSorted.length === 0) {
+                return;
+            }
+
+            isLoadingMoreRef.current = true;
+
+            const oldScrollHeight = container.scrollHeight;
+            const oldScrollTop = container.scrollTop;
+
+            getMoreMessagesOpenChat(allSorted[0].messageId - 1);
+
+            const checkAndAdjust = () => {
+                if (container.scrollHeight === oldScrollHeight) {
+                    requestAnimationFrame(checkAndAdjust);
+                } else {
+                    const scrollDiff = container.scrollHeight - oldScrollHeight;
+                    container.scrollTop = oldScrollTop + scrollDiff;
+                    isLoadingMoreRef.current = false;
+                }
+            };
+
+            requestAnimationFrame(checkAndAdjust);
+        };
+
         const onScroll = () => {
-            const atBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - tolerance;
+            const atBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - bottomTolerance;
+
             latestIsAtBottomRef.current = atBottom;
-            // Dismiss badge whenever the user actually reaches the bottom
             if (atBottom) {
                 setNewMessageAlert(false);
                 setOpenChatDirty(false);
             }
+
+            // Check if scrolled near top (for loading more messages)
+            const threshold = 500;
+            if (container.scrollTop < threshold) {
+                if (isScrollbarDraggingRef.current) {
+                    // Mark that we want to load, but wait for mouse release
+                    pendingLoadRef.current = true;
+                } else {
+                    // Not dragging, load immediately
+                    triggerLoad();
+                }
+            }
         };
+
         container.addEventListener("scroll", onScroll, { passive: true });
-        // set initial value
-        latestIsAtBottomRef.current = container.scrollTop + container.clientHeight >= container.scrollHeight - tolerance;
-        return () => container.removeEventListener("scroll", onScroll);
-    }, []);
+        container.addEventListener("mousedown", onMouseDown);
+        document.addEventListener("mouseup", onMouseUp);
 
-    // Handler for clicking "New Messages" badge
-    const handleNewMessageAlertClick = () => {
-        requestAnimationFrame(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-            latestIsAtBottomRef.current = true;
-            setNewMessageAlert(false);
-            setOpenChatDirty(false);
-            prevMessagesCountRef.current = messages.length + pendingMessages.length;
-        });
-    };
+        return () => {
+            container.removeEventListener("scroll", onScroll);
+            container.removeEventListener("mousedown", onMouseDown);
+            document.removeEventListener("mouseup", onMouseUp);
+        };
+    }, [allSorted, canLoadMore, isLoadingMore, getMoreMessagesOpenChat, setOpenChatDirty]);
 
+    // When opened, scroll to the bottom
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
         setNewMessageAlert(false);
     }, [openChat]);
-
-
 
     if (chatError) {
         return (
@@ -191,34 +267,49 @@ export const ChatWindow = ({
 
     return (
         <div className="relative flex-1 flex flex-col">
-            <ul
+            <div
+                id="scrollableDiv"
                 ref={containerRef}
-                className="flex-1 p-5 flex flex-col gap-4 overflow-y-scroll grow shrink basis-0 custom-scroll"
+                className="flex-1 px-5 pt-5 overflow-y-auto custom-scroll grow shrink basis-0"
             >
-                {canLoadMore && <button className="w-full bg-neutral-900 hover:bg-neutral-800 hover:cursor-pointer rounded-full" >
-                    Load more
-                </button>}
-                {allSorted.map((m) => (
-                    <Message
-                        message={m}
-                        key={m.__pending ? `pending-${m.clientId}` : `msg-${m.messageId}`}
-                        pending={m.__pending}
-                    />
-                ))}
-                <div ref={messagesEndRef} />
-            </ul>
-
-            {newMessageAlert && (
-                <div
-                    className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-red-700 hover:bg-red-600 shadow-2xl text-center px-5 py-1
-                       rounded-full cursor-pointer flex flex-row items-center gap-1"
-                    onClick={handleNewMessageAlertClick}
-                >
-                    <span>New Messages</span>
-                    <BiChevronDown size={20} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {isLoadingMore && (
+                        <div className="w-full bg-neutral-900 rounded-full py-0.5 flex justify-center items-center gap-2">
+                            <Spinner size={16} />
+                            <span>Loading more...</span>
+                        </div>
+                    )}
+                    {allSorted.map((m) => (
+                        <Message
+                            message={m}
+                            key={m.__pending ? `pending-${m.clientId}` : `msg-${m.messageId}`}
+                            pending={m.__pending}
+                        />
+                    ))}
+                    <div ref={messagesEndRef} />
                 </div>
-            )}
-        </div>
+            </div>
 
+            {
+                newMessageAlert && (
+                    <div
+                        className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-red-700 hover:bg-red-600 shadow-2xl text-center px-5 py-1
+                   rounded-full cursor-pointer flex flex-row items-center gap-1"
+                        onClick={() => {
+                            requestAnimationFrame(() => {
+                                messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+                                latestIsAtBottomRef.current = true;
+                                setNewMessageAlert(false);
+                                setOpenChatDirty(false);
+                                prevMessagesCountRef.current = messages.length + pendingMessages.length;
+                            })
+                        }}
+                    >
+                        <span>New Messages</span>
+                        <BiChevronDown size={20} />
+                    </div>
+                )
+            }
+        </div >
     );
 };

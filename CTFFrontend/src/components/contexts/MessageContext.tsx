@@ -27,6 +27,8 @@ interface MessageContextValue {
     pendingChats: ChatMessage[],
     isOpenChatLoading: boolean,
     setOpenChatDirty: (dirty: boolean) => void;
+    getMoreMessagesOpenChat: (start: number) => void;
+    isLoadingMore: boolean;
 }
 
 const MessageContext = createContext<MessageContextValue | undefined>(undefined);
@@ -43,6 +45,7 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
     const [loadingGlobalChats, setLoadingGlobalChats] = useState<boolean>(true);
     const [errorGlobal, setErrorGlobal] = useState<string | null>(null);
     const [canLoadMoreGlobal, setCanLoadMoreGlobal] = useState<boolean>(false);
+    const [isLoadingMoreGlobal, setIsLoadingMoreGlobal] = useState<boolean>(false);
 
     // Team chat params
     const [teamChats, setTeamChats] = useState<ChatMessage[]>([]);
@@ -50,6 +53,7 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
     const [loadingTeamChats, setLoadingTeamChats] = useState<boolean>(true);
     const [errorTeam, setErrorTeam] = useState<string | null>(null);
     const [canLoadMoreTeam, setCanLoadMoreTeam] = useState<boolean>(false);
+    const [isLoadingMoreTeam, setIsLoadingMoreTeam] = useState<boolean>(false);
 
     const [pendingTeamMessages, setPendingTeamMessages] = useState<ChatMessage[]>([]);
     const [pendingGlobalMessages, setPendingGlobalMessages] = useState<ChatMessage[]>([]);
@@ -65,7 +69,6 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
                 setCanLoadMoreGlobal(!e.end);
             })
             .catch((e) => setErrorGlobal(e.message))
-            .finally(() => setLoadingGlobalChats(false));
 
         getTeamMessages(2147483647, 20, myTeam?.id!, jwt!)
             .then((e) => {
@@ -73,7 +76,6 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
                 setCanLoadMoreTeam(!e.end);
             })
             .catch((e) => setErrorTeam(e.message))
-            .finally(() => setLoadingTeamChats(false));
     }, [myTeam]);
 
     useEffect(() => {
@@ -90,7 +92,8 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
                 ));
                 setGlobalChats(prev => [...prev, msg]);
                 if (msg.player?.id !== me?.id) setDirtyGlobal(openChat !== "global");
-            }
+            },
+            () => setLoadingGlobalChats(false)
         );
         wsGlobalRef.current = wsGlobal;
 
@@ -109,7 +112,8 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
                     ));
                     setTeamChats(prev => [...prev, msg]);
                     if (msg.player?.id !== me?.id) setDirtyTeams(openChat !== "team");
-                }
+                },
+                () => setLoadingTeamChats(false)
             );
             wsTeamRef.current = wsTeam;
         }
@@ -162,12 +166,12 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
             switch (openChat) {
                 case "team":
                     setPendingTeamMessages(prev =>
-                        prev.map(p => p.clientId === tempId ? { ...p, serverId: res.id, messageId: res.id } : p)
+                        prev.filter(p => p.clientId !== tempId)
                     );
                     break;
                 case "global":
                     setPendingGlobalMessages(prev =>
-                        prev.map(p => p.clientId === tempId ? { ...p, serverId: res.id, messageId: res.id } : p)
+                        prev.filter(p => p.clientId !== tempId)
                     );
                     break;
             }
@@ -182,9 +186,9 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
                     setPendingGlobalMessages(prev => prev.filter(p => p.clientId !== tempId));
                     break;
             }
-
             throw err;
         }
+
     }, [jwt, openChat, me, myTeam]);
 
     useEffect(() => {
@@ -244,6 +248,41 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [openChat, errorTeam, errorGlobal]);
 
+    const isLoadingMore = useMemo<boolean>(() => {
+        switch (openChat) {
+            case "global": return isLoadingMoreGlobal;
+            case "team": return isLoadingMoreTeam;
+            default: return false;
+        }
+    }, [openChat, isLoadingMoreGlobal, isLoadingMoreTeam]);
+
+    const getMoreMessagesOpenChat = useCallback((start: number) => {
+        if (!jwt) return;
+
+        switch (openChat) {
+            case "global":
+                setIsLoadingMoreGlobal(true);
+                getGlobalMessages(start, 20, jwt!).then(
+                    (res) => {
+                        setCanLoadMoreGlobal(!res.end);
+                        setGlobalChats(prev => [...res.messages, ...prev]);
+                    }
+                ).finally(() => setIsLoadingMoreGlobal(false));
+                break;
+            case "team":
+                if (!myTeam) return;
+                setIsLoadingMoreTeam(true);
+                getTeamMessages(start, 20, myTeam.id, jwt!).then(
+                    (res) => {
+                        setCanLoadMoreTeam(!res.end);
+                        setTeamChats(prev => [...res.messages, ...prev]);
+                    }
+                ).finally(() => setIsLoadingMoreTeam(false));
+                break;
+            default: return;
+        }
+    }, [jwt, openChat, myTeam]);
+
 
     const providerValue = useMemo(() => ({
         openChat,
@@ -267,11 +306,13 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
         isOpenChatLoading,
         setOpenChatDirty,
         chatError,
+        getMoreMessagesOpenChat,
+        isLoadingMore,
     }), [
         openChat, sendMessage, dirtyTeams, dirtyGlobal, globalChats, teamChats,
         pendingTeamMessages, pendingGlobalMessages, loadingGlobalChats, loadingTeamChats,
         canLoadMoreGlobal, canLoadMoreTeam, displayChats, pendingChats, isOpenChatLoading,
-        chatError
+        chatError, getMoreMessagesOpenChat,
     ]);
     return (
         <MessageContext.Provider value={providerValue}>
