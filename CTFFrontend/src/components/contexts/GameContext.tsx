@@ -16,6 +16,7 @@ interface GameContextValue {
     players: Player[],
     teams: Team[],
     getTeamFromId: (teamId: string) => Team | null;
+    removeMeFromGame: () => void;
 }
 
 const GameContext = createContext<GameContextValue | undefined>(undefined);
@@ -79,6 +80,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return teams.find(t => t.id === teamId) ?? null;
     }, [teams]);
 
+    const removeMeFromGame = useCallback(() => {
+        if (me) setPlayers(prev => prev.filter(p => p.id !== me.id));
+    }, [me])
+
     useEffect(() => {
         gameStatus().then(r => {
             setLoading(false);
@@ -98,6 +103,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             players,
             teams,
             getTeamFromId,
+            removeMeFromGame,
         }}>
             {children}
         </GameContext.Provider>

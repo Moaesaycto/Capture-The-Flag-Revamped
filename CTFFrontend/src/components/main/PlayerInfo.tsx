@@ -5,14 +5,17 @@ import { RxExit } from "react-icons/rx";
 import { playerLeave } from "../../services/PlayerApi";
 import { useCallback } from "react";
 import Spinner from "./LoadingSpinner";
+import { useGameContext } from "../contexts/GameContext";
 
 const PlayerInfo = () => {
     const { me, myTeam, jwt, logout } = useAuthContext();
+    const { removeMeFromGame } = useGameContext();
 
     const onClick = useCallback(() => {
+        removeMeFromGame();
         playerLeave(jwt);
         logout();
-    }, [jwt, logout])
+    }, [jwt, logout]);
 
     return (
         (myTeam && me ?

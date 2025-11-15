@@ -211,7 +211,7 @@ export const ChatWindow = ({
                                 {canLoadMore ? (
                                     <>
                                         <Spinner size={16} />
-                                        <span>Loading more...</span>
+                                        <span>Loading chats...</span>
                                     </>
                                 ) : (
                                     <span className="text-sm text-neutral-600">Beginning of the chat</span>

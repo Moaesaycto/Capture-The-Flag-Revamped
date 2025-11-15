@@ -14,6 +14,7 @@ const NameRow = ({ player, index }: { player?: Player, index: number }) => {
     const onClick = () => {
         player && playerRemove(player.id, jwt);
     }
+
     return (
         <li
             key={index}
