@@ -7,7 +7,7 @@ import Color from "color";
 import { BiCheck, BiChevronDown, BiSolidStar } from "react-icons/bi";
 import { RiAdminFill } from "react-icons/ri";
 import Spinner from "../main/LoadingSpinner";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMessageContext } from "../contexts/MessageContext";
 import { Virtuoso } from 'react-virtuoso'
 
@@ -78,10 +78,10 @@ export const ChatWindow = ({
 
     const [newMessageAlert, setNewMessageAlert] = useState<boolean>(false);
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
     const latestIsAtBottomRef = useRef<boolean>(true);
     const prevMessagesCountRef = useRef<number>(0);
     const prevLastMessageIdRef = useRef<number | null>(null);
+    const virtuosoRef = useRef<any>(null);
 
     const totalMessages = messages.length + pendingMessages.length;
 
@@ -97,6 +97,14 @@ export const ChatWindow = ({
         merged.sort((a, b) => (a.serverId ?? a.messageId) - (b.serverId ?? b.messageId));
         return merged;
     }, [messages, pendingMessages]);
+
+    const scrollToBottom = useCallback(() => {
+        virtuosoRef.current?.scrollToIndex({
+            index: allSorted.length - 1,
+            align: 'end',
+            behavior: 'smooth',
+        });
+    }, [allSorted, virtuosoRef])
 
 
     // Handle logic for scrolling and notifying when new messages come in
@@ -116,7 +124,7 @@ export const ChatWindow = ({
         const isFromMe = !!last && last.player?.id === me?.id;
 
         if (isFromMe || latestIsAtBottomRef.current) {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            scrollToBottom();
             setNewMessageAlert(false);
             setOpenChatDirty(false);
         } else {
@@ -126,7 +134,7 @@ export const ChatWindow = ({
 
         prevMessagesCountRef.current = total;
         prevLastMessageIdRef.current = lastId;
-    }, [allSorted, me]);
+    }, [allSorted, me, scrollToBottom]);
 
     if (chatError) {
         return (
@@ -170,6 +178,8 @@ export const ChatWindow = ({
     return (
         <div className="relative flex-1 flex flex-col">
             <Virtuoso
+                key={openChat} // Force remount when chat type changes
+                ref={virtuosoRef}
                 data={allSorted}
                 firstItemIndex={firstItemIndex}
                 initialTopMostItemIndex={initialIndex}
@@ -190,7 +200,7 @@ export const ChatWindow = ({
                                         <span>Loading more...</span>
                                     </>
                                 ) : (
-                                    <span>No more messages</span>
+                                    <span className="text-sm text-neutral-600">Beginning of the chat</span>
                                 )}
                             </div>
                         </div>
@@ -208,7 +218,7 @@ export const ChatWindow = ({
                    rounded-full cursor-pointer flex flex-row items-center gap-1"
                         onClick={() => {
                             requestAnimationFrame(() => {
-                                messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+                                scrollToBottom();
                                 latestIsAtBottomRef.current = true;
                                 setNewMessageAlert(false);
                                 setOpenChatDirty(false);

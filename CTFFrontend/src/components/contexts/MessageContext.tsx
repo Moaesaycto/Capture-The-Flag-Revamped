@@ -197,7 +197,7 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
     }, [jwt, openChat, me, myTeam]);
 
     useEffect(() => {
-        if (openChat) setLastOpenChat(openChat);
+        if (openChat) setLastOpenChat(openChat);   
     }, [openChat]);
 
     const restoreOpen = useCallback(() => {
