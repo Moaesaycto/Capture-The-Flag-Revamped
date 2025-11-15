@@ -9,7 +9,7 @@ import { RiAdminFill } from "react-icons/ri";
 import Spinner from "../main/LoadingSpinner";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMessageContext } from "../contexts/MessageContext";
-
+import { Virtuoso } from 'react-virtuoso'
 
 const MessageInner = ({ message, pending }: { message: ChatMessage, pending?: boolean }) => {
     const { me } = useAuthContext();
@@ -27,22 +27,24 @@ const MessageInner = ({ message, pending }: { message: ChatMessage, pending?: bo
     const headerStyle = useMemo(() => ({ color: lightColor }), [lightColor]);
 
     return (
-        <li
-            className={`py-2 pl-4 pr-2 rounded-2xl flex flex-col bg-neutral-800
-        ${isMe ? "ml-[20%] rounded-br-sm" : "mr-10 rounded-bl-sm"}`}
-            style={containerStyle}
-        >
-            <div className="flex justify-between h-4 text-xs" style={headerStyle}>
-                <div className="flex flex-row gap-1.5 items-center">
-                    {message.player.id === me?.id ? <BiSolidStar style={{ color: "gold" }} /> : null}
-                    <span>{message.player.name}</span>
-                    {message.player.auth ? <RiAdminFill style={{ color: "#FFB900" }} /> : null}
-                    <span className="text-neutral-400">{formattedTime}</span>
+        <div className="py-2 px-10">
+            <li
+                className={`py-2 pl-4 pr-2 rounded-2xl flex flex-col bg-neutral-800
+        ${isMe ? "ml-[20%] rounded-br-sm" : "mr-[20%] rounded-bl-sm"}`}
+                style={containerStyle}
+            >
+                <div className="flex justify-between h-4 text-xs" style={headerStyle}>
+                    <div className="flex flex-row gap-1.5 items-center">
+                        {message.player.id === me?.id ? <BiSolidStar style={{ color: "gold" }} /> : null}
+                        <span>{message.player.name}</span>
+                        {message.player.auth ? <RiAdminFill style={{ color: "#FFB900" }} /> : null}
+                        <span className="text-neutral-400">{formattedTime}</span>
+                    </div>
+                    <div>{pending ? <Spinner size={20} /> : <BiCheck size={20} />}</div>
                 </div>
-                <div>{pending ? <Spinner size={20} /> : <BiCheck size={20} />}</div>
-            </div>
-            <span>{message.message}</span>
-        </li>
+                <span>{message.message}</span>
+            </li>
+        </div>
     );
 };
 
@@ -58,7 +60,6 @@ const Message = React.memo(MessageInner, (prev, next) => {
     );
 });
 
-
 interface ChatWindowProps {
     messages: ChatMessage[];
     pendingMessages: ChatMessage[];
@@ -73,18 +74,14 @@ export const ChatWindow = ({
     openChat
 }: ChatWindowProps) => {
     const { me } = useAuthContext();
-    const { setOpenChatDirty, isOpenChatLoading, chatError, getMoreMessagesOpenChat, isLoadingMore } = useMessageContext();
+    const { setOpenChatDirty, isOpenChatLoading, chatError, getMoreMessagesOpenChat, firstItemIndex } = useMessageContext();
 
     const [newMessageAlert, setNewMessageAlert] = useState<boolean>(false);
 
-    const containerRef = useRef<HTMLDivElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const latestIsAtBottomRef = useRef<boolean>(true);
     const prevMessagesCountRef = useRef<number>(0);
     const prevLastMessageIdRef = useRef<number | null>(null);
-    const isLoadingMoreRef = useRef(false);
-    const isScrollbarDraggingRef = useRef(false);
-    const pendingLoadRef = useRef(false);
 
     const totalMessages = messages.length + pendingMessages.length;
 
@@ -131,102 +128,6 @@ export const ChatWindow = ({
         prevLastMessageIdRef.current = lastId;
     }, [allSorted, me]);
 
-    // The infinite scroll logic
-    useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
-
-        const bottomTolerance = 4;
-
-        // Track scrollbar dragging
-        const onMouseDown = (e: MouseEvent) => {
-            // If the user clicked on the scrollbar (thumb or background)
-            const target = e.target as HTMLElement;
-            if (target === container) {
-                const rect = container.getBoundingClientRect();
-                const clickX = e.clientX;
-                if (clickX > rect.right - 20) {
-                    // Freeze infinite load
-                    isScrollbarDraggingRef.current = true;
-                }
-            }
-        };
-
-        const onMouseUp = () => {
-            if (isScrollbarDraggingRef.current) {
-                isScrollbarDraggingRef.current = false;
-                // Check if we should load more now that dragging is done
-                if (pendingLoadRef.current) {
-                    pendingLoadRef.current = false;
-                    triggerLoad();
-                }
-            }
-        };
-
-        const triggerLoad = () => {
-            if (isLoadingMoreRef.current || !canLoadMore || isLoadingMore || allSorted.length === 0) {
-                return;
-            }
-
-            isLoadingMoreRef.current = true;
-
-            const oldScrollHeight = container.scrollHeight;
-            const oldScrollTop = container.scrollTop;
-
-            getMoreMessagesOpenChat(allSorted[0].messageId - 1);
-
-            const checkAndAdjust = () => {
-                if (container.scrollHeight === oldScrollHeight) {
-                    requestAnimationFrame(checkAndAdjust);
-                } else {
-                    const scrollDiff = container.scrollHeight - oldScrollHeight;
-                    container.scrollTop = oldScrollTop + scrollDiff;
-                    isLoadingMoreRef.current = false;
-                }
-            };
-
-            requestAnimationFrame(checkAndAdjust);
-        };
-
-        const onScroll = () => {
-            const atBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - bottomTolerance;
-
-            latestIsAtBottomRef.current = atBottom;
-            if (atBottom) {
-                setNewMessageAlert(false);
-                setOpenChatDirty(false);
-            }
-
-            // Check if scrolled near top (for loading more messages)
-            const threshold = 500;
-            if (container.scrollTop < threshold) {
-                if (isScrollbarDraggingRef.current) {
-                    // Mark that we want to load, but wait for mouse release
-                    pendingLoadRef.current = true;
-                } else {
-                    // Not dragging, load immediately
-                    triggerLoad();
-                }
-            }
-        };
-
-        container.addEventListener("scroll", onScroll, { passive: true });
-        container.addEventListener("mousedown", onMouseDown);
-        document.addEventListener("mouseup", onMouseUp);
-
-        return () => {
-            container.removeEventListener("scroll", onScroll);
-            container.removeEventListener("mousedown", onMouseDown);
-            document.removeEventListener("mouseup", onMouseUp);
-        };
-    }, [allSorted, canLoadMore, isLoadingMore, getMoreMessagesOpenChat, setOpenChatDirty]);
-
-    // When opened, scroll to the bottom
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
-        setNewMessageAlert(false);
-    }, [openChat]);
-
     if (chatError) {
         return (
             <div className="w-full flex-1 flex items-center justify-center flex-col gap-5">
@@ -264,31 +165,42 @@ export const ChatWindow = ({
         );
     }
 
+    const initialIndex = firstItemIndex + allSorted.length - 1;
+
     return (
         <div className="relative flex-1 flex flex-col">
-            <div
-                id="scrollableDiv"
-                ref={containerRef}
-                className="flex-1 px-5 pt-5 overflow-y-auto custom-scroll grow shrink basis-0"
-            >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {isLoadingMore && (
-                        <div className="w-full bg-neutral-900 rounded-full py-0.5 flex justify-center items-center gap-2">
-                            <Spinner size={16} />
-                            <span>Loading more...</span>
+            <Virtuoso
+                data={allSorted}
+                firstItemIndex={firstItemIndex}
+                initialTopMostItemIndex={initialIndex}
+                increaseViewportBy={200}
+                startReached={() => getMoreMessagesOpenChat(allSorted[0].messageId - 1)}
+                itemContent={(index, m) => <Message
+                    message={m}
+                    key={m.__pending ? `pending-${m.clientId}-${index}` : `msg-${m.messageId}-${index}`}
+                    pending={m.__pending}
+                />}
+                components={{
+                    Header: () => (
+                        <div className="p-2 pt-4">
+                            <div className="w-full bg-neutral-900 rounded-full py-0.5 flex justify-center items-center gap-2">
+                                {canLoadMore ? (
+                                    <>
+                                        <Spinner size={16} />
+                                        <span>Loading more...</span>
+                                    </>
+                                ) : (
+                                    <span>No more messages</span>
+                                )}
+                            </div>
                         </div>
-                    )}
-                    {allSorted.map((m) => (
-                        <Message
-                            message={m}
-                            key={m.__pending ? `pending-${m.clientId}` : `msg-${m.messageId}`}
-                            pending={m.__pending}
-                        />
-                    ))}
-                    <div ref={messagesEndRef} />
-                </div>
-            </div>
-
+                    )
+                }}
+                followOutput={latestIsAtBottomRef.current ? 'smooth' : false}
+                atBottomStateChange={(atBottom) => {
+                    latestIsAtBottomRef.current = atBottom;
+                }}
+            />
             {
                 newMessageAlert && (
                     <div

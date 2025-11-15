@@ -29,7 +29,11 @@ interface MessageContextValue {
     setOpenChatDirty: (dirty: boolean) => void;
     getMoreMessagesOpenChat: (start: number) => void;
     isLoadingMore: boolean;
+    firstItemIndex: number;
 }
+
+const INITIAL_FIRST_INDEX = 100_000
+
 
 const MessageContext = createContext<MessageContextValue | undefined>(undefined);
 
@@ -38,6 +42,7 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
 
     const [openChat, setOpenChat] = useState<ChatType | null>(null);
     const [lastOpenChat, setLastOpenChat] = useState<ChatType | null>(null);
+    const [firstItemIndex, setFirstItemIndex] = useState(INITIAL_FIRST_INDEX);
 
     // Global chat params
     const [globalChats, setGlobalChats] = useState<ChatMessage[]>([]);
@@ -261,27 +266,38 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
 
         switch (openChat) {
             case "global":
+                if (isLoadingMoreGlobal) return; // Prevent duplicate calls
                 setIsLoadingMoreGlobal(true);
-                getGlobalMessages(start, 20, jwt!).then(
-                    (res) => {
-                        setCanLoadMoreGlobal(!res.end);
-                        setGlobalChats(prev => [...res.messages, ...prev]);
-                    }
-                ).finally(() => setIsLoadingMoreGlobal(false));
+                getGlobalMessages(start, 20, jwt!).then((res) => {
+                    setCanLoadMoreGlobal(!res.end);
+
+                    // Update firstItemIndex BEFORE updating messages
+                    setFirstItemIndex(prevIndex => prevIndex - res.messages.length);
+
+                    // Then update messages
+                    setGlobalChats(prev => [...res.messages, ...prev]);
+                }).finally(() => setIsLoadingMoreGlobal(false));
                 break;
+
             case "team":
                 if (!myTeam) return;
+                if (isLoadingMoreTeam) return; // Prevent duplicate calls
                 setIsLoadingMoreTeam(true);
-                getTeamMessages(start, 20, myTeam.id, jwt!).then(
-                    (res) => {
-                        setCanLoadMoreTeam(!res.end);
-                        setTeamChats(prev => [...res.messages, ...prev]);
-                    }
-                ).finally(() => setIsLoadingMoreTeam(false));
+                getTeamMessages(start, 20, myTeam.id, jwt!).then((res) => {
+                    setCanLoadMoreTeam(!res.end);
+
+                    // Update firstItemIndex BEFORE updating messages
+                    setFirstItemIndex(prevIndex => prevIndex - res.messages.length);
+
+                    // Then update messages
+                    setTeamChats(prev => [...res.messages, ...prev]);
+                }).finally(() => setIsLoadingMoreTeam(false));
                 break;
+
             default: return;
         }
-    }, [jwt, openChat, myTeam]);
+    }, [jwt, openChat, myTeam, isLoadingMoreGlobal, isLoadingMoreTeam]);
+
 
 
     const providerValue = useMemo(() => ({
@@ -308,11 +324,12 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
         chatError,
         getMoreMessagesOpenChat,
         isLoadingMore,
+        firstItemIndex,
     }), [
         openChat, sendMessage, dirtyTeams, dirtyGlobal, globalChats, teamChats,
         pendingTeamMessages, pendingGlobalMessages, loadingGlobalChats, loadingTeamChats,
         canLoadMoreGlobal, canLoadMoreTeam, displayChats, pendingChats, isOpenChatLoading,
-        chatError, getMoreMessagesOpenChat,
+        chatError, getMoreMessagesOpenChat, firstItemIndex,
     ]);
     return (
         <MessageContext.Provider value={providerValue}>
