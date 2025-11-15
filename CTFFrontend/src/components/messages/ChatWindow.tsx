@@ -82,6 +82,7 @@ export const ChatWindow = ({
     const prevMessagesCountRef = useRef<number>(0);
     const prevLastMessageIdRef = useRef<number | null>(null);
     const virtuosoRef = useRef<any>(null);
+    const isLoadingMoreRef = useRef<boolean>(false);
 
     const totalMessages = messages.length + pendingMessages.length;
 
@@ -98,13 +99,14 @@ export const ChatWindow = ({
         return merged;
     }, [messages, pendingMessages]);
 
+    // Stable scroll to bottom that doesn't depend on allSorted
     const scrollToBottom = useCallback(() => {
         virtuosoRef.current?.scrollToIndex({
-            index: allSorted.length - 1,
+            index: 'LAST',
             align: 'end',
             behavior: 'smooth',
         });
-    }, [allSorted, virtuosoRef])
+    }, []);
 
 
     // Handle logic for scrolling and notifying when new messages come in
@@ -116,6 +118,14 @@ export const ChatWindow = ({
         const lastId = last?.messageId ?? null;
 
         const prevLastId = prevLastMessageIdRef.current;
+
+        if (isLoadingMoreRef.current) {
+            isLoadingMoreRef.current = false;
+            prevMessagesCountRef.current = total;
+            prevLastMessageIdRef.current = lastId;
+            return;
+        }
+
         if (prevLastId !== null && lastId === prevLastId) {
             prevMessagesCountRef.current = total;
             return;
@@ -124,17 +134,18 @@ export const ChatWindow = ({
         const isFromMe = !!last && last.player?.id === me?.id;
 
         if (isFromMe || latestIsAtBottomRef.current) {
-            scrollToBottom();
+            // Ensure scroll happens AFTER render
+            requestAnimationFrame(scrollToBottom);
             setNewMessageAlert(false);
             setOpenChatDirty(false);
         } else {
-            // No scrolling
+            // Show alert for messages from others when not at bottom
             setNewMessageAlert(true);
         }
 
         prevMessagesCountRef.current = total;
         prevLastMessageIdRef.current = lastId;
-    }, [allSorted, me, scrollToBottom]);
+    }, [allSorted, me, scrollToBottom, setOpenChatDirty]);
 
     if (chatError) {
         return (
@@ -178,13 +189,16 @@ export const ChatWindow = ({
     return (
         <div className="relative flex-1 flex flex-col">
             <Virtuoso
-                key={openChat} // Force remount when chat type changes
+                key={openChat}
                 ref={virtuosoRef}
                 data={allSorted}
                 firstItemIndex={firstItemIndex}
                 initialTopMostItemIndex={initialIndex}
                 increaseViewportBy={200}
-                startReached={() => getMoreMessagesOpenChat(allSorted[0].messageId - 1)}
+                startReached={() => {
+                    isLoadingMoreRef.current = true;
+                    getMoreMessagesOpenChat(allSorted[0].messageId - 1);
+                }}
                 itemContent={(index, m) => <Message
                     message={m}
                     key={m.__pending ? `pending-${m.clientId}-${index}` : `msg-${m.messageId}-${index}`}
@@ -209,6 +223,10 @@ export const ChatWindow = ({
                 followOutput={latestIsAtBottomRef.current ? 'smooth' : false}
                 atBottomStateChange={(atBottom) => {
                     latestIsAtBottomRef.current = atBottom;
+                    if (atBottom) {
+                        setNewMessageAlert(false);
+                        setOpenChatDirty(false);
+                    }
                 }}
             />
             {
@@ -217,13 +235,10 @@ export const ChatWindow = ({
                         className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-red-700 hover:bg-red-600 shadow-2xl text-center px-5 py-1
                    rounded-full cursor-pointer flex flex-row items-center gap-1"
                         onClick={() => {
-                            requestAnimationFrame(() => {
-                                scrollToBottom();
-                                latestIsAtBottomRef.current = true;
-                                setNewMessageAlert(false);
-                                setOpenChatDirty(false);
-                                prevMessagesCountRef.current = messages.length + pendingMessages.length;
-                            })
+                            scrollToBottom();
+                            latestIsAtBottomRef.current = true;
+                            setNewMessageAlert(false);
+                            setOpenChatDirty(false);
                         }}
                     >
                         <span>New Messages</span>
