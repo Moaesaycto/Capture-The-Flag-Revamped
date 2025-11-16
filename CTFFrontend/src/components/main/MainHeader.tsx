@@ -3,17 +3,20 @@ import { useAuthContext } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { useMessageContext } from "../contexts/MessageContext";
 
-
 const MainHeader = () => {
     const { loggedIn } = useAuthContext();
-    const {dirtyTeams, dirtyGlobal} = useMessageContext();
+    const { dirtyTeams, dirtyGlobal } = useMessageContext();
 
     return (
-        <header className="w-full bg-amber-400 text-4xl sm:text-5xl z-1" style={{ fontFamily: "American Captain" }}>
-            <div className="flex justify-between items-center px-3 h-12">
+        <header
+            className="w-full bg-amber-400 text-4xl sm:text-5xl z-1 flex flex-col items-center justify-center"
+        >
+            <div className="flex justify-between items-center px-3 h-12 max-w-6xl w-full">
                 <div className="flex flex-row gap-2 py-0">
                     <PiFlagBannerFoldDuotone />
-                    <h1 className="">
+                    <h1
+                        style={{ fontFamily: "American Captain" }}
+                    >
                         Capture The Flag
                     </h1>
                 </div>

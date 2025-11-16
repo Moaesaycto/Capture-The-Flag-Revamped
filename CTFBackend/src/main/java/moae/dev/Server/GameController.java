@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import moae.dev.Game.Game;
 import moae.dev.Requests.MessageRequest;
 import moae.dev.Requests.SettingsRequest;
+import moae.dev.Requests.StateRequest;
 import moae.dev.Utils.MessagePage;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -69,5 +70,17 @@ public class GameController {
     return Map.of(
         "messages", page.messages(),
         "end", page.end());
+  }
+
+  @PutMapping("/state/")
+  public Map<String, Object> changeState(
+      @RequestBody StateRequest req, @AuthenticationPrincipal Jwt jwt) {
+    try {
+      game.setState(req.getState());
+    } catch (Exception e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    return Map.of("message", "success");
   }
 }

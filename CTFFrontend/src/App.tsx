@@ -7,9 +7,9 @@ import MessagesPage from './pages/MessagesPage'
 
 function App() {
   return (
-    <div className="flex flex-col min-h-screen w-full">
+    <div className="flex flex-col min-h-screen w-full items-center bg-neutral-950">
       <MainHeader />
-      <main className="flex-1 min-h-0 w-full flex bg-neutral-900">
+      <main className="flex-1 min-h-0 w-full flex bg-neutral-900 max-w-6xl">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/message" element={<MessagesPage />} />

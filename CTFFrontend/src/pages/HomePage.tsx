@@ -6,6 +6,7 @@ import PlayerInfo from "../components/main/PlayerInfo";
 import { useMemo } from "react";
 import Map from "../components/main/Map";
 import GameController from "../components/main/GameController";
+import StateViewer from "../components/main/StateViewer";
 
 const HomePage = () => {
     const { loggedIn, me } = useAuthContext();
@@ -14,6 +15,7 @@ const HomePage = () => {
 
     return (
         <Page>
+            <StateViewer />
             {me?.auth && <GameController />}
             <Controller />
             <PlayerList />

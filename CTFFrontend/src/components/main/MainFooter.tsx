@@ -6,9 +6,9 @@ import { PiWifiHighBold, PiWifiXBold } from "react-icons/pi";
 const MainFooter = () => {
     const { loading, health } = useGameContext();
     return (
-        <div className="bg-amber-400 z-1">
-            <div className="construction-pattern h-2" />
-            <div className="w-full text-center py-3 px-10 flex justify-between">
+        <footer className="flex flex-col bg-amber-400 z-1 w-full items-center">
+            <div className="construction-pattern h-2 w-full" />
+            <div className="w-full text-center py-3 px-10 flex justify-between max-w-6xl">
                 <span>
                     Rules
                 </span>
@@ -28,7 +28,7 @@ const MainFooter = () => {
                     )}
                 </div>
             </div>
-        </div>
+        </footer>
     )
 }
 

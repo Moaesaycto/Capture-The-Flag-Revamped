@@ -89,6 +89,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setLoading(false);
             setTeams(r.teams);
             setPlayers(r.players);
+            setState(r.state.state as State);
         }).catch(() => { }); // TODO: fix
     }, []);
 

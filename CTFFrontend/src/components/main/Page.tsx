@@ -14,7 +14,7 @@ const Page = ({ children }: PageProps) => {
     if (!healthy) return <NoConnection />
 
     return (
-        <div className="flex flex-col flex-1 w-full min-h-0 text-white p-5">
+        <div className="flex flex-col flex-1 w-full min-h-0 text-white py-5 px-10">
             {children}
         </div>
     )

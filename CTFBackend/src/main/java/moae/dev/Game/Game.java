@@ -66,30 +66,47 @@ public class Game {
     return this.webSocketHandler;
   }
 
-  // ----- Gameplay -----
+  // ----- Game Controls -----
   public void start() {
-    // TODO: Fix me
-  }
+    if (this.state != State.WAITING_TO_START) {
+      throw new IllegalStateException("Cannot start game in this state");
+    }
 
-  public void skip() {
-    // TODO: Fix me
-  }
+    // Schedule logic
 
-  public void rewind() {
-    // TODO: Fix me
+    state = State.GRACE_PERIOD;
   }
 
   public void pause() {
-    // TODO: Fix me
+    if (state != State.GRACE_PERIOD && state != State.SCOUT_PERIOD && state != State.FFA_PERIOD) {
+      throw new IllegalStateException("Cannot pause a game that isn't running");
+    }
+
+    // Schedule logic
+
+    state = State.PAUSED;
   }
 
-  public void end() {
-    // TODO: Fix
+  public void resume() {
+    if (state != State.PAUSED) {
+      throw new IllegalStateException("Cannot resume a unpaused game");
+    }
+
+    // Schedule logic
+
+    state = null; // TODO: Revert to what it was BEFORE the pause
   }
+
+  public void skip() {}
+
+  public void rewind() {}
+
+  public void end() {}
 
   // ----- Utilities -----
   public void setState(State state) {
     if (Game.state == state) return;
+
     Game.state = state;
     StateSocketConnectionHandler.broadcast("state:" + state.toString());
   }
@@ -229,7 +246,7 @@ public class Game {
   }
 
   public boolean isValidTeam(UUID team) {
-      return teams.stream().anyMatch(p -> p.getID().equals(team));
+    return teams.stream().anyMatch(p -> p.getID().equals(team));
   }
 
   public boolean declareVictory(UUID team) {
