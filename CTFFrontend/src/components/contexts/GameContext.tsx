@@ -33,6 +33,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [teams, setTeams] = useState<Team[]>([]);
     const [currentDuration, setCurrentDuration] = useState<number>(0);
     const [stateUpdateKey, setStateUpdateKey] = useState<number>(0);
+    const [paused, setPaused] = useState<boolean>(false);
 
     useEffect(() => {
         createWebSocket(
@@ -89,6 +90,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 setState(update.state);
                 setCurrentDuration(update.duration);
                 setStateUpdateKey(prev => prev + 1);
+                setPaused(update.paused);
+                console.log(update);
             },
         )
 
@@ -119,10 +122,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return state === "grace" || state === "scout" || state === "ffa";
     }, [state]);
 
-    const isPaused = useMemo<boolean>(() => {
-        return state === "paused";
-    }, [state]);
-
     return (
         <GameContext.Provider value={{
             loading,
@@ -137,7 +136,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             removeMeFromGame,
             currentDuration,
             isRunning,
-            isPaused,
+            isPaused: paused,
             stateUpdateKey,
         }}>
             {children}

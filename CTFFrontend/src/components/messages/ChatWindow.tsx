@@ -1,14 +1,14 @@
 import { PiGlobeBold, PiWifiXBold } from "react-icons/pi";
-import type { ChatMessage } from "../../types";
+import type { ChatMessage } from "@/types";
 import { FaFlag } from "react-icons/fa";
-import { useAuthContext } from "../contexts/AuthContext";
-import { useGameContext } from "../contexts/GameContext";
+import { useAuthContext } from "@/components/contexts/AuthContext";
+import { useGameContext } from "@/components/contexts/GameContext";
 import Color from "color";
 import { BiCheck, BiChevronDown, BiSolidStar } from "react-icons/bi";
 import { RiAdminFill } from "react-icons/ri";
-import Spinner from "../main/LoadingSpinner";
+import Spinner from "@/components/main/LoadingSpinner";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useMessageContext } from "../contexts/MessageContext";
+import { useMessageContext } from "@/components/contexts/MessageContext";
 import { Virtuoso } from 'react-virtuoso'
 
 const MessageInner = ({ message, pending }: { message: ChatMessage, pending?: boolean }) => {
@@ -99,7 +99,6 @@ export const ChatWindow = ({
         return merged;
     }, [messages, pendingMessages]);
 
-    // Stable scroll to bottom that doesn't depend on allSorted
     const scrollToBottom = useCallback(() => {
         virtuosoRef.current?.scrollToIndex({
             index: 'LAST',
@@ -134,12 +133,10 @@ export const ChatWindow = ({
         const isFromMe = !!last && last.player?.id === me?.id;
 
         if (isFromMe || latestIsAtBottomRef.current) {
-            // Ensure scroll happens AFTER render
             requestAnimationFrame(scrollToBottom);
             setNewMessageAlert(false);
             setOpenChatDirty(false);
         } else {
-            // Show alert for messages from others when not at bottom
             setNewMessageAlert(true);
         }
 

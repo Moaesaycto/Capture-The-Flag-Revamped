@@ -2,7 +2,7 @@ import { useState, type ComponentType } from "react";
 import { FaArrowRotateLeft, FaLock } from "react-icons/fa6";
 import { PiPauseFill, PiPlayFill, PiSkipBackFill, PiSkipForwardFill, PiStopFill } from "react-icons/pi";
 import type { StandardStatus } from "../../types";
-import { gameEnd, gamePause, gameResume, gameRewind, gameSkip, gameStart } from "../../services/GameApi";
+import { gameEnd, gamePause, gameReset, gameResume, gameRewind, gameSkip, gameStart } from "../../services/GameApi";
 import { useAuthContext } from "../contexts/AuthContext";
 import { ErrorMessage } from "./Messages";
 import { useGameContext } from "../contexts/GameContext";
@@ -17,7 +17,7 @@ type ControllButtonProps = {
 const ControllButton = ({ onClick, color, Icon, disabled = false }: ControllButtonProps) => {
     return (
         <button
-            className="bg-neutral-900 hover:bg-neutral-700 hover:cursor-pointer p-2 rounded-lg"
+            className="bg-neutral-900 hover:bg-neutral-700 hover:cursor-pointer p-2 rounded-lg disabled:opacity-50 disabled:hover:bg-neutral-900 disabled:cursor-not-allowed"
             onClick={onClick}
             style={{
                 color,
@@ -34,7 +34,7 @@ const GameController = () => {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const { jwt } = useAuthContext();
-    const { isRunning, isPaused } = useGameContext();
+    const { isRunning, isPaused, state } = useGameContext();
 
     const ExecuteUpdate = (action: (jwt: string) => Promise<StandardStatus>) => {
         setError(null);
@@ -50,15 +50,46 @@ const GameController = () => {
             <div className="p-4">
                 {error && <ErrorMessage message={error} />}
                 <div className="w-full pb-2 pt-3 flex flex-row items-center justify-around">
-                    <ControllButton Icon={FaArrowRotateLeft} color="#ffb2b2" onClick={() => { }} disabled={loading} />
-                    <ControllButton Icon={PiSkipBackFill} color="#a0c0ff" onClick={() => ExecuteUpdate(gameRewind)} disabled={loading} />
+                    {/* Reset Button */}
+                    <ControllButton
+                        Icon={FaArrowRotateLeft}
+                        color="#ffb2b2"
+                        onClick={() => ExecuteUpdate((jwt) => gameReset(false, jwt))}
+                        disabled={loading}
+                    />
 
-                    <ControllButton Icon={isRunning ? PiPauseFill : PiPlayFill} onClick={() => {
-                        isPaused ? ExecuteUpdate(gameResume) : isRunning ? ExecuteUpdate(gamePause) : ExecuteUpdate(gameStart);
-                    }} disabled={loading} />
+                    {/* Rewind Button */}
+                    <ControllButton
+                        Icon={PiSkipBackFill}
+                        color="#a0c0ff"
+                        onClick={() => ExecuteUpdate(gameRewind)}
+                        disabled={loading || state === "ready"}
+                    />
 
-                    <ControllButton Icon={PiSkipForwardFill} color="#a0c0ff" onClick={() => ExecuteUpdate(gameSkip)} disabled={loading} />
-                    <ControllButton Icon={PiStopFill} color="#ffb2b2" onClick={() => ExecuteUpdate(gameEnd)} disabled={loading} />
+                    {/* Play / Pause Button */}
+                    <ControllButton
+                        Icon={isRunning ? PiPauseFill : PiPlayFill}
+                        onClick={() => {
+                            isPaused ? ExecuteUpdate(gameResume) : isRunning ? ExecuteUpdate(gamePause) : ExecuteUpdate(gameStart);
+                        }}
+                        disabled={loading}
+                    />
+
+                    {/* Skip Button */}
+                    <ControllButton
+                        Icon={PiSkipForwardFill}
+                        color="#a0c0ff"
+                        onClick={() => ExecuteUpdate(gameSkip)}
+                        disabled={loading || state === "ended"}
+                    />
+
+                    {/* Stop Button */}
+                    <ControllButton
+                        Icon={PiStopFill}
+                        color="#ffb2b2"
+                        onClick={() => ExecuteUpdate(gameEnd)}
+                        disabled={loading || state === "ready" || state === "ended"}
+                    />
                 </div>
             </div>
         </div>

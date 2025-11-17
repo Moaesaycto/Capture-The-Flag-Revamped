@@ -73,9 +73,10 @@ export type MessageChunk = {
     end: true,
 }
 
-export type State = "ready" | "grace" | "scout" | "ffa" | "ended" | "paused" | "loading"
+export type State = "ready" | "grace" | "scout" | "ffa" | "ended"
 
 export type GameState = {
     state: State,
-    duration: number;
+    duration: number,
+    paused: boolean,
 }

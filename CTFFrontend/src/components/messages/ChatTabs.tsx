@@ -1,4 +1,4 @@
-import type { Chat, ChatType } from "../../types";
+import type { Chat, ChatType } from "@/types";
 
 type ChatTabsProps = {
   chats: Chat[];

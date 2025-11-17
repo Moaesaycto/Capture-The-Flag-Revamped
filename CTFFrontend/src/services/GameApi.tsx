@@ -36,3 +36,7 @@ export const gameRewind = async (jwt: string) => {
 export const gameEnd = async (jwt: string) => {
     return await apiCall<StandardStatus>(`game/control/end`, "POST", {}, jwt);
 }
+
+export const gameReset = async (hard: boolean, jwt: string) => {
+    return await apiCall<StandardStatus>(`game/control/reset`, "POST", { hard }, jwt);
+}
