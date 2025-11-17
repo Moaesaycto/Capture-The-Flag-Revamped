@@ -24,12 +24,12 @@ const MainHeader = () => {
                     {loggedIn &&
                         <div className="flex flex-row items-center">
                             <Link to="/">
-                                <div className="m-1 text-2xl border-3 rounded-xl relative p-0.5 hover:cursor-pointer">
+                                <div className="m-1 text-2xl border-3 border-black rounded-xl relative p-0.5 hover:cursor-pointer">
                                     <PiHouseBold />
                                 </div>
                             </Link>
                             <Link to="/message">
-                                <div className="m-1 text-2xl border-3 rounded-xl relative p-0.5 hover:cursor-pointer">
+                                <div className="m-1 text-2xl border-3 border-black rounded-xl relative p-0.5 hover:cursor-pointer">
                                     {(dirtyTeams || dirtyGlobal) && <div className="w-3 h-3 bg-red-500 border-red-900 rounded-full absolute -top-1.5 -left-1.5" />}
                                     <PiChatsCircleBold />
                                 </div>
