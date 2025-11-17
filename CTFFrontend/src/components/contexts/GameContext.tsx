@@ -93,6 +93,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 setPaused(update.paused);
                 console.log(update);
             },
+            () => {},
+            () => setHealth(false),
+            () => setHealth(false),
         )
 
         return () => {

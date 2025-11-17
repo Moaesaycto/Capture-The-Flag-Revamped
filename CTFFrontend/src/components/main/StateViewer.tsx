@@ -5,7 +5,8 @@ import type { State } from "../../types";
 import { FaBinoculars, FaFistRaised, FaFlagCheckered, FaHourglassHalf, FaShieldAlt } from "react-icons/fa";
 import confetti from "canvas-confetti";
 import Spinner from "./LoadingSpinner";
-import { PiPauseFill } from "react-icons/pi";
+import { PiPauseFill, PiWarning } from "react-icons/pi";
+import { useAuthContext } from "../contexts/AuthContext";
 
 type StateDisplay = {
     title: string,
@@ -42,7 +43,8 @@ export const STATE_MAP: { [key in State]: StateDisplay } = {
 };
 
 const StateViewer = () => {
-    const { state, currentDuration, isPaused, isInGame, stateUpdateKey } = useGameContext();
+    const { state, currentDuration, isPaused, isInGame, stateUpdateKey, health: gameHealth } = useGameContext();
+    const { healthy: authHealth } = useAuthContext();
     const [displayTime, setDisplayTime] = useState(currentDuration);
     const intervalRef = useRef<number | null>(null);
 
@@ -108,6 +110,30 @@ const StateViewer = () => {
                 <Spinner />
             </div>
         );
+    }
+
+    if (!gameHealth || !authHealth) {
+        return (
+            <div className="w-full pt-4 pb-10 relative mb-10 mt-4 flex items-center justify-center">
+                <PiWarning
+                    className="absolute text-gray-300"
+                    style={{
+                        fontSize: "12rem",
+                        opacity: 0.1,
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        pointerEvents: "none",
+                        zIndex: 0,
+                        color: "red"
+                    }}
+                />
+                <div className="h-30 flex flex-col items-center justify-center">
+                    <span className="text-3xl relative z-10">DISCONNECTED</span>
+                    <span className="text-lg opacity-50">Connection to server lost</span>
+                </div>
+            </div>
+        )
     }
 
     return (
