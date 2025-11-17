@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { createWebSocket } from "../../services/api";
-import type { Player, Team, State, GameState } from "../../types";
-import { gameStatus } from "../../services/GameApi";
-import { useAuthContext } from "./AuthContext";
+import { createWebSocket } from "@/services/api";
+import type { Player, Team, State, GameState } from "@/types";
+import { gameStatus } from "@/services/GameApi";
+import { useAuthContext } from "@/components/contexts/AuthContext";
 
 interface GameContextValue {
     loading: boolean;
@@ -16,7 +16,7 @@ interface GameContextValue {
     getTeamFromId: (teamId: string) => Team | null;
     removeMeFromGame: () => void;
     currentDuration: number;
-    isRunning: boolean;
+    isInGame: boolean;
     isPaused: boolean;
     stateUpdateKey: number;
 }
@@ -115,10 +115,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setPlayers(r.players);
             setState(r.state.state as State);
             setCurrentDuration(r.state.duration);
+            setPaused(r.state.paused);
         }).catch(() => { }); // TODO: fix
     }, []);
 
-    const isRunning = useMemo<boolean>(() => {
+    const isInGame = useMemo<boolean>(() => {
         return state === "grace" || state === "scout" || state === "ffa";
     }, [state]);
 
@@ -135,7 +136,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             getTeamFromId,
             removeMeFromGame,
             currentDuration,
-            isRunning,
+            isInGame,
             isPaused: paused,
             stateUpdateKey,
         }}>

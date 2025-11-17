@@ -1,9 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { createWebSocket } from "../../services/api";
-import { useAuthContext } from "./AuthContext";
-import { getTeamMessages, teamMessage } from "../../services/TeamApi";
-import type { ChatMessage, ChatType, MessageResponse } from "../../types";
-import { getGlobalMessages, globalMessage } from "../../services/GameApi";
+import { createWebSocket } from "@/services/api";
+import { useAuthContext } from "@/components/contexts/AuthContext";
+import { getTeamMessages, teamMessage } from "@/services/TeamApi";
+import type { ChatMessage, ChatType, MessageResponse } from "@/types";
+import { getGlobalMessages, globalMessage } from "@/services/GameApi";
 
 interface MessageContextValue {
     openChat: ChatType | null,

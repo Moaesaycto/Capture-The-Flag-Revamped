@@ -34,7 +34,7 @@ const GameController = () => {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const { jwt } = useAuthContext();
-    const { isRunning, isPaused, state } = useGameContext();
+    const { isInGame, isPaused, state } = useGameContext();
 
     const ExecuteUpdate = (action: (jwt: string) => Promise<StandardStatus>) => {
         setError(null);
@@ -68,9 +68,17 @@ const GameController = () => {
 
                     {/* Play / Pause Button */}
                     <ControllButton
-                        Icon={isRunning ? PiPauseFill : PiPlayFill}
+                        Icon={isPaused || !isInGame ? PiPlayFill : PiPauseFill}
                         onClick={() => {
-                            isPaused ? ExecuteUpdate(gameResume) : isRunning ? ExecuteUpdate(gamePause) : ExecuteUpdate(gameStart);
+                            if (!isInGame) {
+                                ExecuteUpdate(gameStart);
+                            } else {
+                                if (isPaused) {
+                                    ExecuteUpdate(gameResume);
+                                } else {
+                                    ExecuteUpdate(gamePause);
+                                }
+                            }
                         }}
                         disabled={loading}
                     />

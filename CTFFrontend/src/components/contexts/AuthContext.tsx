@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { apiHealth } from "../../services/api";
-import type { Player, Team } from "../../types";
-import { playerMe } from "../../services/PlayerApi";
-import { teamGet } from "../../services/TeamApi";
+import { apiHealth } from "@/services/api";
+import type { Player, Team } from "@/types";
+import { playerMe } from "@/services/PlayerApi";
+import { teamGet } from "@/services/TeamApi";
 import { useNavigate } from "react-router-dom";
 
 const JWT_KEY = import.meta.env.VITE_JWT_KEY;

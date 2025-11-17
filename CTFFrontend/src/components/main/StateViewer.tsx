@@ -1,10 +1,11 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useGameContext } from "../contexts/GameContext";
 import type { IconType } from "react-icons";
 import type { State } from "../../types";
 import { FaBinoculars, FaFistRaised, FaFlagCheckered, FaHourglassHalf, FaShieldAlt } from "react-icons/fa";
 import confetti from "canvas-confetti";
 import Spinner from "./LoadingSpinner";
+import { PiPauseFill } from "react-icons/pi";
 
 type StateDisplay = {
     title: string,
@@ -41,7 +42,7 @@ export const STATE_MAP: { [key in State]: StateDisplay } = {
 };
 
 const StateViewer = () => {
-    const { state, currentDuration, isPaused, isRunning, stateUpdateKey } = useGameContext();
+    const { state, currentDuration, isPaused, isInGame, stateUpdateKey } = useGameContext();
     const [displayTime, setDisplayTime] = useState(currentDuration);
     const intervalRef = useRef<number | null>(null);
 
@@ -58,7 +59,7 @@ const StateViewer = () => {
             intervalRef.current = null;
         }
 
-        if (!isRunning || isPaused) return;
+        if (!isInGame || isPaused) return;
 
         intervalRef.current = window.setInterval(() => {
             const elapsed = Date.now() - startTime;
@@ -77,15 +78,7 @@ const StateViewer = () => {
                 intervalRef.current = null;
             }
         };
-    }, [stateUpdateKey, isRunning, isPaused, currentDuration]);
-
-    if (!state) {
-        return (
-            <div className="w-full pt-4 pb-10 relative mb-6 flex items-center justify-center">
-                <Spinner />
-            </div>
-        );
-    }
+    }, [stateUpdateKey, isInGame, isPaused, currentDuration]);
 
     useEffect(() => {
         if (state === "ended") {
@@ -97,12 +90,20 @@ const StateViewer = () => {
         }
     }, [state]);
 
+    if (!state) {
+        return (
+            <div className="w-full pt-4 pb-10 relative mb-6 flex items-center justify-center">
+                <Spinner />
+            </div>
+        );
+    }
+
     const totalSeconds = Math.floor(displayTime / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = String(totalSeconds % 60).padStart(2, "0");
 
     const stateDisplay = STATE_MAP[state];
-    const Icon = stateDisplay.icon;
+    const Icon = useMemo(() => isPaused ? PiPauseFill : stateDisplay.icon, [isPaused, stateDisplay]);
 
     return (
         <div className="w-full pt-4 pb-10 relative mb-10 mt-4 flex items-center justify-center">
@@ -116,7 +117,7 @@ const StateViewer = () => {
                     transform: "translate(-50%, -50%)",
                     pointerEvents: "none",
                     zIndex: 0,
-                    color: stateDisplay.color
+                    color: isPaused ? "#9696ff" : stateDisplay.color
                 }}
             />
             <div className="h-30 flex flex-col items-center">

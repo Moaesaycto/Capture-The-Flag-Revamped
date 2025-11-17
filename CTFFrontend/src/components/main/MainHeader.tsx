@@ -1,7 +1,7 @@
 import { PiChatsCircleBold, PiFlagBannerFoldDuotone, PiHouseBold } from "react-icons/pi";
-import { useAuthContext } from "../contexts/AuthContext";
+import { useAuthContext } from "@/components/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import { useMessageContext } from "../contexts/MessageContext";
+import { useMessageContext } from "@/components/contexts/MessageContext";
 
 const MainHeader = () => {
     const { loggedIn } = useAuthContext();
