@@ -70,17 +70,9 @@ const GameController = () => {
                     <ControllButton
                         Icon={isPaused || !isInGame ? PiPlayFill : PiPauseFill}
                         onClick={() => {
-                            if (!isInGame) {
-                                ExecuteUpdate(gameStart);
-                            } else {
-                                if (isPaused) {
-                                    ExecuteUpdate(gameResume);
-                                } else {
-                                    ExecuteUpdate(gamePause);
-                                }
-                            }
+                            isPaused ? ExecuteUpdate(gameResume) : isInGame ? ExecuteUpdate(gamePause) : ExecuteUpdate(gameStart);
                         }}
-                        disabled={loading}
+                        disabled={loading || state == "ended"}
                     />
 
                     {/* Skip Button */}

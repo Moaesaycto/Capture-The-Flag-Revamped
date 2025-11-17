@@ -32,7 +32,6 @@ public class Game {
 
   private static final long REWIND_TOLERANCE_MS = 5000;
   private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-  private State previousRunningState = null;
   private ScheduledFuture<?> scheduled = null;
   private long remaining = -1;
   private long stageDuration = -1;
@@ -41,15 +40,14 @@ public class Game {
   private final boolean locked;
 
   private static State state;
+  private static boolean paused = false;
 
   public enum State {
     WAITING_TO_START("ready"),
     GRACE_PERIOD("grace"),
     SCOUT_PERIOD("scout"),
     FFA_PERIOD("ffa"),
-    ENDED("ended"),
-    PAUSED("paused"),
-    LOADING("loading");
+    ENDED("ended");
 
     private final String readableName;
 
@@ -72,6 +70,7 @@ public class Game {
     teams = new ArrayList<Team>();
     players = new ArrayList<Player>();
     state = State.WAITING_TO_START;
+    paused = false;
     config = initConfig;
     locked = false;
 
@@ -98,84 +97,111 @@ public class Game {
 
   public synchronized void pause() {
     if (!isGameRunning()) throw new IllegalStateException("Cannot pause a game that isn't running");
-    if (state == State.PAUSED) return;
+    if (paused) return;
     if (scheduled != null) scheduled.cancel(false);
 
     long elapsed = System.currentTimeMillis() - stageStartEpoch;
     remaining = Math.max(0, stageDuration - elapsed);
 
-    previousRunningState = state;
-    state = State.PAUSED;
-    stateBroadcast(state, remaining);
+    paused = true;
+    stateBroadcast(state, remaining, paused);
   }
 
   public void resume() {
-    if (state != State.PAUSED) throw new IllegalStateException("Cannot resume a unpaused game");
-    if (previousRunningState == null) throw new IllegalStateException("No state to resume to");
+    if (!paused) throw new IllegalStateException("Cannot resume a unpaused game");
 
-    goToSameStateWithRemaining(previousRunningState);
+    paused = false;
+    goToWithRemaining(state, remaining);
   }
 
   public void skip() {
-    if (!isGameRunning() && state != State.PAUSED)
+    if (!isGameRunning() && !paused)
       throw new IllegalStateException("Cannot skip a game that isn't running");
     if (scheduled != null) scheduled.cancel(false);
 
-    if (state == State.PAUSED) {
-      // Skip to start of next period while paused
-      previousRunningState = getNextState(previousRunningState);
-      remaining = getDurationForState(previousRunningState);
+    if (paused) {
+      State nextState = getNextState(state);
+      remaining = getDurationForState(nextState);
+      state = nextState;
     } else {
       advance();
     }
+
+    if (state == State.WAITING_TO_START || state == State.ENDED) paused = false;
+
+    stateBroadcast(state, remaining, paused);
   }
 
   public void rewind() {
-    if (!isGameRunning() && state != State.PAUSED && state != State.ENDED)
+    if (!isGameRunning() && !paused && state != State.ENDED)
       throw new IllegalStateException("Cannot rewind a game that isn't running or ended");
     if (scheduled != null) scheduled.cancel(false);
 
-    if (state == State.PAUSED) {
-      // Calculate elapsed time (excluding paused time)
+    if (paused) {
       long elapsed = stageDuration - remaining;
-      if (elapsed <= REWIND_TOLERANCE_MS) {
-        // Within tolerance: go to previous state
-        previousRunningState = getPreviousState(previousRunningState);
-        remaining = getDurationForState(previousRunningState);
-      } else {
-        // Outside tolerance: restart current section
-        remaining = getDurationForState(previousRunningState);
-      }
+      if (elapsed <= REWIND_TOLERANCE_MS) state = getPreviousState(state);
+
+      remaining = getDurationForState(state);
     } else {
       // Game is running
       long elapsed = System.currentTimeMillis() - stageStartEpoch;
       if (elapsed <= REWIND_TOLERANCE_MS) {
-        // Within tolerance: go to previous state
         State previousState = getPreviousState(state);
         goTo(previousState, getDurationForState(previousState));
       } else {
-        // Outside tolerance: restart current section
         goTo(state, getDurationForState(state));
       }
     }
+
+    if (state == State.WAITING_TO_START || state == State.ENDED) paused = false;
+    stateBroadcast(state, remaining, paused);
   }
 
   public void end() {
     if (!isGameRunning()) throw new IllegalStateException("Cannot end a game that isn't running");
     if (scheduled != null) scheduled.cancel(false);
     remaining = -1;
+    paused = false;
     state = State.ENDED;
-    stateBroadcast(state, 0);
+    stateBroadcast(state, 0, paused);
+  }
+
+  public synchronized void reset() {
+    reset(false);
+  }
+
+  public synchronized void reset(boolean hard) {
+    if (scheduled != null) {
+      scheduled.cancel(false);
+      scheduled = null;
+    }
+
+    state = State.WAITING_TO_START;
+    paused = false;
+    remaining = -1;
+    stageDuration = -1;
+    stageStartEpoch = 0;
+
+    if (hard) {
+      players.clear();
+      messages.clear();
+      counter.set(0);
+    }
+
+    stateBroadcast(state, config.getGame().getGraceTime() * 1000L, paused);
   }
 
   // ----- State Handling -----
   public void goTo(State newState, long duration) {
     setState(newState);
+    paused = false;
     stageDuration = duration;
     stageStartEpoch = System.currentTimeMillis();
     remaining = -1;
 
-    stateBroadcast(newState, duration);
+    if (state == State.WAITING_TO_START) paused = false;
+
+    stateBroadcast(newState, duration, paused);
 
     if (duration > 0) {
       scheduled = scheduler.schedule(this::advance, duration, TimeUnit.MILLISECONDS);
@@ -190,15 +216,19 @@ public class Game {
     return Game.state;
   }
 
-  private void goToSameStateWithRemaining(State restoredState) {
-    long dur = remaining;
+  public synchronized boolean isPaused() {
+    return paused;
+  }
+
+  private void goToWithRemaining(State restoredState, long dur) {
     remaining = -1;
+    paused = false;
 
     state = restoredState;
     stageDuration = dur;
     stageStartEpoch = System.currentTimeMillis();
     scheduled = scheduler.schedule(this::advance, dur, TimeUnit.MILLISECONDS);
-    stateBroadcast(state, dur);
+    stateBroadcast(state, dur, paused);
   }
 
   public void advance() {
@@ -257,14 +287,7 @@ public class Game {
     List<Map<String, Object>> teamList = new ArrayList<>();
 
     long now = System.currentTimeMillis();
-    long timeLeft =
-        switch (state) {
-          case ENDED -> 0L;
-          case PAUSED -> Math.max(0L, remaining);
-          default -> Math.max(0L, stageDuration - (now - stageStartEpoch));
-        };
-
-    Map<String, Object> currState = Map.of("state", state.toString(), "duration", timeLeft);
+    Map<String, Object> currState = getCurrentState(now);
 
     players.forEach(p -> playerList.add(p.toMap()));
     teams.forEach(t -> teamList.add(t.toMap()));
@@ -274,6 +297,26 @@ public class Game {
         "teams", teamList,
         "state", currState,
         "game", config.getMap());
+  }
+
+  private Map<String, Object> getCurrentState(long now) {
+    long timeLeft =
+        switch (state) {
+          case WAITING_TO_START -> config.getGame().getGraceTime() * 1000L;
+          case ENDED -> 0L;
+          default -> {
+            if (paused) {
+              yield Math.max(0L, remaining);
+            } else {
+              yield Math.max(0L, stageDuration - (now - stageStartEpoch));
+            }
+          }
+        };
+
+    return Map.of(
+        "state", state.toString(),
+        "duration", timeLeft,
+        "paused", paused);
   }
 
   public void merge(@Valid SettingsRequest settings) {
@@ -305,8 +348,8 @@ public class Game {
     if (locked) throw new IllegalStateException("Game process is currently locked");
   }
 
-  public void stateBroadcast(State newState, long duration) {
-    StateSocketConnectionHandler.broadcast(new StateMessage(state, duration));
+  public void stateBroadcast(State newState, long duration, boolean isPaused) {
+    StateSocketConnectionHandler.broadcast(new StateMessage(newState, duration, isPaused));
   }
 
   // ----- Players -----
@@ -322,7 +365,7 @@ public class Game {
   }
 
   public UUID addPlayer(String name, UUID team, boolean auth) {
-    if (state != State.WAITING_TO_START)
+    if (state != State.WAITING_TO_START && !auth)
       throw new IllegalStateException("Cannot join game at this time");
 
     if (players.stream().anyMatch(p -> p.getName().equals(name)))
@@ -341,7 +384,10 @@ public class Game {
   public boolean removePlayer(UUID id) {
     if (!isValidPlayer(id)) throw new NoSuchElementException("Player not found");
 
-    return players.removeIf(p -> id.equals(p.getID()));
+    boolean removed = players.removeIf(p -> id.equals(p.getID()));
+
+    if (players.isEmpty()) reset(true);
+    return removed;
   }
 
   public boolean isValidPlayer(UUID player) {

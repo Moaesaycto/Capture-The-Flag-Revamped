@@ -3,6 +3,7 @@ package moae.dev.Server;
 import jakarta.validation.Valid;
 import moae.dev.Game.Game;
 import moae.dev.Requests.MessageRequest;
+import moae.dev.Requests.ResetRequest;
 import moae.dev.Requests.SettingsRequest;
 import moae.dev.Utils.MessagePage;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -97,6 +98,14 @@ public class GameController {
   @PostMapping("/control/end")
   public Map<String, Object> endGame(@AuthenticationPrincipal Jwt jwt) {
     game.end();
+    return Map.of("message", "success");
+  }
+
+  @RequirePlayerAuth
+  @PostMapping("/control/reset")
+  public Map<String, Object> resetGame(
+      @RequestBody ResetRequest req, @AuthenticationPrincipal Jwt jwt) {
+    game.reset(req.isHard());
     return Map.of("message", "success");
   }
 }

@@ -90,6 +90,18 @@ const StateViewer = () => {
         }
     }, [state]);
 
+    const totalSeconds = Math.floor(displayTime / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = String(totalSeconds % 60).padStart(2, "0");
+
+    const stateDisplay = useMemo(() => STATE_MAP[state as State] ?? {
+        title: "",
+        icon: PiPauseFill,
+        color: "#999",
+    }, [state]);
+
+    const Icon = isPaused ? PiPauseFill : stateDisplay.icon;
+
     if (!state) {
         return (
             <div className="w-full pt-4 pb-10 relative mb-6 flex items-center justify-center">
@@ -97,13 +109,6 @@ const StateViewer = () => {
             </div>
         );
     }
-
-    const totalSeconds = Math.floor(displayTime / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = String(totalSeconds % 60).padStart(2, "0");
-
-    const stateDisplay = STATE_MAP[state];
-    const Icon = useMemo(() => isPaused ? PiPauseFill : stateDisplay.icon, [isPaused, stateDisplay]);
 
     return (
         <div className="w-full pt-4 pb-10 relative mb-10 mt-4 flex items-center justify-center">

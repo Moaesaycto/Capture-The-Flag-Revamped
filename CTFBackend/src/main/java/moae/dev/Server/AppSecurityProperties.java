@@ -32,7 +32,7 @@ public class AppSecurityProperties {
   }
 
   public boolean passCheck(String password) {
-    return authPw != null && authPw.equals(password);
+      return authPw != null && authPw.equals(password);
   }
 
   public String getJwtSecret() {
