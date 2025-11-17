@@ -91,7 +91,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 setCurrentDuration(update.duration);
                 setStateUpdateKey(prev => prev + 1);
                 setPaused(update.paused);
-                console.log(update);
             },
             () => {},
             () => setHealth(false),
