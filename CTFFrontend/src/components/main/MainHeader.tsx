@@ -2,10 +2,12 @@ import { PiChatsCircleBold, PiFlagBannerFoldDuotone, PiHouseBold } from "react-i
 import { useAuthContext } from "@/components/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { useMessageContext } from "@/components/contexts/MessageContext";
+import { useLocation } from "react-router-dom";
 
 const MainHeader = () => {
     const { loggedIn } = useAuthContext();
     const { dirtyTeams, dirtyGlobal } = useMessageContext();
+    const location = useLocation().pathname.replace("/", "");
 
     return (
         <header
@@ -23,17 +25,17 @@ const MainHeader = () => {
                 <div className="h-full flex items-center justify-center gap-1">
                     {loggedIn &&
                         <div className="flex flex-row items-center">
-                            <Link to="/">
+                            {location !== "" && <Link to="/">
                                 <div className="m-1 text-2xl border-3 border-black rounded-xl relative p-0.5 hover:cursor-pointer">
                                     <PiHouseBold />
                                 </div>
-                            </Link>
-                            <Link to="/message">
+                            </Link>}
+                            {location !== "message" && <Link to="/message">
                                 <div className="m-1 text-2xl border-3 border-black rounded-xl relative p-0.5 hover:cursor-pointer">
                                     {(dirtyTeams || dirtyGlobal) && <div className="w-3 h-3 bg-red-500 border-red-900 rounded-full absolute -top-1.5 -left-1.5" />}
                                     <PiChatsCircleBold />
                                 </div>
-                            </Link>
+                            </Link>}
                         </div>
                     }
                 </div>

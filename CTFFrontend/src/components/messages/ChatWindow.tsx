@@ -30,7 +30,7 @@ const MessageInner = ({ message, pending }: { message: ChatMessage, pending?: bo
         <div className="py-2 px-10">
             <li
                 className={`py-2 pl-4 pr-2 rounded-2xl flex flex-col bg-neutral-800
-        ${isMe ? "ml-[20%] rounded-br-sm" : "mr-[20%] rounded-bl-sm"}`}
+        ${isMe ? "ml-[20%] rounded-br-xs" : "mr-[20%] rounded-bl-xs"}`}
                 style={containerStyle}
             >
                 <div className="flex justify-between h-4 text-xs" style={headerStyle}>
