@@ -53,7 +53,7 @@ const JoinForm = () => {
     const TeamButton = ({ team, disabled }: { team: Team, disabled?: boolean }) => {
         return (
             <button
-                style={{ color: team.color, backgroundColor: Color(team.color).alpha(0.25).toString() }}
+                style={{ color: team.color, backgroundColor: Color(team.color).alpha(0.25).toString(), borderColor: team.color }}
                 className="flex-1 justify-center 
                            px-5 py-1 font-semibold border-2 rounded flex gap-2 items-center transition duration-150
                            hover:scale-105 hover:cursor-pointer disabled:opacity-50 disabled:hover:scale-100 disabled:hover:cursor-not-allowed"
@@ -96,7 +96,7 @@ const JoinForm = () => {
                             value={name.slice(0, 32)}
                         />
                         <input
-                            className="appearance-none h-7 w-7 bg-black checked:bg-amber-300 rounded"
+                            className="appearance-none h-7 w-7 bg-neutral-950 checked:bg-amber-300 rounded"
                             type="checkbox"
                             onChange={(e: ChangeEvent<HTMLInputElement>) => { setWantsAuth(e.target.checked) }}
                         />

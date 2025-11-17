@@ -3,6 +3,7 @@ import { useGameContext } from "../contexts/GameContext";
 import type { IconType } from "react-icons";
 import type { State } from "../../types";
 import { FaBinoculars, FaFistRaised, FaFlagCheckered, FaHourglassHalf, FaShieldAlt } from "react-icons/fa";
+import confetti from "canvas-confetti";
 import Spinner from "./LoadingSpinner";
 
 type StateDisplay = {
@@ -85,6 +86,16 @@ const StateViewer = () => {
             </div>
         );
     }
+
+    useEffect(() => {
+        if (state === "ended") {
+            confetti({
+                particleCount: 200,
+                spread: 90,
+                origin: { y: 0.3 },
+            });
+        }
+    }, [state]);
 
     const totalSeconds = Math.floor(displayTime / 1000);
     const minutes = Math.floor(totalSeconds / 60);

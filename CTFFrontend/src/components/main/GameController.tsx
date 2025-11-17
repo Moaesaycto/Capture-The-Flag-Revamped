@@ -80,7 +80,7 @@ const GameController = () => {
                         Icon={PiSkipForwardFill}
                         color="#a0c0ff"
                         onClick={() => ExecuteUpdate(gameSkip)}
-                        disabled={loading || state === "ended"}
+                        disabled={loading || state === "ready" || state === "ended"}
                     />
 
                     {/* Stop Button */}
