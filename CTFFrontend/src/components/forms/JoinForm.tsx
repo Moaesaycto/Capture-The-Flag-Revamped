@@ -72,8 +72,8 @@ const JoinForm = () => {
 
     return (
         <div>
-            {error && <ErrorMessage message={error} />}
             <form onSubmit={onSubmit} className="w-full gap-3 bg-neutral-800 p-3 rounded relative">
+                {error && <ErrorMessage message={error} />}
                 {loading &&
                     <div className="absolute inset-0 flex items-center justify-center">
                         <Spinner />

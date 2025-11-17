@@ -33,10 +33,6 @@ export type GameInfoProps = {
     minPlayerPerTeam: number,
 }
 
-export type GameState = {
-    state: string
-}
-
 export type GameStatus = {
     game: GameInfoProps,
     players: Player[],
@@ -75,4 +71,11 @@ export type MessageResponse = {
 export type MessageChunk = {
     messages: ChatMessage[],
     end: true,
+}
+
+export type State = "ready" | "grace" | "scout" | "ffa" | "ended" | "paused" | "loading"
+
+export type GameState = {
+    state: State,
+    duration: number;
 }

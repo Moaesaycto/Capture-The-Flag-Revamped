@@ -1,5 +1,6 @@
 package moae.dev.Game;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.validation.Valid;
 import moae.dev.Requests.SettingsRequest;
 import moae.dev.Server.AppConfig;
@@ -29,7 +30,9 @@ public class Game {
   private final List<ChatMessage> messages = new ArrayList<>();
   private SocketConnectionHandler webSocketHandler;
 
+  private static final long REWIND_TOLERANCE_MS = 5000;
   private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+  private State previousRunningState = null;
   private ScheduledFuture<?> scheduled = null;
   private long remaining = -1;
   private long stageDuration = -1;
@@ -58,6 +61,11 @@ public class Game {
     public String toString() {
       return readableName;
     }
+
+    @JsonValue
+    public String getReadableName() {
+      return readableName;
+    }
   }
 
   public Game(AppConfig initConfig) {
@@ -82,48 +90,80 @@ public class Game {
 
   // ----- Game Controls -----
   public synchronized void start() {
-    if (state != State.WAITING_TO_START && state != State.ENDED) {
+    if (state != State.WAITING_TO_START && state != State.ENDED)
       throw new IllegalStateException("Cannot start game in this state: " + state.readableName);
-    }
 
-    goTo(State.GRACE_PERIOD, config.getGame().getGraceTime());
+    goTo(State.GRACE_PERIOD, config.getGame().getGraceTime() * 1000L);
   }
 
   public synchronized void pause() {
+    if (!isGameRunning()) throw new IllegalStateException("Cannot pause a game that isn't running");
     if (state == State.PAUSED) return;
     if (scheduled != null) scheduled.cancel(false);
 
-    if (state != State.GRACE_PERIOD && state != State.SCOUT_PERIOD && state != State.FFA_PERIOD) {
-      throw new IllegalStateException("Cannot pause a game that isn't running");
-    }
-
-    long elapsed = (System.currentTimeMillis() / 1000L) - stageStartEpoch;
+    long elapsed = System.currentTimeMillis() - stageStartEpoch;
     remaining = Math.max(0, stageDuration - elapsed);
 
+    previousRunningState = state;
     state = State.PAUSED;
-    stateBroadcast(state, 0);
+    stateBroadcast(state, remaining);
   }
 
   public void resume() {
-    if (state != State.PAUSED) {
-      throw new IllegalStateException("Cannot resume a unpaused game");
-    }
+    if (state != State.PAUSED) throw new IllegalStateException("Cannot resume a unpaused game");
+    if (previousRunningState == null) throw new IllegalStateException("No state to resume to");
 
-    goToSameStateWithRemaining();
+    goToSameStateWithRemaining(previousRunningState);
   }
 
   public void skip() {
+    if (!isGameRunning() && state != State.PAUSED)
+      throw new IllegalStateException("Cannot skip a game that isn't running");
     if (scheduled != null) scheduled.cancel(false);
-    advance();
+
+    if (state == State.PAUSED) {
+      // Skip to start of next period while paused
+      previousRunningState = getNextState(previousRunningState);
+      remaining = getDurationForState(previousRunningState);
+    } else {
+      advance();
+    }
   }
 
   public void rewind() {
+    if (!isGameRunning() && state != State.PAUSED && state != State.ENDED)
+      throw new IllegalStateException("Cannot rewind a game that isn't running or ended");
     if (scheduled != null) scheduled.cancel(false);
-    back();
+
+    if (state == State.PAUSED) {
+      // Calculate elapsed time (excluding paused time)
+      long elapsed = stageDuration - remaining;
+      if (elapsed <= REWIND_TOLERANCE_MS) {
+        // Within tolerance: go to previous state
+        previousRunningState = getPreviousState(previousRunningState);
+        remaining = getDurationForState(previousRunningState);
+      } else {
+        // Outside tolerance: restart current section
+        remaining = getDurationForState(previousRunningState);
+      }
+    } else {
+      // Game is running
+      long elapsed = System.currentTimeMillis() - stageStartEpoch;
+      if (elapsed <= REWIND_TOLERANCE_MS) {
+        // Within tolerance: go to previous state
+        State previousState = getPreviousState(state);
+        goTo(previousState, getDurationForState(previousState));
+      } else {
+        // Outside tolerance: restart current section
+        goTo(state, getDurationForState(state));
+      }
+    }
   }
 
   public void end() {
+    if (!isGameRunning()) throw new IllegalStateException("Cannot end a game that isn't running");
     if (scheduled != null) scheduled.cancel(false);
+    remaining = -1;
     state = State.ENDED;
     stateBroadcast(state, 0);
   }
@@ -132,13 +172,13 @@ public class Game {
   public void goTo(State newState, long duration) {
     setState(newState);
     stageDuration = duration;
-    stageStartEpoch = System.currentTimeMillis() / 1000L;
+    stageStartEpoch = System.currentTimeMillis();
     remaining = -1;
 
     stateBroadcast(newState, duration);
 
     if (duration > 0) {
-      scheduled = scheduler.schedule(this::advance, duration, TimeUnit.SECONDS);
+      scheduled = scheduler.schedule(this::advance, duration, TimeUnit.MILLISECONDS);
     }
   }
 
@@ -150,20 +190,22 @@ public class Game {
     return Game.state;
   }
 
-  private void goToSameStateWithRemaining() {
-    stageStartEpoch = System.currentTimeMillis() / 1000L;
+  private void goToSameStateWithRemaining(State restoredState) {
     long dur = remaining;
     remaining = -1;
 
-    scheduled = scheduler.schedule(this::advance, dur, TimeUnit.SECONDS);
+    state = restoredState;
+    stageDuration = dur;
+    stageStartEpoch = System.currentTimeMillis();
+    scheduled = scheduler.schedule(this::advance, dur, TimeUnit.MILLISECONDS);
     stateBroadcast(state, dur);
   }
 
   public void advance() {
     synchronized (this) {
       switch (state) {
-        case GRACE_PERIOD -> goTo(State.SCOUT_PERIOD, config.getGame().getScoutTime());
-        case SCOUT_PERIOD -> goTo(State.FFA_PERIOD, config.getGame().getFfaTime());
+        case GRACE_PERIOD -> goTo(State.SCOUT_PERIOD, config.getGame().getScoutTime() * 1000L);
+        case SCOUT_PERIOD -> goTo(State.FFA_PERIOD, config.getGame().getFfaTime() * 1000L);
         case FFA_PERIOD -> goTo(State.ENDED, 0);
       }
     }
@@ -171,17 +213,58 @@ public class Game {
 
   public void back() {
     switch (state) {
-      case SCOUT_PERIOD -> goTo(State.GRACE_PERIOD, config.getGame().getGraceTime());
-      case FFA_PERIOD -> goTo(State.SCOUT_PERIOD, config.getGame().getScoutTime());
+      case SCOUT_PERIOD -> goTo(State.GRACE_PERIOD, config.getGame().getGraceTime() * 1000L);
+      case FFA_PERIOD -> goTo(State.SCOUT_PERIOD, config.getGame().getScoutTime() * 1000L);
+      case ENDED -> goTo(State.FFA_PERIOD, config.getGame().getFfaTime() * 1000L);
       default -> goTo(State.WAITING_TO_START, 0);
     }
+  }
+
+  public boolean isGameRunning() {
+    return state == State.GRACE_PERIOD || state == State.SCOUT_PERIOD || state == State.FFA_PERIOD;
+  }
+
+  private State getNextState(State current) {
+    return switch (current) {
+      case GRACE_PERIOD -> State.SCOUT_PERIOD;
+      case SCOUT_PERIOD -> State.FFA_PERIOD;
+      case FFA_PERIOD -> State.ENDED;
+      default -> current;
+    };
+  }
+
+  private State getPreviousState(State current) {
+    return switch (current) {
+      case SCOUT_PERIOD -> State.GRACE_PERIOD;
+      case FFA_PERIOD -> State.SCOUT_PERIOD;
+      case ENDED -> State.FFA_PERIOD;
+      default -> State.WAITING_TO_START;
+    };
+  }
+
+  private long getDurationForState(State state) {
+    return switch (state) {
+      case GRACE_PERIOD -> config.getGame().getGraceTime() * 1000L;
+      case SCOUT_PERIOD -> config.getGame().getScoutTime() * 1000L;
+      case FFA_PERIOD -> config.getGame().getFfaTime() * 1000L;
+      default -> 0L;
+    };
   }
 
   // ----- Utilities -----
   public Map<String, Object> status() {
     List<Map<String, Object>> playerList = new ArrayList<>();
     List<Map<String, Object>> teamList = new ArrayList<>();
-    Map<String, String> currState = Map.of("state", state.toString());
+
+    long now = System.currentTimeMillis();
+    long timeLeft =
+        switch (state) {
+          case ENDED -> 0L;
+          case PAUSED -> Math.max(0L, remaining);
+          default -> Math.max(0L, stageDuration - (now - stageStartEpoch));
+        };
+
+    Map<String, Object> currState = Map.of("state", state.toString(), "duration", timeLeft);
 
     players.forEach(p -> playerList.add(p.toMap()));
     teams.forEach(t -> teamList.add(t.toMap()));

@@ -1,10 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createWebSocket } from "../../services/api";
-import type { Player, Team } from "../../types";
+import type { Player, Team, State, GameState } from "../../types";
 import { gameStatus } from "../../services/GameApi";
 import { useAuthContext } from "./AuthContext";
-
-type State = "ready" | "grace" | "scout" | "ffa" | "ended" | "paused" | "loading"
 
 interface GameContextValue {
     loading: boolean;
@@ -17,6 +15,10 @@ interface GameContextValue {
     teams: Team[],
     getTeamFromId: (teamId: string) => Team | null;
     removeMeFromGame: () => void;
+    currentDuration: number;
+    isRunning: boolean;
+    isPaused: boolean;
+    stateUpdateKey: number;
 }
 
 const GameContext = createContext<GameContextValue | undefined>(undefined);
@@ -29,6 +31,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [state, setState] = useState<State | null>(null);
     const [players, setPlayers] = useState<Player[]>([]);
     const [teams, setTeams] = useState<Team[]>([]);
+    const [currentDuration, setCurrentDuration] = useState<number>(0);
+    const [stateUpdateKey, setStateUpdateKey] = useState<number>(0);
 
     useEffect(() => {
         createWebSocket(
@@ -76,6 +80,23 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         };
     }, [logout, me]);
 
+    useEffect(() => {
+        const socket = createWebSocket(
+            "state",
+            undefined,
+            (msg: string) => {
+                const update: GameState = JSON.parse(msg);
+                setState(update.state);
+                setCurrentDuration(update.duration);
+                setStateUpdateKey(prev => prev + 1);
+            },
+        )
+
+        return () => {
+            socket.close();
+        }
+    }, []);
+
     const getTeamFromId = useCallback((teamId: string) => {
         return teams.find(t => t.id === teamId) ?? null;
     }, [teams]);
@@ -90,8 +111,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setTeams(r.teams);
             setPlayers(r.players);
             setState(r.state.state as State);
+            setCurrentDuration(r.state.duration);
         }).catch(() => { }); // TODO: fix
     }, []);
+
+    const isRunning = useMemo<boolean>(() => {
+        return state === "grace" || state === "scout" || state === "ffa";
+    }, [state]);
+
+    const isPaused = useMemo<boolean>(() => {
+        return state === "paused";
+    }, [state]);
 
     return (
         <GameContext.Provider value={{
@@ -105,6 +135,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             teams,
             getTeamFromId,
             removeMeFromGame,
+            currentDuration,
+            isRunning,
+            isPaused,
+            stateUpdateKey,
         }}>
             {children}
         </GameContext.Provider>
