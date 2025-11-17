@@ -36,7 +36,7 @@ export const STATE_MAP: { [key in State]: StateDisplay } = {
         color: "#dd3535"
     },
     ended: {
-        title: "Ended",
+        title: "Game Over",
         icon: FaFlagCheckered,
         color: "#9696ff",
     }

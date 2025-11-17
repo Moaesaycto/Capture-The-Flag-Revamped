@@ -120,12 +120,11 @@ public class Game {
     if (scheduled != null) scheduled.cancel(false);
 
     if (paused) {
-      State nextState = getNextState(state);
-      remaining = getDurationForState(nextState);
-      state = nextState;
+      state = getNextState(state);
     } else {
       advance();
     }
+    remaining = getDurationForState(state);
 
     if (state == State.WAITING_TO_START || state == State.ENDED) paused = false;
 
@@ -139,11 +138,10 @@ public class Game {
 
     if (paused) {
       long elapsed = stageDuration - remaining;
-      if (elapsed <= REWIND_TOLERANCE_MS) state = getPreviousState(state);
-
-      remaining = getDurationForState(state);
+      if (elapsed <= REWIND_TOLERANCE_MS) {
+        state = getPreviousState(state);
+      }
     } else {
-      // Game is running
       long elapsed = System.currentTimeMillis() - stageStartEpoch;
       if (elapsed <= REWIND_TOLERANCE_MS) {
         State previousState = getPreviousState(state);
@@ -153,7 +151,14 @@ public class Game {
       }
     }
 
+    if (state == State.WAITING_TO_START) {
+      remaining = config.getGame().getGraceTime() * 1000L;
+    } else {
+      remaining = getDurationForState(state);
+    }
+
     if (state == State.WAITING_TO_START || state == State.ENDED) paused = false;
+
     stateBroadcast(state, remaining, paused);
   }
 
