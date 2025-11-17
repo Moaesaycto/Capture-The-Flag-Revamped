@@ -1,6 +1,8 @@
 package moae.dev.Sockets;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import moae.dev.Game.Game;
+import moae.dev.Utils.StateMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -22,13 +24,22 @@ public class StateSocketConnectionHandler extends SocketConnectionHandler {
     // Do nothing
   }
 
-  public static void broadcast(String message) {
+  public static void broadcast(StateMessage message) {
+    ObjectMapper mapper = new ObjectMapper();
+    String json;
+
+    try {
+      json = mapper.writeValueAsString(message);
+    } catch (Exception e) {
+      return;
+    }
+
     if (instance != null) {
       synchronized (instance.webSocketSessions) {
         for (WebSocketSession session : instance.webSocketSessions) {
           try {
             if (session.isOpen()) {
-              session.sendMessage(new TextMessage(message));
+              session.sendMessage(new TextMessage(json));
             }
           } catch (IOException e) {
             instance.logger.error(

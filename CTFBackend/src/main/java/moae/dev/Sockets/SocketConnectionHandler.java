@@ -4,11 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PreDestroy;
 import moae.dev.Utils.ChatMessage;
 import moae.dev.Game.Game;
-import moae.dev.Game.Player;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
@@ -51,33 +49,6 @@ public class SocketConnectionHandler extends TextWebSocketHandler {
   @Override
   public void handleMessage(@NonNull WebSocketSession session, @NonNull WebSocketMessage<?> message)
       throws Exception {
-
-    /* Jwt jwt = (Jwt) session.getAttributes().get("jwt");
-    Player player = game.getPlayer(UUID.fromString(jwt.getSubject()));
-
-    long messageId = messageIdCounter.incrementAndGet();
-    ChatMessage chatMessage = new ChatMessage(
-            message.getPayload().toString(),
-            player.getID(),
-            (int) messageId,
-            new java.util.Date()
-    );
-
-    ObjectMapper mapper = new ObjectMapper();
-    String jsonMessage = mapper.writeValueAsString(chatMessage);
-
-    synchronized (webSocketSessions) {
-        for (WebSocketSession webSocketSession : webSocketSessions) {
-            if (session == webSocketSession) continue;
-            if (webSocketSession.isOpen()) {
-                webSocketSession.sendMessage(new TextMessage(jsonMessage));
-            }
-        }
-    }
-
-    if (session.isOpen()) {
-        session.sendMessage(new TextMessage(jsonMessage));
-    } */
   }
 
   public void broadcastMessage(ChatMessage message) {

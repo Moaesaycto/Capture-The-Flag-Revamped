@@ -8,10 +8,15 @@ import moae.dev.Sockets.StateSocketConnectionHandler;
 import moae.dev.Utils.ChatMessage;
 import moae.dev.Utils.MessagePage;
 import moae.dev.Utils.MessageUtils;
+import moae.dev.Utils.StateMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Game {
@@ -23,6 +28,12 @@ public class Game {
   private final AtomicInteger counter = new AtomicInteger(0);
   private final List<ChatMessage> messages = new ArrayList<>();
   private SocketConnectionHandler webSocketHandler;
+
+  private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+  private ScheduledFuture<?> scheduled = null;
+  private long remaining = -1;
+  private long stageDuration = -1;
+  private long stageStartEpoch = 0;
 
   private final boolean locked;
 
@@ -70,24 +81,27 @@ public class Game {
   }
 
   // ----- Game Controls -----
-  public void start() {
-    if (state != State.WAITING_TO_START) {
-      throw new IllegalStateException("Cannot start game in this state");
+  public synchronized void start() {
+    if (state != State.WAITING_TO_START && state != State.ENDED) {
+      throw new IllegalStateException("Cannot start game in this state: " + state.readableName);
     }
 
-    // Schedule logic
-
-    state = State.GRACE_PERIOD;
+    goTo(State.GRACE_PERIOD, config.getGame().getGraceTime());
   }
 
-  public void pause() {
+  public synchronized void pause() {
+    if (state == State.PAUSED) return;
+    if (scheduled != null) scheduled.cancel(false);
+
     if (state != State.GRACE_PERIOD && state != State.SCOUT_PERIOD && state != State.FFA_PERIOD) {
       throw new IllegalStateException("Cannot pause a game that isn't running");
     }
 
-    // Schedule logic
+    long elapsed = (System.currentTimeMillis() / 1000L) - stageStartEpoch;
+    remaining = Math.max(0, stageDuration - elapsed);
 
     state = State.PAUSED;
+    stateBroadcast(state, 0);
   }
 
   public void resume() {
@@ -95,29 +109,75 @@ public class Game {
       throw new IllegalStateException("Cannot resume a unpaused game");
     }
 
-    // Schedule logic
-
-    state = null; // TODO: Revert to what it was BEFORE the pause
+    goToSameStateWithRemaining();
   }
 
-  public void skip() {}
+  public void skip() {
+    if (scheduled != null) scheduled.cancel(false);
+    advance();
+  }
 
-  public void rewind() {}
+  public void rewind() {
+    if (scheduled != null) scheduled.cancel(false);
+    back();
+  }
 
-  public void end() {}
+  public void end() {
+    if (scheduled != null) scheduled.cancel(false);
+    state = State.ENDED;
+    stateBroadcast(state, 0);
+  }
 
-  // ----- Utilities -----
-  public void setState(State state) {
-    if (Game.state == state) return;
+  // ----- State Handling -----
+  public void goTo(State newState, long duration) {
+    setState(newState);
+    stageDuration = duration;
+    stageStartEpoch = System.currentTimeMillis() / 1000L;
+    remaining = -1;
 
+    stateBroadcast(newState, duration);
+
+    if (duration > 0) {
+      scheduled = scheduler.schedule(this::advance, duration, TimeUnit.SECONDS);
+    }
+  }
+
+  public synchronized void setState(State state) {
     Game.state = state;
-    StateSocketConnectionHandler.broadcast("state:" + state.toString());
   }
 
-  public State getState() {
+  public synchronized State getState() {
     return Game.state;
   }
 
+  private void goToSameStateWithRemaining() {
+    stageStartEpoch = System.currentTimeMillis() / 1000L;
+    long dur = remaining;
+    remaining = -1;
+
+    scheduled = scheduler.schedule(this::advance, dur, TimeUnit.SECONDS);
+    stateBroadcast(state, dur);
+  }
+
+  public void advance() {
+    synchronized (this) {
+      switch (state) {
+        case GRACE_PERIOD -> goTo(State.SCOUT_PERIOD, config.getGame().getScoutTime());
+        case SCOUT_PERIOD -> goTo(State.FFA_PERIOD, config.getGame().getFfaTime());
+        case FFA_PERIOD -> goTo(State.ENDED, 0);
+      }
+    }
+  }
+
+  public void back() {
+    switch (state) {
+      case SCOUT_PERIOD -> goTo(State.GRACE_PERIOD, config.getGame().getGraceTime());
+      case FFA_PERIOD -> goTo(State.SCOUT_PERIOD, config.getGame().getScoutTime());
+      default -> goTo(State.WAITING_TO_START, 0);
+    }
+  }
+
+  // ----- Utilities -----
   public Map<String, Object> status() {
     List<Map<String, Object>> playerList = new ArrayList<>();
     List<Map<String, Object>> teamList = new ArrayList<>();
@@ -131,12 +191,6 @@ public class Game {
         "teams", teamList,
         "state", currState,
         "game", config.getMap());
-  }
-
-  public void reset() {
-    players.clear();
-    teams.clear();
-    setState(State.WAITING_TO_START);
   }
 
   public void merge(@Valid SettingsRequest settings) {
@@ -166,6 +220,10 @@ public class Game {
 
   public void lockCheck() {
     if (locked) throw new IllegalStateException("Game process is currently locked");
+  }
+
+  public void stateBroadcast(State newState, long duration) {
+    StateSocketConnectionHandler.broadcast(new StateMessage(state, duration));
   }
 
   // ----- Players -----
