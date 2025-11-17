@@ -24,6 +24,8 @@ public class Game {
   private final List<ChatMessage> messages = new ArrayList<>();
   private SocketConnectionHandler webSocketHandler;
 
+  private final boolean locked;
+
   private static State state;
 
   public enum State {
@@ -52,6 +54,7 @@ public class Game {
     players = new ArrayList<Player>();
     state = State.WAITING_TO_START;
     config = initConfig;
+    locked = false;
 
     if (!registerNTeams(initConfig.getGame().getMaxTeams(), initConfig.getTeams())) {
       throw new RuntimeException("Failed to register teams. Check the configuration and retry");
@@ -68,7 +71,7 @@ public class Game {
 
   // ----- Game Controls -----
   public void start() {
-    if (this.state != State.WAITING_TO_START) {
+    if (state != State.WAITING_TO_START) {
       throw new IllegalStateException("Cannot start game in this state");
     }
 
@@ -161,6 +164,10 @@ public class Game {
     return MessageUtils.getMessages(start, count, messages);
   }
 
+  public void lockCheck() {
+    if (locked) throw new IllegalStateException("Game process is currently locked");
+  }
+
   // ----- Players -----
   public Player getPlayer(UUID id) {
     Player player = players.stream().filter(p -> p.getID().equals(id)).findFirst().orElse(null);
@@ -204,6 +211,10 @@ public class Game {
     return players.stream()
         .filter(p -> p.getID().equals(playerId))
         .anyMatch(p -> p.getTeam().equals(teamId));
+  }
+
+  public boolean isAuth(UUID player) {
+    return getPlayer(player).isAuth();
   }
 
   // ----- Teams -----

@@ -4,13 +4,10 @@ import jakarta.validation.Valid;
 import moae.dev.Game.Game;
 import moae.dev.Requests.MessageRequest;
 import moae.dev.Requests.SettingsRequest;
-import moae.dev.Requests.StateRequest;
 import moae.dev.Utils.MessagePage;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 import java.util.UUID;
@@ -34,6 +31,7 @@ public class GameController {
     return game.status();
   }
 
+  @RequirePlayerAuth
   @PatchMapping("/settings")
   public Map<String, Object> editSettings(@Valid @RequestBody SettingsRequest settings) {
     this.game.merge(settings);
@@ -43,19 +41,7 @@ public class GameController {
   @PostMapping("/message/global")
   public Map<String, Integer> messageGlobal(
       @RequestBody MessageRequest req, @AuthenticationPrincipal Jwt jwt) {
-    UUID playerId = UUID.fromString(jwt.getSubject());
-
-    if (!game.isValidPlayer(playerId)) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player not found");
-    }
-
-    Integer msgId;
-    try {
-      msgId = game.sendMessage(playerId, req.getContent());
-    } catch (Exception e) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-    }
-
+    Integer msgId = game.sendMessage(UUID.fromString(jwt.getSubject()), req.getContent());
     return Map.of("id", msgId);
   }
 
@@ -72,15 +58,45 @@ public class GameController {
         "end", page.end());
   }
 
-  @PutMapping("/state/")
-  public Map<String, Object> changeState(
-      @RequestBody StateRequest req, @AuthenticationPrincipal Jwt jwt) {
-    try {
-      game.setState(req.getState());
-    } catch (Exception e) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-    }
+  @RequirePlayerAuth
+  @PostMapping("/control/start")
+  public Map<String, Object> startGame(@AuthenticationPrincipal Jwt jwt) {
+    game.start();
+    return Map.of("message", "success");
+  }
 
+  @RequirePlayerAuth
+  @PostMapping("/control/pause")
+  public Map<String, Object> pauseGame(@AuthenticationPrincipal Jwt jwt) {
+    game.pause();
+    return Map.of("message", "success");
+  }
+
+  @RequirePlayerAuth
+  @PostMapping("/control/resume")
+  public Map<String, Object> resumeGame(@AuthenticationPrincipal Jwt jwt) {
+    game.resume();
+    return Map.of("message", "success");
+  }
+
+  @RequirePlayerAuth
+  @PostMapping("/control/skip")
+  public Map<String, Object> skipGame(@AuthenticationPrincipal Jwt jwt) {
+    game.skip();
+    return Map.of("message", "success");
+  }
+
+  @RequirePlayerAuth
+  @PostMapping("/control/rewind")
+  public Map<String, Object> rewindGame(@AuthenticationPrincipal Jwt jwt) {
+    game.rewind();
+    return Map.of("message", "success");
+  }
+
+  @RequirePlayerAuth
+  @PostMapping("/control/end")
+  public Map<String, Object> endGame(@AuthenticationPrincipal Jwt jwt) {
+    game.end();
     return Map.of("message", "success");
   }
 }

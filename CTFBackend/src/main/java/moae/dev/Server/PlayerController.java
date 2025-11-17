@@ -48,15 +48,7 @@ public class PlayerController {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect auth password");
 
     UUID joined = null;
-    try {
-      joined = game.addPlayer(body.getName(), UUID.fromString(body.getTeam()), body.isAuth());
-    } catch (IllegalStateException e) {
-      throw new ResponseStatusException(
-          HttpStatus.UNAUTHORIZED, "You cannot join the game at this time");
-    } catch (IllegalArgumentException e) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
-    }
-
+    joined = game.addPlayer(body.getName(), UUID.fromString(body.getTeam()), body.isAuth());
     String jti = UUID.randomUUID().toString();
 
     var now = Instant.now();
@@ -81,52 +73,29 @@ public class PlayerController {
 
   @GetMapping("/me")
   public Map<String, Object> playerInfo(@AuthenticationPrincipal Jwt jwt) {
-    UUID playerId = UUID.fromString(jwt.getSubject());
-
-    Map<String, Object> playerInfo;
-
-    try {
-      playerInfo = game.getPlayer(playerId).toMap();
-    } catch (NoSuchElementException e) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-    }
-
-    return playerInfo;
+    return game.getPlayer(UUID.fromString(jwt.getSubject())).toMap();
   }
 
   @DeleteMapping("/leave")
   public Map<String, Object> playerLeave(@AuthenticationPrincipal Jwt jwt) {
     UUID playerId = validator.ValidateUUID(jwt.getSubject(), "player");
-
-    if (playerId == null)
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player not found");
-
     Player p = game.getPlayer(playerId);
 
-    boolean removed = game.removePlayer(playerId);
-    if (!removed) throw new ResponseStatusException(HttpStatus.CONFLICT, "Player not found");
+    if (!game.removePlayer(playerId)) throw new ResponseStatusException(HttpStatus.CONFLICT, "Player not found");
 
     PlayerSocketConnectionHandler.broadcast(
-        p.getName(), p.getTeam().toString(), p.isAuth(), p.getID().toString(), "removed");
+        p.getName(), p.getTeam().toString(), p.isAuth(), p.getID().toString(), "left");
 
     return Map.of("message", "success");
   }
 
+  @RequirePlayerAuth
   @DeleteMapping("/remove")
   public Map<String, Object> playerRemove(
       @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody RemoveRequest body) {
-
-    if (!game.getPlayer(UUID.fromString(jwt.getSubject())).isAuth())
-      throw new ResponseStatusException(
-          HttpStatus.UNAUTHORIZED, "You are not authorized to do this");
-
     Player p = game.getPlayer(UUID.fromString(body.getId()));
 
-    try {
-      game.removePlayer(validator.ValidateUUID(body.getId(), "player"));
-    } catch (NoSuchElementException e) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found");
-    }
+    game.removePlayer(validator.ValidateUUID(body.getId(), "player"));
 
     PlayerSocketConnectionHandler.broadcast(
         p.getName(), p.getTeam().toString(), p.isAuth(), p.getID().toString(), "removed");
