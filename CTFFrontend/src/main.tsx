@@ -6,16 +6,19 @@ import { AuthProvider } from './components/contexts/AuthContext.tsx'
 import { GameProvider } from './components/contexts/GameContext.tsx'
 import { MessageProvider } from './components/contexts/MessageContext.tsx'
 import { BrowserRouter } from 'react-router-dom'
+import { SettingsProvider } from './components/contexts/SettingsContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <GameProvider>
-          <MessageProvider>
+        <SettingsProvider>
+          <GameProvider>
+            <MessageProvider>
               <App />
-          </MessageProvider>
-        </GameProvider>
+            </MessageProvider>
+          </GameProvider>
+        </SettingsProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,

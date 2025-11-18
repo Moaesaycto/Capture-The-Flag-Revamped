@@ -83,7 +83,7 @@ const SettingsPage = () => {
     return (
         <Page>
             <h2
-                className="text-4xl"
+                className="text-4xl mb-4"
                 style={{ fontFamily: "American Captain" }}
             >
                 Settings
