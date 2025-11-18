@@ -34,27 +34,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [currentDuration, setCurrentDuration] = useState<number>(0);
     const [stateUpdateKey, setStateUpdateKey] = useState<number>(0);
     const [paused, setPaused] = useState<boolean>(false);
-
-    useEffect(() => {
-        createWebSocket(
-            "state",
-            undefined,
-            () => { },
-            () => {
-                setLoading(false);
-                setHealth(true);
-            },
-            () => {
-                setLoading(false);
-                setHealth(false);
-            },
-            () => {
-                setLoading(false);
-                setHealth(false);
-            }
-        );
-    }, []);
-
+    const [wsConnected, setWsConnected] = useState<boolean>(false);
+    const [initialDataLoaded, setInitialDataLoaded] = useState<boolean>(false);
 
     useEffect(() => {
         const socket = createWebSocket(
@@ -82,24 +63,60 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }, [logout, me]);
 
     useEffect(() => {
-        const socket = createWebSocket(
-            "state",
-            undefined,
-            (msg: string) => {
-                const update: GameState = JSON.parse(msg);
-                setState(update.state);
-                setCurrentDuration(update.duration);
-                setStateUpdateKey(prev => prev + 1);
-                setPaused(update.paused);
-            },
-            () => {},
-            () => setHealth(false),
-            () => setHealth(false),
-        )
+        let socket: WebSocket | null = null;
+        let retryTimeout: number | null = null;
+        let hasRetried = false;
+        let hasConnected = false;
+
+        const handleSuccess = () => {
+            hasConnected = true;
+            setHealth(true);
+            setWsConnected(true);
+        };
+
+        const handleFailure = () => {
+            if (hasConnected) return;
+
+            if (!hasRetried) {
+                hasRetried = true;
+                retryTimeout = window.setTimeout(() => {
+                    connect();
+                }, 1000);
+            } else {
+                setHealth(false);
+                setWsConnected(true);
+            }
+        };
+
+        const connect = () => {
+            socket = createWebSocket(
+                "state",
+                undefined,
+                (msg: string) => {
+                    if (!hasConnected) {
+                        hasConnected = true;
+                        setHealth(true);
+                        setWsConnected(true);
+                    }
+
+                    const update: GameState = JSON.parse(msg);
+                    setState(update.state);
+                    setCurrentDuration(update.duration);
+                    setStateUpdateKey(prev => prev + 1);
+                    setPaused(update.paused);
+                },
+                handleSuccess,
+                handleFailure,
+                handleFailure
+            );
+        };
+
+        connect();
 
         return () => {
-            socket.close();
-        }
+            if (socket) socket.close();
+            if (retryTimeout) clearTimeout(retryTimeout);
+        };
     }, []);
 
     const getTeamFromId = useCallback((teamId: string) => {
@@ -112,14 +129,20 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         gameStatus().then(r => {
-            setLoading(false);
             setTeams(r.teams);
             setPlayers(r.players);
             setState(r.state.state as State);
             setCurrentDuration(r.state.duration);
             setPaused(r.state.paused);
+            setInitialDataLoaded(true);
         }).catch(() => { }); // TODO: fix
     }, []);
+
+    useEffect(() => {
+        if (wsConnected && initialDataLoaded) {
+            setLoading(false);
+        }
+    }, [wsConnected, initialDataLoaded]);
 
     const isInGame = useMemo<boolean>(() => {
         return state === "grace" || state === "scout" || state === "ffa";

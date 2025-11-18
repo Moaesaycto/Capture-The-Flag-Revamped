@@ -1,6 +1,7 @@
 import { useAuthContext } from "@/components/contexts/AuthContext";
 import { useSettingsContext } from "@/components/contexts/SettingsContext";
 import Page from "@/components/main/Page"
+import { gameReset } from "@/services/GameApi";
 import type { ReactNode } from "react";
 import type { IconType } from "react-icons";
 import { FaRegHandPointer, FaTrash } from "react-icons/fa";
@@ -10,16 +11,17 @@ import { RiAdminFill } from "react-icons/ri";
 type OptionType = "switch" | "button";
 
 type OptionProps = {
-    title: string,
-    onChange: (value: boolean) => void;
-    disabled?: boolean;
+    title: string;
     type?: OptionType;
+    value?: boolean;
+    disabled?: boolean;
     icon?: IconType;
     color?: string;
-    value?: boolean;
-}
+    onChange?: (value: boolean) => void;
+    onClick?: () => void;
+};
 
-const Option = ({ title, onChange, disabled = false, type = "switch", icon: Icon, color, value }: OptionProps) => {
+const Option = ({ title, onChange, disabled = false, type = "switch", icon: Icon, color, value, onClick }: OptionProps) => {
     let control;
 
     switch (type) {
@@ -29,7 +31,7 @@ const Option = ({ title, onChange, disabled = false, type = "switch", icon: Icon
                     <input
                         type="checkbox"
                         disabled={disabled}
-                        onChange={(e) => onChange(e.target.checked)}
+                        onChange={(e) => onChange?.(e.target.checked)}
                         checked={value}
                     />
                     <span className="slider round"></span>
@@ -43,15 +45,14 @@ const Option = ({ title, onChange, disabled = false, type = "switch", icon: Icon
                     disabled={disabled}
                     className="px-3 py-1 bg-neutral-700 rounded hover:bg-neutral-600 hover:cursor-pointer hover:disabled:cursor-not-allowed"
                     style={{ color }}
+                    onClick={onClick}
                 >
                     {Icon ? <Icon /> : <FaRegHandPointer />}
                 </button>
             );
             break;
-
-        default:
-            control = null;
     }
+
 
     return (
         <div className="w-full flex flex-row justify-between items-center odd:bg-neutral-800 even:bg-neutral-900 p-2">
@@ -81,7 +82,7 @@ const SettingsSection = ({ icon: Icon, title, children }: SettingsSectionProps) 
 }
 
 const SettingsPage = () => {
-    const { me } = useAuthContext();
+    const { me, jwt, logout } = useAuthContext();
     const { wantsStatusNotifs,
         setWantsStatusNotifs,
         wantsGlobalMessageNotifs,
@@ -106,7 +107,7 @@ const SettingsPage = () => {
                 <Option title="Announcements" disabled onChange={(e) => setWantsAnnouncementNotifs(e)} value={wantsAnnouncementNotifs} />
             </SettingsSection>
             {me && me.auth && <SettingsSection title="Moderator Options" icon={RiAdminFill} >
-                <Option title="Full Reset Game" onChange={() => { }} type="button" icon={FaTrash} color="#ff7a7a" />
+                <Option title="Full Reset Game" onClick={() => { gameReset(true, jwt!); logout();}} type="button" icon={FaTrash} color="#ff7a7a" />
             </SettingsSection>}
         </Page>
     )

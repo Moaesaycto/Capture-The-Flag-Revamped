@@ -6,7 +6,6 @@ import { FaBinoculars, FaFistRaised, FaFlagCheckered, FaHourglassHalf, FaShieldA
 import confetti from "canvas-confetti";
 import Spinner from "./LoadingSpinner";
 import { PiPauseFill, PiWarning } from "react-icons/pi";
-import { useAuthContext } from "../contexts/AuthContext";
 
 type StateDisplay = {
     title: string,
@@ -43,8 +42,7 @@ export const STATE_MAP: { [key in State]: StateDisplay } = {
 };
 
 const StateViewer = () => {
-    const { state, currentDuration, isPaused, isInGame, stateUpdateKey, health: gameHealth } = useGameContext();
-    const { healthy: authHealth } = useAuthContext();
+    const { state, currentDuration, isPaused, isInGame, stateUpdateKey, health: gameHealth, loading } = useGameContext();
     const [displayTime, setDisplayTime] = useState(currentDuration);
     const intervalRef = useRef<number | null>(null);
 
@@ -104,15 +102,7 @@ const StateViewer = () => {
 
     const Icon = isPaused ? PiPauseFill : stateDisplay.icon;
 
-    if (!state) {
-        return (
-            <div className="w-full pt-4 pb-10 relative mb-6 flex items-center justify-center">
-                <Spinner />
-            </div>
-        );
-    }
-
-    if (!gameHealth || !authHealth) {
+    if (!gameHealth) {
         return (
             <div className="w-full pt-4 pb-10 relative mb-10 mt-4 flex items-center justify-center">
                 <PiWarning
@@ -129,12 +119,16 @@ const StateViewer = () => {
                     }}
                 />
                 <div className="h-30 flex flex-col items-center justify-center">
-                    <span className="text-3xl relative z-10">DISCONNECTED</span>
-                    <span className="text-lg opacity-50">Try refreshing the page</span>
+                    <div className="text-3xl flex flex-row items-center gap-4">
+                        <span className="relative z-10">Connecting</span>
+                        <Spinner />
+                    </div>
+                    <span className="text-lg opacity-50">If it doesn't load soon, try refreshing the page</span>
                 </div>
             </div>
         )
     }
+
 
     return (
         <div className="w-full pt-4 pb-10 relative mb-10 mt-4 flex items-center justify-center">
