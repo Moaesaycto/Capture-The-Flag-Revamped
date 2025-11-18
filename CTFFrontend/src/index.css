@@ -215,6 +215,12 @@ a:hover {
   transition: .2s;
 }
 
+.switch input:disabled+.slider {
+  cursor: not-allowed;
+  opacity: 0.5;
+  /* optional, for visual cue */
+}
+
 .slider:before {
   position: absolute;
   content: "";

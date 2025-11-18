@@ -1,4 +1,5 @@
 import { useAuthContext } from "@/components/contexts/AuthContext";
+import { useSettingsContext } from "@/components/contexts/SettingsContext";
 import Page from "@/components/main/Page"
 import type { ReactNode } from "react";
 import type { IconType } from "react-icons";
@@ -15,19 +16,21 @@ type OptionProps = {
     type?: OptionType;
     icon?: IconType;
     color?: string;
+    value?: boolean;
 }
 
-const Option = ({ title, onChange, disabled = false, type = "switch", icon: Icon, color }: OptionProps) => {
+const Option = ({ title, onChange, disabled = false, type = "switch", icon: Icon, color, value }: OptionProps) => {
     let control;
 
     switch (type) {
         case "switch":
             control = (
-                <label className="switch" style={{ opacity: disabled ? 0.5 : 1 }}>
+                <label className="switch">
                     <input
                         type="checkbox"
                         disabled={disabled}
                         onChange={(e) => onChange(e.target.checked)}
+                        checked={value}
                     />
                     <span className="slider round"></span>
                 </label>
@@ -38,7 +41,7 @@ const Option = ({ title, onChange, disabled = false, type = "switch", icon: Icon
             control = (
                 <button
                     disabled={disabled}
-                    className="px-3 py-1 bg-neutral-700 rounded hover:bg-neutral-600 hover:cursor-pointer"
+                    className="px-3 py-1 bg-neutral-700 rounded hover:bg-neutral-600 hover:cursor-pointer hover:disabled:cursor-not-allowed"
                     style={{ color }}
                 >
                     {Icon ? <Icon /> : <FaRegHandPointer />}
@@ -79,6 +82,14 @@ const SettingsSection = ({ icon: Icon, title, children }: SettingsSectionProps) 
 
 const SettingsPage = () => {
     const { me } = useAuthContext();
+    const { wantsStatusNotifs,
+        setWantsStatusNotifs,
+        wantsGlobalMessageNotifs,
+        setWantsGlobalMessageNotifs,
+        wantsTeamMessageNotifs,
+        setWantsTeamMessageNotifs,
+        wantsAnnouncementNotifs,
+        setWantsAnnouncementNotifs } = useSettingsContext();
 
     return (
         <Page>
@@ -89,10 +100,10 @@ const SettingsPage = () => {
                 Settings
             </h2>
             <SettingsSection title="Notifications" icon={IoNotifications} >
-                <Option title="Status updates" onChange={() => { }} />
-                <Option title="Global messages" onChange={() => { }} />
-                <Option title="Team messages" onChange={() => { }} />
-                <Option title="Announcements" disabled onChange={() => { }} />
+                <Option title="Status updates" onChange={(e) => setWantsStatusNotifs(e)} value={wantsStatusNotifs} />
+                <Option title="Global messages" onChange={(e) => setWantsGlobalMessageNotifs(e)} value={wantsGlobalMessageNotifs} />
+                <Option title="Team messages" onChange={(e) => setWantsTeamMessageNotifs(e)} value={wantsTeamMessageNotifs} />
+                <Option title="Announcements" disabled onChange={(e) => setWantsAnnouncementNotifs(e)} value={wantsAnnouncementNotifs} />
             </SettingsSection>
             {me && me.auth && <SettingsSection title="Moderator Options" icon={RiAdminFill} >
                 <Option title="Full Reset Game" onChange={() => { }} type="button" icon={FaTrash} color="#ff7a7a" />
