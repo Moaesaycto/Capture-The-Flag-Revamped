@@ -1,4 +1,4 @@
-import { PiChatsCircleBold, PiFlagBannerFoldDuotone, PiHouseBold } from "react-icons/pi";
+import { PiChatsCircleBold, PiFlagBannerFoldDuotone, PiGearBold, PiHouseBold } from "react-icons/pi";
 import { useAuthContext } from "@/components/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { useMessageContext } from "@/components/contexts/MessageContext";
@@ -34,6 +34,11 @@ const MainHeader = () => {
                                 <div className="m-1 text-2xl border-3 border-black rounded-xl relative p-0.5 hover:cursor-pointer">
                                     {(dirtyTeams || dirtyGlobal) && <div className="w-3 h-3 bg-red-500 border-red-900 rounded-full absolute -top-1.5 -left-1.5" />}
                                     <PiChatsCircleBold />
+                                </div>
+                            </Link>}
+                            {location !== "settings" && <Link to="/settings">
+                                <div className="m-1 text-2xl border-3 border-black rounded-xl relative p-0.5 hover:cursor-pointer">
+                                    <PiGearBold />
                                 </div>
                             </Link>}
                         </div>

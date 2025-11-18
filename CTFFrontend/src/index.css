@@ -89,22 +89,22 @@ a:hover {
 }
 
 .custom-scroll::-webkit-scrollbar {
-    background-color: var(--scrollbar-bg);
-    width: 12px;
+  background-color: var(--scrollbar-bg);
+  width: 12px;
 }
 
 .custom-scroll::-webkit-scrollbar-track {
-    background-color: var(--scrollbar-bg);
+  background-color: var(--scrollbar-bg);
 }
 
 .custom-scroll::-webkit-scrollbar-thumb {
-    background-color: var(--scrollbar-thumb-bg);
-    border-radius: 16px;
-    border: 3px solid var(--scrollbar-border);
+  background-color: var(--scrollbar-thumb-bg);
+  border-radius: 16px;
+  border: 3px solid var(--scrollbar-border);
 }
 
 .custom-scroll::-webkit-scrollbar-button {
-    display: none;
+  display: none;
 }
 
 @theme inline {
@@ -183,7 +183,71 @@ a:hover {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  border-radius: 22px;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #0A0A0A;
+  -webkit-transition: .2s;
+  transition: .2s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 2px;
+  background-color: rgb(221, 221, 221);
+  -webkit-transition: .2s;
+  transition: .2s;
+  border-radius: 50%;
+}
+
+input:checked+.slider {
+  background-color: #FFB900;
+}
+
+input:focus+.slider {
+  box-shadow: 0 0 1px #FFB900;
+}
+
+input:checked+.slider:before {
+  --transform: 16px;
+  -webkit-transform: translateX(var(--transform));
+  -ms-transform: translateX(var(--transform));
+  transform: translateX(var(--transform));
+}
+
+input:focus {
+  outline: none;
+}
+
+input:focus+.slider {
+  outline: none;
+  box-shadow: none;
 }

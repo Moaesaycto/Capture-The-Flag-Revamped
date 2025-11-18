@@ -4,6 +4,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import MainFooter from './components/main/MainFooter'
 import MessagesPage from './pages/MessagesPage'
+import SettingsPage from './pages/SettingsPage'
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/message" element={<MessagesPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

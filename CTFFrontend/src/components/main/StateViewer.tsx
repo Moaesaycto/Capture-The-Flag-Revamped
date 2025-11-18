@@ -130,7 +130,7 @@ const StateViewer = () => {
                 />
                 <div className="h-30 flex flex-col items-center justify-center">
                     <span className="text-3xl relative z-10">DISCONNECTED</span>
-                    <span className="text-lg opacity-50">Connection to server lost</span>
+                    <span className="text-lg opacity-50">Try refreshing the page</span>
                 </div>
             </div>
         )
