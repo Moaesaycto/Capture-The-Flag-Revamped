@@ -375,7 +375,7 @@ public class Game {
 
     if (players.stream().anyMatch(p -> p.getName().equals(name)))
       throw new IllegalArgumentException(
-          "A player with the name " + name + "already exists in the game");
+          "A player with the name " + name + " already exists in the game");
 
     if (teams.stream().noneMatch(t -> t.getID().equals(team))) {
       throw new IllegalArgumentException("Invalid team choice");

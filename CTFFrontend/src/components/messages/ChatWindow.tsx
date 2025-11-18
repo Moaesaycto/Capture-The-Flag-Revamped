@@ -83,6 +83,10 @@ export const ChatWindow = ({
     const prevLastMessageIdRef = useRef<number | null>(null);
     const virtuosoRef = useRef<any>(null);
     const isLoadingMoreRef = useRef<boolean>(false);
+    const wrapperRef = useRef<HTMLDivElement | null>(null);
+    const isInteractingRef = useRef(false);
+    const queuedLoadRef = useRef(false);
+    const queuedLoadParamRef = useRef<number | null>(null);
 
     const totalMessages = messages.length + pendingMessages.length;
 
@@ -144,6 +148,42 @@ export const ChatWindow = ({
         prevLastMessageIdRef.current = lastId;
     }, [allSorted, me, scrollToBottom, setOpenChatDirty]);
 
+    useEffect(() => {
+        const wrapper = wrapperRef.current;
+        if (!wrapper) return;
+
+        const SCROLLBAR_HIT_THRESHOLD = 24;
+
+        const onPointerDown = (ev: PointerEvent) => {
+            const rect = wrapper.getBoundingClientRect();
+            if (ev.clientX >= rect.right - SCROLLBAR_HIT_THRESHOLD) {
+                isInteractingRef.current = true;
+            }
+        };
+
+        const onPointerUp = () => {
+            if (isInteractingRef.current) {
+                isInteractingRef.current = false;
+
+                if (queuedLoadRef.current && queuedLoadParamRef.current != null) {
+                    isLoadingMoreRef.current = true;
+                    getMoreMessagesOpenChat(queuedLoadParamRef.current);
+                    queuedLoadRef.current = false;
+                    queuedLoadParamRef.current = null;
+                }
+            }
+        };
+
+        wrapper.addEventListener("pointerdown", onPointerDown);
+        window.addEventListener("pointerup", onPointerUp);
+
+        return () => {
+            wrapper.removeEventListener("pointerdown", onPointerDown);
+            window.removeEventListener("pointerup", onPointerUp);
+        };
+    }, [getMoreMessagesOpenChat]);
+
+
     if (chatError) {
         return (
             <div className="w-full flex-1 flex items-center justify-center flex-col gap-5">
@@ -184,7 +224,7 @@ export const ChatWindow = ({
     const initialIndex = firstItemIndex + allSorted.length - 1;
 
     return (
-        <div className="relative flex-1 flex flex-col">
+        <div ref={wrapperRef} className="relative flex-1 flex flex-col">
             <Virtuoso
                 key={openChat}
                 ref={virtuosoRef}
@@ -193,6 +233,14 @@ export const ChatWindow = ({
                 initialTopMostItemIndex={initialIndex}
                 increaseViewportBy={200}
                 startReached={() => {
+                    // Do nothing while the scrollbar thumb is being held
+                    if (isInteractingRef.current) {
+                        queuedLoadRef.current = true;
+                        queuedLoadParamRef.current = allSorted[0].messageId - 1;
+                        return;
+                    }
+
+                    // Normal behavior
                     isLoadingMoreRef.current = true;
                     getMoreMessagesOpenChat(allSorted[0].messageId - 1);
                 }}
