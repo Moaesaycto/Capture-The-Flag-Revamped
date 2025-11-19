@@ -18,7 +18,7 @@ const Page = ({ children }: PageProps) => {
 
     return (
         <div className="flex flex-col flex-1 w-full min-h-0 text-white py-5 px-5">
-            {emergency && <WarningMessage message="An emergency has been declared. Return to the rendezvous point immediately." />}
+            {emergency && <WarningMessage message="An emergency has been declared, and the game has been paused. Return to the rendezvous point immediately. Check the global chat often for updates." />}
             {children}
         </div>
     )

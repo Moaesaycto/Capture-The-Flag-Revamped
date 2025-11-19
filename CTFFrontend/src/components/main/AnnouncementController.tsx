@@ -5,6 +5,7 @@ import { Select, SelectGroup, SelectItem, SelectTrigger, SelectValue, SelectCont
 import { ErrorMessage } from "./Messages";
 import { useAuthContext } from "../contexts/AuthContext";
 import { gameAnnounce } from "@/services/GameApi";
+import Container from "./Containers";
 
 const AnnouncementController = () => {
     const [announcementType, setAnnouncementType] = useState<AnnouncementType>("emergency");
@@ -29,19 +30,15 @@ const AnnouncementController = () => {
     }, [setError, message, announcementType, jwt]);
 
     return (
-        <div className="bg-neutral-800 rounded-b mb-5">
-            <div className="bg-amber-400 text-black flex gap-1 px-2 items-center rounded-t text-sm uppercase">
-                <FaLock /> <span>Announcement Controls</span>
-            </div>
-            <div className="p-4">
-                {error && <ErrorMessage message={error} />}
-                <div className="flex gap-3 items-center">
-                    <Select
-                        value={announcementType}
-                        onValueChange={(val) => setAnnouncementType(val as AnnouncementType)}
-                    >
-                        <SelectTrigger
-                            className="
+        <Container Icon={FaLock} title="Announcement Controls">
+            {error && <ErrorMessage message={error} />}
+            <div className="flex gap-3 items-center">
+                <Select
+                    value={announcementType}
+                    onValueChange={(val) => setAnnouncementType(val as AnnouncementType)}
+                >
+                    <SelectTrigger
+                        className="
                             bg-neutral-900 border-none rounded
                             outline-none
                             focus:outline-none
@@ -50,43 +47,43 @@ const AnnouncementController = () => {
                             focus:ring-2 focus:ring-amber-400
                             data-[state=open]:ring-2 data-[state=open]:ring-amber-400
                         "
-                        >
+                    >
 
-                            <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-neutral-900 text-white border-none text-xl">
-                            <SelectGroup>
-                                {ANNOUNCEMENT_TYPES.map((e, k) => <SelectItem
-                                    value={e}
-                                    key={k}
-                                    className="focus:bg-amber-400"
-                                >
-                                    {String(e).charAt(0).toUpperCase() + String(e).slice(1)}
-                                </SelectItem>)}
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
+                        <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-neutral-900 text-white border-none text-xl">
+                        <SelectGroup>
+                            {ANNOUNCEMENT_TYPES.map((e, k) => <SelectItem
+                                value={e}
+                                key={k}
+                                className="focus:bg-amber-400"
+                            >
+                                {String(e).charAt(0).toUpperCase() + String(e).slice(1)}
+                            </SelectItem>)}
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
 
-                    <input
-                        className="bg-neutral-900 w-full py-1 px-2 rounded focus:ring-2 focus:ring-amber-400 focus:outline-none"
-                        name="name"
-                        placeholder="Enter announcement message"
-                        autoComplete="off"
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => setMessage(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
-                    />
-                    <button
-                        className={`bg-amber-400 text-black w-10 h-7.5 rounded flex justify-center items-center
+                <input
+                    className="bg-neutral-900 w-full py-1 px-2 rounded focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                    name="name"
+                    placeholder="Enter announcement message"
+                    autoComplete="off"
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setMessage(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
+                />
+                <button
+                    className={`bg-amber-400 text-black w-10 h-7.5 rounded flex justify-center items-center
                                hover:bg-amber-500 hover:cursor-pointer disabled:hover:cursor-not-allowed
                                disabled:hover:bg-amber-400 disabled:opacity-50`}
-                        onClick={submit}
-                        disabled={loading}
-                    >
-                        <FaPaperPlane />
-                    </button>
-                </div>
+                    onClick={submit}
+                    disabled={loading}
+                >
+                    <FaPaperPlane />
+                </button>
             </div>
-        </div>
+        </Container>
+
     )
 }
 

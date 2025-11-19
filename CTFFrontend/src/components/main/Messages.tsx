@@ -28,3 +28,15 @@ export const WarningMessage = ({ message }: { message: string }) => {
         </div>
     )
 }
+
+export const Announcement = ({ message }: { message: string }) => {
+    return (
+        <div
+            className="w-full"
+        >
+            <span>
+                {message}
+            </span>
+        </div>
+    )
+}

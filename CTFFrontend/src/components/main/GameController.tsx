@@ -6,15 +6,16 @@ import { gameEnd, gamePause, gameReset, gameResume, gameRewind, gameSkip, gameSt
 import { useAuthContext } from "../contexts/AuthContext";
 import { ErrorMessage } from "./Messages";
 import { useGameContext } from "../contexts/GameContext";
+import Container from "./Containers";
 
-type ControllButtonProps = {
+type ControlButtonProps = {
     onClick: () => void;
     color?: string;
     Icon: ComponentType;
     disabled?: boolean;
 }
 
-const ControllButton = ({ onClick, color, Icon, disabled = false }: ControllButtonProps) => {
+const ControlButton = ({ onClick, color, Icon, disabled = false }: ControlButtonProps) => {
     return (
         <button
             className="bg-neutral-900 hover:bg-neutral-700 hover:cursor-pointer p-2 rounded-lg disabled:opacity-50 disabled:hover:bg-neutral-900 disabled:cursor-not-allowed"
@@ -57,65 +58,60 @@ const GameController = () => {
     }
 
     return (
-        <div className="bg-neutral-800 rounded-b mb-5">
-            <div className="bg-amber-400 text-black flex gap-1 px-2 items-center rounded-t text-sm uppercase">
-                <FaLock /> <span>Game Controls</span>
+        <Container Icon={FaLock} title="Game Controls">
+            {error && <ErrorMessage message={error} />}
+            <div className="w-full pb-2 pt-3 flex flex-row items-center justify-around">
+                {/* Reset Button */}
+                <ControlButton
+                    Icon={FaArrowRotateLeft}
+                    color="#ffb2b2"
+                    onClick={() => ExecuteUpdate((jwt) => gameReset(false, jwt))}
+                    disabled={emergency || loading}
+                />
+
+                {/* Rewind Button */}
+                <ControlButton
+                    Icon={PiSkipBackFill}
+                    color="#a0c0ff"
+                    onClick={() => ExecuteUpdate(gameRewind)}
+                    disabled={emergency || loading || state === "ready"}
+                />
+
+                {/* Play / Pause Button */}
+                <ControlButton
+                    Icon={isPaused || !isInGame ? PiPlayFill : PiPauseFill}
+                    onClick={() => {
+                        isPaused ? ExecuteUpdate(gameResume) : isInGame ? ExecuteUpdate(gamePause) : ExecuteUpdate(gameStart);
+                    }}
+                    disabled={emergency || loading || state == "ended"}
+                />
+
+                {/* Skip Button */}
+                <ControlButton
+                    Icon={PiSkipForwardFill}
+                    color="#a0c0ff"
+                    onClick={() => ExecuteUpdate(gameSkip)}
+                    disabled={emergency || loading || state === "ready" || state === "ended"}
+                />
+
+                {/* Stop Button */}
+                <ControlButton
+                    Icon={PiStopFill}
+                    color="#ffb2b2"
+                    onClick={() => ExecuteUpdate(gameEnd)}
+                    disabled={emergency || loading || state === "ready" || state === "ended"}
+                />
             </div>
-            <div className="p-4">
-                {error && <ErrorMessage message={error} />}
-                <div className="w-full pb-2 pt-3 flex flex-row items-center justify-around">
-                    {/* Reset Button */}
-                    <ControllButton
-                        Icon={FaArrowRotateLeft}
-                        color="#ffb2b2"
-                        onClick={() => ExecuteUpdate((jwt) => gameReset(false, jwt))}
-                        disabled={emergency || loading}
-                    />
-
-                    {/* Rewind Button */}
-                    <ControllButton
-                        Icon={PiSkipBackFill}
-                        color="#a0c0ff"
-                        onClick={() => ExecuteUpdate(gameRewind)}
-                        disabled={emergency || loading || state === "ready"}
-                    />
-
-                    {/* Play / Pause Button */}
-                    <ControllButton
-                        Icon={isPaused || !isInGame ? PiPlayFill : PiPauseFill}
-                        onClick={() => {
-                            isPaused ? ExecuteUpdate(gameResume) : isInGame ? ExecuteUpdate(gamePause) : ExecuteUpdate(gameStart);
-                        }}
-                        disabled={emergency || loading || state == "ended"}
-                    />
-
-                    {/* Skip Button */}
-                    <ControllButton
-                        Icon={PiSkipForwardFill}
-                        color="#a0c0ff"
-                        onClick={() => ExecuteUpdate(gameSkip)}
-                        disabled={emergency || loading || state === "ready" || state === "ended"}
-                    />
-
-                    {/* Stop Button */}
-                    <ControllButton
-                        Icon={PiStopFill}
-                        color="#ffb2b2"
-                        onClick={() => ExecuteUpdate(gameEnd)}
-                        disabled={emergency || loading || state === "ready" || state === "ended"}
-                    />
-                </div>
-                {emergency &&
-                    <button
-                        onClick={release}
-                        className={`bg-red-400 text-black w-full h-7.5 rounded flex justify-center items-center
+            {emergency &&
+                <button
+                    onClick={release}
+                    className={`bg-red-400 text-black w-full h-7.5 rounded flex justify-center items-center
                                hover:bg-red-500 hover:cursor-pointer disabled:hover:cursor-not-allowed
                                disabled:hover:bg-red-400 disabled:opacity-50 mt-4`}
-                    >
-                        Release Emergency
-                    </button>}
-            </div>
-        </div>
+                >
+                    Release Emergency
+                </button>}
+        </Container>
     )
 }
 
