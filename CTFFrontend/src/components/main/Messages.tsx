@@ -14,3 +14,17 @@ export const ErrorMessage = ({ message }: { message: string }) => {
         </div>
     )
 }
+
+export const WarningMessage = ({ message }: { message: string }) => {
+    return (
+        <div
+            className="w-full border-3 border-amber-800 rounded p-2 flex flex-row items-center gap-2 text-amber-500 mb-3"
+            style={{ backgroundColor: Color("#9F0712").alpha(0.2).toString() }}
+        >
+            <ImWarning />
+            <span>
+                {message}
+            </span>
+        </div>
+    )
+}

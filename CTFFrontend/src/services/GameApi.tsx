@@ -1,4 +1,4 @@
-import type { MessageChunk, GameStatus, MessageResponse, StandardStatus } from "../types";
+import type { MessageChunk, GameStatus, MessageResponse, StandardStatus, AnnouncementType } from "../types";
 import apiCall from "./api";
 
 export const gameStatus = async () => {
@@ -39,4 +39,8 @@ export const gameEnd = async (jwt: string) => {
 
 export const gameReset = async (hard: boolean, jwt: string) => {
     return await apiCall<StandardStatus>(`game/control/reset`, "POST", { hard }, jwt);
+}
+
+export const gameAnnounce = async (type: AnnouncementType, message: string, jwt: string) => {
+    return await apiCall<StandardStatus>(`game/announce`, "POST", { type, message }, jwt);
 }

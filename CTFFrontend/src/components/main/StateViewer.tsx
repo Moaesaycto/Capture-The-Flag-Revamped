@@ -42,7 +42,7 @@ export const STATE_MAP: { [key in State]: StateDisplay } = {
 };
 
 const StateViewer = () => {
-    const { state, currentDuration, isPaused, isInGame, stateUpdateKey, health: gameHealth, loading } = useGameContext();
+    const { state, currentDuration, isPaused, isInGame, stateUpdateKey, health: gameHealth, emergency } = useGameContext();
     const [displayTime, setDisplayTime] = useState(currentDuration);
     const intervalRef = useRef<number | null>(null);
 
@@ -101,6 +101,32 @@ const StateViewer = () => {
     }, [state]);
 
     const Icon = isPaused ? PiPauseFill : stateDisplay.icon;
+
+    if (emergency) {
+        return (
+            <div className="w-full pt-4 pb-10 relative mb-10 mt-4 flex items-center justify-center">
+                <PiWarning
+                    className="absolute text-gray-300"
+                    style={{
+                        fontSize: "12rem",
+                        opacity: 0.1,
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        pointerEvents: "none",
+                        zIndex: 0,
+                        color: "gold"
+                    }}
+                />
+                <div className="h-30 flex flex-col items-center justify-center">
+                    <div className="text-5xl flex flex-row items-center gap-4">
+                        <span className="relative z-10">EMERGENCY</span>
+                    </div>
+                    <span className="text-lg opacity-50">Return to the rendezvous point immediately</span>
+                </div>
+            </div>
+        )
+    }
 
     if (!gameHealth) {
         return (

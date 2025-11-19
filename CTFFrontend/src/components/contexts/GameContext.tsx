@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createWebSocket } from "@/services/api";
-import type { Player, Team, State, GameState } from "@/types";
+import type { Player, Team, State, GameState, Announcement } from "@/types";
 import { gameStatus } from "@/services/GameApi";
 import { useAuthContext } from "@/components/contexts/AuthContext";
 
@@ -19,6 +19,7 @@ interface GameContextValue {
     isInGame: boolean;
     isPaused: boolean;
     stateUpdateKey: number;
+    emergency: boolean;
 }
 
 const GameContext = createContext<GameContextValue | undefined>(undefined);
@@ -36,6 +37,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [paused, setPaused] = useState<boolean>(false);
     const [wsConnected, setWsConnected] = useState<boolean>(false);
     const [initialDataLoaded, setInitialDataLoaded] = useState<boolean>(false);
+
+    const [emergency, setEmergency] = useState<boolean>(false);
 
     useEffect(() => {
         const socket = createWebSocket(
@@ -61,6 +64,26 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             socket.close();
         };
     }, [logout, me]);
+
+    useEffect(() => {
+        const socket = createWebSocket(
+            "announcements",
+            undefined,
+            (msg: string) => {
+                const announcement: Announcement = JSON.parse(msg);
+                switch (announcement.type) {
+                    case "emergency":
+                        setEmergency(true);
+                        break;
+                    case "reset":
+                        window.location.reload();
+                        break;
+                }
+
+            }
+        );
+        return () => socket.close();
+    }, [])
 
     useEffect(() => {
         let socket: WebSocket | null = null;
@@ -104,6 +127,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     setCurrentDuration(update.duration);
                     setStateUpdateKey(prev => prev + 1);
                     setPaused(update.paused);
+
+                    setEmergency(false);
                 },
                 handleSuccess,
                 handleFailure,
@@ -134,6 +159,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setState(r.state.state as State);
             setCurrentDuration(r.state.duration);
             setPaused(r.state.paused);
+            setEmergency(r.state.emergency);
             setInitialDataLoaded(true);
         }).catch(() => { }); // TODO: fix
     }, []);
@@ -164,6 +190,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             isInGame,
             isPaused: paused,
             stateUpdateKey,
+            emergency,
         }}>
             {children}
         </GameContext.Provider>
