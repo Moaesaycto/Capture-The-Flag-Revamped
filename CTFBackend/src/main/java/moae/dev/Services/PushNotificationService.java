@@ -4,6 +4,8 @@ import moae.dev.Utils.PushSubscription;
 
 import nl.martijndwars.webpush.*;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.security.Security;
@@ -12,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class PushNotificationService {
+  private static final Logger logger = LoggerFactory.getLogger(PushNotificationService.class);
 
   private final Map<String, Subscription> subscriptions = new ConcurrentHashMap<>();
 
@@ -59,7 +62,7 @@ public class PushNotificationService {
       }
     } catch (Exception e) {
       System.err.println("Push service error: " + e.getMessage());
-      e.printStackTrace();
+      logger.error("Push service error: {}", e.getMessage(), e);
     }
   }
 }

@@ -1,7 +1,5 @@
 package moae.dev.Game;
 
-import moae.dev.Utils.NotificationSettings;
-
 import java.util.Map;
 import java.util.UUID;
 

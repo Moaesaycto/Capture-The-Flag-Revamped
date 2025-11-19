@@ -68,3 +68,6 @@ Icon?
 *.swp
 *.swo
 *.bak
+
+# My stuff
+/temp
