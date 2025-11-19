@@ -157,7 +157,7 @@ const StateViewer = () => {
 
 
     return (
-        <div className="w-full pt-4 pb-10 relative mb-10 mt-4 flex items-center justify-center">
+        <div className="w-full pt-4 pb-10 relative mb-10 mt-10 flex items-center justify-center">
             <Icon
                 className="absolute text-gray-300"
                 style={{

@@ -16,10 +16,10 @@ const HomePage = () => {
 
     return (
         <Page>
+            <Controller />
             <StateViewer />
             {me?.auth && <GameController />}
             {me?.auth && <AnnouncementController />}
-            <Controller />
             <PlayerList />
             <Map />
         </Page>
