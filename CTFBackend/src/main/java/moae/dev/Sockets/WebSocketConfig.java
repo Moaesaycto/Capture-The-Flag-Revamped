@@ -35,6 +35,10 @@ public class WebSocketConfig implements WebSocketConfigurer {
         .addInterceptors(new JwtHandshakeInterceptor(jwtDecoder, null, game))
         .setAllowedOrigins("*");
 
+    webSocketHandlerRegistry
+        .addHandler(new AnnouncementSocketConnectionHandler(game), "/socket/announcements")
+        .setAllowedOrigins("*");
+
     game.getTeams()
         .forEach(
             t -> {

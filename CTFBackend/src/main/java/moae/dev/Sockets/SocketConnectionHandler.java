@@ -48,8 +48,7 @@ public class SocketConnectionHandler extends TextWebSocketHandler {
 
   @Override
   public void handleMessage(@NonNull WebSocketSession session, @NonNull WebSocketMessage<?> message)
-      throws Exception {
-  }
+      throws Exception {}
 
   public void broadcastMessage(ChatMessage message) {
     ObjectMapper mapper = new ObjectMapper();

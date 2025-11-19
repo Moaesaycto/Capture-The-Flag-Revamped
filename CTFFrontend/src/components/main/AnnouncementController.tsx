@@ -70,7 +70,7 @@ const AnnouncementController = () => {
                     <input
                         className="bg-neutral-900 w-full py-1 px-2 rounded focus:ring-2 focus:ring-amber-400 focus:outline-none"
                         name="name"
-                        placeholder="Enter Name"
+                        placeholder="Enter announcement message"
                         autoComplete="off"
                         onChange={(e: ChangeEvent<HTMLInputElement>) => setMessage(e.target.value)}
                         onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}

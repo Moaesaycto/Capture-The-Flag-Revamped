@@ -4,12 +4,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.validation.Valid;
 import moae.dev.Requests.SettingsRequest;
 import moae.dev.Server.AppConfig;
+import moae.dev.Sockets.AnnouncementSocketConnectionHandler;
 import moae.dev.Sockets.SocketConnectionHandler;
 import moae.dev.Sockets.StateSocketConnectionHandler;
-import moae.dev.Utils.ChatMessage;
-import moae.dev.Utils.MessagePage;
-import moae.dev.Utils.MessageUtils;
-import moae.dev.Utils.StateMessage;
+import moae.dev.Utils.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -39,8 +37,9 @@ public class Game {
 
   private final boolean locked;
 
-  private static State state;
-  private static boolean paused = false;
+  private State state;
+  private boolean paused = false;
+  private boolean emergencyDeclared = false;
 
   public enum State {
     WAITING_TO_START("ready"),
@@ -191,6 +190,8 @@ public class Game {
       players.clear();
       messages.clear();
       counter.set(0);
+
+      AnnouncementSocketConnectionHandler.broadcast(new AnnouncementMessage("reset", null));
     }
 
     stateBroadcast(state, config.getGame().getGraceTime() * 1000L, paused);
@@ -214,11 +215,11 @@ public class Game {
   }
 
   public synchronized void setState(State state) {
-    Game.state = state;
+    this.state = state;
   }
 
   public synchronized State getState() {
-    return Game.state;
+    return state;
   }
 
   public synchronized boolean isPaused() {
@@ -319,9 +320,14 @@ public class Game {
         };
 
     return Map.of(
-        "state", state.toString(),
-        "duration", timeLeft,
-        "paused", paused);
+        "state",
+        state.toString(),
+        "duration",
+        timeLeft,
+        "paused",
+        paused,
+        "emergency",
+        emergencyDeclared);
   }
 
   public void merge(@Valid SettingsRequest settings) {
@@ -355,6 +361,22 @@ public class Game {
 
   public void stateBroadcast(State newState, long duration, boolean isPaused) {
     StateSocketConnectionHandler.broadcast(new StateMessage(newState, duration, isPaused));
+  }
+
+  public void declareEmergency() {
+    emergencyDeclared = true;
+    try {
+      pause();
+    } catch (Exception ignored) {
+    }
+  }
+
+  public void releaseEmergency() {
+      emergencyDeclared = false;
+  }
+
+  public boolean emergencyDeclared() {
+      return emergencyDeclared;
   }
 
   // ----- Players -----
