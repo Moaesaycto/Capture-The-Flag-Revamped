@@ -13,7 +13,7 @@ const Page = ({ children }: PageProps) => {
     const { authLoading, healthy } = useAuthContext();
     const { emergency, loading, health } = useGameContext();
 
-    if (authLoading || loading || !health) return <Loading />
+    if (authLoading || (loading && !health)) return <Loading />
     if (!healthy) return <NoConnection />
 
     return (

@@ -86,7 +86,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 }
             },
             () => setEmergencyChannelConnected(true),
-            () => {},
+            () => { },
             () => setEmergencyChannelConnected(false)
         );
         return () => socket.close();
@@ -168,7 +168,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setPaused(r.state.paused);
             setEmergency(r.state.emergency);
             setInitialDataLoaded(true);
-        }).catch(() => { }); // TODO: fix
+        }).catch(() => setLoading(false));
     }, []);
 
     useEffect(() => {

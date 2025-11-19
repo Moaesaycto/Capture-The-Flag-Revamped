@@ -30,6 +30,8 @@ interface MessageContextValue {
     getMoreMessagesOpenChat: (start: number) => void;
     isLoadingMore: boolean;
     firstItemIndex: number;
+    currMessage: string,
+    setCurrMessage: (msg: string) => void;
 }
 
 const INITIAL_FIRST_INDEX = 100_000
@@ -40,6 +42,7 @@ const MessageContext = createContext<MessageContextValue | undefined>(undefined)
 export const MessageProvider = ({ children }: { children: ReactNode }) => {
     const { jwt, myTeam, me } = useAuthContext();
 
+    const [currMessage, setCurrMessage] = useState<string>("");
     const [openChat, setOpenChat] = useState<ChatType | null>(null);
     const [lastOpenChat, setLastOpenChat] = useState<ChatType | null>(null);
     const [firstItemIndex, setFirstItemIndex] = useState(INITIAL_FIRST_INDEX);
@@ -325,11 +328,13 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
         getMoreMessagesOpenChat,
         isLoadingMore,
         firstItemIndex,
+        currMessage,
+        setCurrMessage,
     }), [
         openChat, sendMessage, dirtyTeams, dirtyGlobal, globalChats, teamChats,
         pendingTeamMessages, pendingGlobalMessages, loadingGlobalChats, loadingTeamChats,
         canLoadMoreGlobal, canLoadMoreTeam, displayChats, pendingChats, isOpenChatLoading,
-        chatError, getMoreMessagesOpenChat, firstItemIndex
+        chatError, getMoreMessagesOpenChat, firstItemIndex, currMessage, setCurrMessage,
     ]);
     return (
         <MessageContext.Provider value={providerValue}>

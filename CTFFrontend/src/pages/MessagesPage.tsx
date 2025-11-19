@@ -28,10 +28,11 @@ const MessagesPage = () => {
         canLoadMoreTeam,
         displayChats,
         pendingChats,
+        currMessage,
+        setCurrMessage,
     } = useMessageContext();
 
     const [chats, setChats] = useState<Chat[]>([]);
-    const [currMessage, setCurrMessage] = useState<string>("");
 
     // Returning to last viewed page
     useEffect(() => {

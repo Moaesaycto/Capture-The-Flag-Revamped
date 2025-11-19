@@ -32,7 +32,6 @@ const MessageInput: FC<MessageInputProps> = ({
         return !loading && !disabled && textOk;
     }, [value, loading, disabled, maxLength, isOpenChatLoading, chatError]);
 
-    // Reset focus after sent
     useEffect(() => {
         if (inputRef.current) {
             inputRef.current.focus();
@@ -45,7 +44,7 @@ const MessageInput: FC<MessageInputProps> = ({
         setError(null);
         try {
             await sendMessage(value);
-            onChange(""); // clear input
+            onChange("");
         } catch (err: any) {
             setError(err?.message ?? "Failed to send message");
         } finally {
