@@ -2,6 +2,7 @@ import { useAuthContext } from "@/components/contexts/AuthContext";
 import { useSettingsContext } from "@/components/contexts/SettingsContext";
 import Page from "@/components/main/Page"
 import { gameReset } from "@/services/GameApi";
+import { usePushNotifications } from "@/services/usePushNotifications";
 import type { ReactNode } from "react";
 import type { IconType } from "react-icons";
 import { FaRegHandPointer, FaTrash } from "react-icons/fa";
@@ -19,9 +20,10 @@ type OptionProps = {
     color?: string;
     onChange?: (value: boolean) => void;
     onClick?: () => void;
+    details?: string;
 };
 
-const Option = ({ title, onChange, disabled = false, type = "switch", icon: Icon, color, value, onClick }: OptionProps) => {
+const Option = ({ title, onChange, disabled = false, type = "switch", icon: Icon, color, value, onClick, details }: OptionProps) => {
     let control;
 
     switch (type) {
@@ -55,9 +57,16 @@ const Option = ({ title, onChange, disabled = false, type = "switch", icon: Icon
 
 
     return (
-        <div className="w-full flex flex-row justify-between items-center odd:bg-neutral-800 even:bg-neutral-900 p-2">
-            <span className="text-md">{title}</span>
-            {control}
+        <div className="w-full odd:bg-neutral-800 even:bg-neutral-900 p-2">
+            <div className="w-full flex flex-row justify-between items-center">
+                <span className="text-md">{title}</span>
+                {control}
+            </div>
+            {details &&
+                <div className="text-xs text-neutral-500">
+                    {details}
+                </div>
+            }
         </div>
     );
 };
@@ -83,14 +92,8 @@ const SettingsSection = ({ icon: Icon, title, children }: SettingsSectionProps) 
 
 const SettingsPage = () => {
     const { me, jwt, logout } = useAuthContext();
-    const { wantsStatusNotifs,
-        setWantsStatusNotifs,
-        wantsGlobalMessageNotifs,
-        setWantsGlobalMessageNotifs,
-        wantsTeamMessageNotifs,
-        setWantsTeamMessageNotifs,
-        wantsAnnouncementNotifs,
-        setWantsAnnouncementNotifs } = useSettingsContext();
+    const { wantsNewMessageBadges, setWantsNewMessageBadges } = useSettingsContext();
+    const { subscribe, subscription, unsubscribe } = usePushNotifications();
 
     return (
         <Page>
@@ -101,13 +104,11 @@ const SettingsPage = () => {
                 Settings
             </h2>
             <SettingsSection title="Notifications" icon={IoNotifications} >
-                <Option title="Status updates" onChange={(e) => setWantsStatusNotifs(e)} value={wantsStatusNotifs} />
-                <Option title="Global messages" onChange={(e) => setWantsGlobalMessageNotifs(e)} value={wantsGlobalMessageNotifs} />
-                <Option title="Team messages" onChange={(e) => setWantsTeamMessageNotifs(e)} value={wantsTeamMessageNotifs} />
-                <Option title="Announcements" disabled onChange={(e) => setWantsAnnouncementNotifs(e)} value={wantsAnnouncementNotifs} />
+                <Option title="Receive Notifications" onChange={(e) => e ? subscribe() : unsubscribe()} value={!!subscription} disabled={!me} details={"This includes both status updates and emergency alerts. It is recommended to turn this on."} />
+                <Option title="Show New Message Badge" onChange={(e) => setWantsNewMessageBadges(e)} value={wantsNewMessageBadges} disabled={!me} />
             </SettingsSection>
             {me && me.auth && <SettingsSection title="Moderator Options" icon={RiAdminFill} >
-                <Option title="Full Reset Game" onClick={() => { gameReset(true, jwt!); logout();}} type="button" icon={FaTrash} color="#ff7a7a" />
+                <Option title="Full Reset Game" onClick={() => { gameReset(true, jwt!); logout(); }} type="button" icon={FaTrash} color="#ff7a7a" />
             </SettingsSection>}
         </Page>
     )

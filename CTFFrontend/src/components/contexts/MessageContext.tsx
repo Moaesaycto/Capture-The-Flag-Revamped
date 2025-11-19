@@ -197,7 +197,7 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
     }, [jwt, openChat, me, myTeam]);
 
     useEffect(() => {
-        if (openChat) setLastOpenChat(openChat);   
+        if (openChat) setLastOpenChat(openChat);
     }, [openChat]);
 
     const restoreOpen = useCallback(() => {
@@ -329,7 +329,7 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
         openChat, sendMessage, dirtyTeams, dirtyGlobal, globalChats, teamChats,
         pendingTeamMessages, pendingGlobalMessages, loadingGlobalChats, loadingTeamChats,
         canLoadMoreGlobal, canLoadMoreTeam, displayChats, pendingChats, isOpenChatLoading,
-        chatError, getMoreMessagesOpenChat, firstItemIndex,
+        chatError, getMoreMessagesOpenChat, firstItemIndex
     ]);
     return (
         <MessageContext.Provider value={providerValue}>
