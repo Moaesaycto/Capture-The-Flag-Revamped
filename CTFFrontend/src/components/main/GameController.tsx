@@ -1,12 +1,14 @@
-import { useState, type ComponentType } from "react";
-import { FaArrowRotateLeft, FaLock } from "react-icons/fa6";
+import { useCallback, useState, type ChangeEvent, type ComponentType } from "react";
+import { FaArrowRotateLeft, FaLock, FaPaperPlane } from "react-icons/fa6";
 import { PiPauseFill, PiPlayFill, PiSkipBackFill, PiSkipForwardFill, PiStopFill } from "react-icons/pi";
-import type { StandardStatus } from "../../types";
-import { gameEnd, gamePause, gameReset, gameResume, gameRewind, gameSkip, gameStart, releaseEmergency } from "../../services/GameApi";
+import { ANNOUNCEMENT_TYPES, type AnnouncementType, type StandardStatus } from "../../types";
+import { gameAnnounce, gameEnd, gamePause, gameReset, gameResume, gameRewind, gameSkip, gameStart, releaseEmergency } from "../../services/GameApi";
 import { useAuthContext } from "../contexts/AuthContext";
 import { ErrorMessage } from "./Messages";
 import { useGameContext } from "../contexts/GameContext";
 import Container from "./Containers";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { FaUnlock } from "react-icons/fa";
 
 type ControlButtonProps = {
     onClick: () => void;
@@ -32,6 +34,16 @@ const ControlButton = ({ onClick, color, Icon, disabled = false }: ControlButton
 }
 
 const GameController = () => {
+    return (
+        <Container Icon={FaLock} title="Game Controls">
+            <GameControls />
+            <div className="h-5" />
+            <AnnouncementController />
+        </Container>
+    )
+}
+
+const GameControls = () => {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const { jwt } = useAuthContext();
@@ -58,7 +70,7 @@ const GameController = () => {
     }
 
     return (
-        <Container Icon={FaLock} title="Game Controls">
+        <div>
             {error && <ErrorMessage message={error} />}
             <div className="w-full pb-2 pt-3 flex flex-row items-center justify-around">
                 {/* Reset Button */}
@@ -101,17 +113,94 @@ const GameController = () => {
                     onClick={() => ExecuteUpdate(gameEnd)}
                     disabled={emergency || loading || state === "ready" || state === "ended"}
                 />
-            </div>
-            {emergency &&
-                <button
+
+                <ControlButton
+                    Icon={FaUnlock}
                     onClick={release}
-                    className={`bg-red-400 text-black w-full h-7.5 rounded flex justify-center items-center
-                               hover:bg-red-500 hover:cursor-pointer disabled:hover:cursor-not-allowed
-                               disabled:hover:bg-red-400 disabled:opacity-50 mt-4`}
+                    disabled={!emergency}
+                />
+            </div>
+        </div>
+    );
+}
+
+const AnnouncementController = () => {
+    const [announcementType, setAnnouncementType] = useState<AnnouncementType>("emergency");
+    const [message, setMessage] = useState<string>("");
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+
+    const { jwt } = useAuthContext();
+
+    const submit = useCallback(() => {
+        if (!jwt) return;
+
+        setLoading(true);
+        if (announcementType == "custom" && message.length == 0) {
+            setError("Custom announcements must include a message");
+        }
+
+        gameAnnounce(announcementType, message, jwt)
+            .catch((e: any) => setError(e.message))
+            .finally(() => setLoading(false));
+
+    }, [setError, message, announcementType, jwt]);
+
+    return (
+        <div>
+            {error && <ErrorMessage message={error} />}
+            <div className="flex gap-3 items-center">
+                <Select
+                    value={announcementType}
+                    onValueChange={(val) => setAnnouncementType(val as AnnouncementType)}
                 >
-                    Release Emergency
-                </button>}
-        </Container>
+                    <SelectTrigger
+                        className="
+                            bg-neutral-900 border-none rounded
+                            outline-none
+                            focus:outline-none
+                            focus-visible:outline-none
+
+                            focus:ring-2 focus:ring-amber-400
+                            data-[state=open]:ring-2 data-[state=open]:ring-amber-400
+                        "
+                    >
+
+                        <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-neutral-900 text-white border-none text-xl">
+                        <SelectGroup>
+                            {ANNOUNCEMENT_TYPES.map((e, k) => <SelectItem
+                                value={e}
+                                key={k}
+                                className="focus:bg-amber-400"
+                            >
+                                {String(e).charAt(0).toUpperCase() + String(e).slice(1)}
+                            </SelectItem>)}
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+
+                <input
+                    className="bg-neutral-900 w-full py-1 px-2 rounded focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                    name="name"
+                    placeholder="Enter announcement message"
+                    autoComplete="off"
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setMessage(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
+                />
+                <button
+                    className={`bg-amber-400 text-black w-10 h-7.5 rounded flex justify-center items-center
+                               hover:bg-amber-500 hover:cursor-pointer disabled:hover:cursor-not-allowed
+                               disabled:hover:bg-amber-400 disabled:opacity-50`}
+                    onClick={submit}
+                    disabled={loading}
+                >
+                    <FaPaperPlane />
+                </button>
+            </div>
+        </div>
+
     )
 }
 

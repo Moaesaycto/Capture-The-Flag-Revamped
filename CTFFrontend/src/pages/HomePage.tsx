@@ -7,7 +7,6 @@ import { useMemo } from "react";
 import Map from "../components/main/Map";
 import GameController from "../components/main/GameController";
 import StateViewer from "../components/main/StateViewer";
-import AnnouncementController from "@/components/main/AnnouncementController";
 
 const HomePage = () => {
     const { loggedIn, me } = useAuthContext();
@@ -19,7 +18,6 @@ const HomePage = () => {
             <Controller />
             <StateViewer />
             {me?.auth && <GameController />}
-            {me?.auth && <AnnouncementController />}
             <PlayerList />
             <Map />
         </Page>

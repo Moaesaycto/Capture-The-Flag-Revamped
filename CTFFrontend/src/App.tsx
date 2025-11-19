@@ -8,12 +8,17 @@ import SettingsPage from './pages/SettingsPage'
 import { useAuthContext } from './components/contexts/AuthContext'
 import type { JSX } from 'react'
 import RulesPage from './pages/RulesPage'
+import { useGameContext } from './components/contexts/GameContext'
+import { WarningMessage } from './components/main/Messages'
 
 function App() {
+  const { emergency } = useGameContext();
+
   return (
     <div className="flex flex-col min-h-screen w-full items-center bg-neutral-950">
       <MainHeader />
-      <main className="flex-1 min-h-0 w-full flex bg-neutral-900 max-w-6xl">
+      <main className="flex-1 min-h-0 w-full bg-neutral-900 max-w-6xl">
+        {emergency && <WarningMessage message="An emergency has been declared, and the game has been paused. Return to the rendezvous point immediately. Check the global chat often for updates." />}
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/message" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />

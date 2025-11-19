@@ -4,7 +4,7 @@ import type { IconType } from "react-icons"
 type ContainerProps = {
     title?: string,
     Icon?: IconType,
-    children?: ReactNode[]
+    children?: ReactNode
 }
 
 const Container = ({ title, Icon, children }: ContainerProps) => {
