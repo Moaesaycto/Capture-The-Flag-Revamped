@@ -15,7 +15,8 @@ const PlayerInfo = () => {
         removeMeFromGame();
         playerLeave(jwt);
         logout();
-    }, [jwt, logout]);
+        console.log('Logout complete');
+    }, [jwt, logout, removeMeFromGame]);
 
     return (
         (myTeam && me ?

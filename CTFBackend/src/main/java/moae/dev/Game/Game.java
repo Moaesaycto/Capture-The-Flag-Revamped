@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.validation.Valid;
 import moae.dev.Requests.SettingsRequest;
 import moae.dev.Server.AppConfig;
-import moae.dev.Server.PushController;
 import moae.dev.Services.PushNotificationService;
 import moae.dev.Sockets.AnnouncementSocketConnectionHandler;
 import moae.dev.Sockets.SocketConnectionHandler;
@@ -99,7 +98,7 @@ public class Game {
     goTo(State.GRACE_PERIOD, config.getGame().getGraceTime() * 1000L);
   }
 
-  public synchronized void pause() {
+  public void pause(boolean announce) {
     if (!isGameRunning()) throw new IllegalStateException("Cannot pause a game that isn't running");
     if (paused) return;
     if (scheduled != null) scheduled.cancel(false);
@@ -108,7 +107,14 @@ public class Game {
     remaining = Math.max(0, stageDuration - elapsed);
 
     paused = true;
+    if (announce)
+      pushService.notifyAll(
+          "The game has been paused", "Check the global chat for more information");
     stateBroadcast(state, remaining, paused);
+  }
+
+  public synchronized void pause() {
+    pause(true);
   }
 
   public void resume() {
@@ -365,25 +371,55 @@ public class Game {
   }
 
   public void stateBroadcast(State newState, long duration, boolean isPaused) {
+    String title = "Capture the Flag";
+    String body =
+        switch (newState) {
+          case State.WAITING_TO_START -> {
+            title = "this is a title";
+            yield "this is a body";
+          }
+          case State.GRACE_PERIOD -> {
+            title = "The game has begun";
+            yield "The grace period has started. You have "
+                + Math.round((float) config.getGame().getGraceTime() / 60)
+                + " minutes to hide and register your flag.";
+          }
+          case State.SCOUT_PERIOD -> {
+            title = "The scouting period has commenced";
+            yield "Flags can now be stolen. You have "
+                + Math.round((float) config.getGame().getScoutTime() / 60)
+                + " minutes until the flag locations are revealed";
+          }
+          case State.FFA_PERIOD -> {
+            title = "Flags have been revealed!";
+            yield "Check the map on the website to see where the flags are located. You have "
+                + Math.round((float) config.getGame().getFfaTime() / 60)
+                + " minutes until the game finishes.";
+          }
+          case State.ENDED -> {
+            title = "The game has ended";
+            yield "Return to the rendezvous point.";
+          }
+        };
 
-    try {
-      pushService.notifyAll(newState.name(), "Game has changed states");
-    } catch (Exception ignored) {
-    }
-
+    pushService.notifyAll(title, body);
     StateSocketConnectionHandler.broadcast(new StateMessage(newState, duration, isPaused));
   }
 
   public void declareEmergency() {
     emergencyDeclared = true;
     try {
-      pause();
+      pause(false);
     } catch (Exception ignored) {
     }
+
+      pushService.notifyAll(
+          "EMERGENCY DECLARED", "An emergency has been declared. Return to the rendezvous point immediately");
   }
 
   public void releaseEmergency() {
     emergencyDeclared = false;
+    pushService.notifyAll("Emergency state has been lifted", "Check the global chat for further information if needed.");
   }
 
   public boolean emergencyDeclared() {

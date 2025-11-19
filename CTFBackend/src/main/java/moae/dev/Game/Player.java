@@ -11,22 +11,11 @@ public class Player {
   private final UUID team;
   private final boolean auth;
 
-  // Subscription settings
-  private boolean pushStatus;
-  private boolean pushGlobalMessages;
-  private boolean pushTeamMessages;
-  private boolean pushAnnouncements; // Will always be set to true when logged in
-
   public Player(String name, UUID team, boolean auth) {
     this.id = UUID.randomUUID();
     this.name = name;
     this.team = team;
     this.auth = auth;
-
-    pushStatus = true;
-    pushGlobalMessages = true;
-    pushTeamMessages = true;
-    pushAnnouncements = true;
   }
 
   public String getName() {
@@ -55,12 +44,5 @@ public class Player {
 
   public boolean isOnTeam(UUID cTeam) {
     return cTeam.equals(this.team);
-  }
-
-  public void mergeNotificationSettings(NotificationSettings settings) {
-      pushStatus = settings.status();
-      pushGlobalMessages = settings.global();
-      pushTeamMessages = settings.team();
-      pushAnnouncements = settings.announcements();
   }
 }

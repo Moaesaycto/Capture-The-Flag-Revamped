@@ -3,7 +3,6 @@ import { apiHealth } from "@/services/api";
 import type { Player, Team } from "@/types";
 import { playerMe } from "@/services/PlayerApi";
 import { teamGet } from "@/services/TeamApi";
-import { useNavigate } from "react-router-dom";
 import { usePushNotifications } from "@/services/usePushNotifications";
 
 const JWT_KEY = import.meta.env.VITE_JWT_KEY;
@@ -25,8 +24,6 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const navigate = useNavigate();
-
     const { unsubscribe } = usePushNotifications();
 
     const [healthy, setHealthy] = useState<boolean | null>(null);
@@ -43,15 +40,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setAuthLoading(true);
     };
 
-    const logout = useCallback(() => {
+    const logout = useCallback(async () => {
+        await unsubscribe();
         setJwt(null);
         setMe(null);
         setMyTeam(null);
         setLoggedIn(false);
+        setAuthLoading(true);
         localStorage.removeItem(JWT_KEY);
-        unsubscribe();
-        navigate("/");
-    }, []);
+    }, [unsubscribe]);
 
     useEffect(() => {
         if (jwt) localStorage.setItem(JWT_KEY, jwt);

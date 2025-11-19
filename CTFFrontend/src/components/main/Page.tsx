@@ -12,10 +12,10 @@ type PageProps = {
 
 const Page = ({ children }: PageProps) => {
     const { authLoading, healthy } = useAuthContext();
-    const { emergency } = useGameContext();
+    const { emergency, loading, health } = useGameContext();
     const { subscription, subscribe, unsubscribe } = usePushNotifications();
 
-    if (authLoading) return <Loading />
+    if (authLoading || loading || !health) return <Loading />
     if (!healthy) return <NoConnection />
 
     return (

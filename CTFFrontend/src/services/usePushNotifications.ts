@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-const API_URL = 'http://localhost:8080/api/push';
+const API_URL = import.meta.env.VITE_BACKEND_URL + "/api/push";
 const STORAGE_KEY = 'push_subscription';
 
 export function usePushNotifications() {
@@ -13,7 +13,7 @@ export function usePushNotifications() {
         }
     }, []);
 
-    const restoreSubscription = async () => {
+    const restoreSubscription = useCallback(async () => {
         try {
             const registration = await navigator.serviceWorker.ready;
             const existingSub = await registration.pushManager.getSubscription();
@@ -25,9 +25,9 @@ export function usePushNotifications() {
         } catch (error) {
             console.error('Failed to restore subscription:', error);
         }
-    };
+    }, []);
 
-    const subscribe = async () => {
+    const subscribe = useCallback(async () => {
         const keyRes = await fetch(`${API_URL}/key`);
         const { publicKey } = await keyRes.json();
 
@@ -45,20 +45,31 @@ export function usePushNotifications() {
 
         setSubscription(sub);
         localStorage.setItem(STORAGE_KEY, 'true');
-    };
+    }, []);
 
-    const unsubscribe = async () => {
-        if (subscription) {
-            await fetch(`${API_URL}/unsubscribe`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ endpoint: subscription.endpoint })
-            });
-            await subscription.unsubscribe();
-            setSubscription(null);
-            localStorage.removeItem(STORAGE_KEY);
+    const unsubscribe = useCallback(async () => {
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            const existingSub = await registration.pushManager.getSubscription();
+
+            if (existingSub) {
+                await Promise.all([
+                    fetch(`${API_URL}/unsubscribe`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ endpoint: existingSub.endpoint }),
+                        keepalive: true
+                    }),
+                    existingSub.unsubscribe()
+                ]);
+
+                setSubscription(null);
+                localStorage.removeItem(STORAGE_KEY);
+            }
+        } catch (error) {
+            console.error('Error unsubscribing:', error);
         }
-    };
+    }, []);
 
     return { subscription, subscribe, unsubscribe };
 }
