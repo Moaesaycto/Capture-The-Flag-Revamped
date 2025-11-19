@@ -4,6 +4,7 @@ import Spinner from "./LoadingSpinner"
 import { useAuthContext } from "../contexts/AuthContext";
 import { useGameContext } from "../contexts/GameContext";
 import { WarningMessage } from "./Messages";
+import { usePushNotifications } from "@/services/usePushNotifications";
 
 type PageProps = {
     children?: ReactNode;
@@ -12,12 +13,15 @@ type PageProps = {
 const Page = ({ children }: PageProps) => {
     const { authLoading, healthy } = useAuthContext();
     const { emergency } = useGameContext();
+    const { subscription, subscribe, unsubscribe } = usePushNotifications();
 
     if (authLoading) return <Loading />
     if (!healthy) return <NoConnection />
 
     return (
         <div className="flex flex-col flex-1 w-full min-h-0 text-white py-5 px-5">
+            {!subscription ? <button onClick={subscribe}>Enable Notifications</button> : <button onClick={unsubscribe}>Disable Notifications</button>}
+
             {emergency && <WarningMessage message="An emergency has been declared. Return to the rendezvous point immediately." />}
             {children}
         </div>

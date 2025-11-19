@@ -12,22 +12,25 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'org.junit:junit-bom:5.10.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation(platform("org.junit:junit-bom:5.10.0"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
     implementation "org.springframework.boot:spring-boot-starter-security"
     implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server"
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
     implementation "org.springframework.security:spring-security-crypto"
     implementation "com.nimbusds:nimbus-jose-jwt:9.40"
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation "org.springframework.integration:spring-integration-websocket:6.5.3"
-    implementation "org.springframework:spring-webmvc"
     implementation 'jakarta.servlet:jakarta.servlet-api:6.0.0'
-    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'nl.martijndwars:web-push:5.1.2'
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.78'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.14'
+    implementation 'org.bitbucket.b_c:jose4j:0.9.6'
 }
 
 test {

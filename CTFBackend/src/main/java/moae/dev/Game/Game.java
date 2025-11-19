@@ -4,10 +4,13 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.validation.Valid;
 import moae.dev.Requests.SettingsRequest;
 import moae.dev.Server.AppConfig;
+import moae.dev.Server.PushController;
+import moae.dev.Services.PushNotificationService;
 import moae.dev.Sockets.AnnouncementSocketConnectionHandler;
 import moae.dev.Sockets.SocketConnectionHandler;
 import moae.dev.Sockets.StateSocketConnectionHandler;
 import moae.dev.Utils.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,6 +29,8 @@ public class Game {
 
   private final AtomicInteger counter = new AtomicInteger(0);
   private final List<ChatMessage> messages = new ArrayList<>();
+
+  @Autowired private PushNotificationService pushService;
   private SocketConnectionHandler webSocketHandler;
 
   private static final long REWIND_TOLERANCE_MS = 5000;
@@ -360,6 +365,12 @@ public class Game {
   }
 
   public void stateBroadcast(State newState, long duration, boolean isPaused) {
+
+    try {
+      pushService.notifyAll(newState.name(), "Game has changed states");
+    } catch (Exception ignored) {
+    }
+
     StateSocketConnectionHandler.broadcast(new StateMessage(newState, duration, isPaused));
   }
 
@@ -372,11 +383,11 @@ public class Game {
   }
 
   public void releaseEmergency() {
-      emergencyDeclared = false;
+    emergencyDeclared = false;
   }
 
   public boolean emergencyDeclared() {
-      return emergencyDeclared;
+    return emergencyDeclared;
   }
 
   // ----- Players -----
