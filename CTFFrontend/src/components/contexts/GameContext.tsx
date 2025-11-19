@@ -78,6 +78,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     case "reset":
                         window.location.reload();
                         break;
+                    case "release":
+                        setEmergency(false);
+                        break;
                 }
 
             }

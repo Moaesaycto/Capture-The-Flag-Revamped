@@ -8,18 +8,14 @@ import Map from "../components/main/Map";
 import GameController from "../components/main/GameController";
 import StateViewer from "../components/main/StateViewer";
 import AnnouncementController from "@/components/main/AnnouncementController";
-import { useGameContext } from "@/components/contexts/GameContext";
-import { WarningMessage } from "@/components/main/Messages";
 
 const HomePage = () => {
     const { loggedIn, me } = useAuthContext();
-    const { emergency } = useGameContext();
 
     const Controller = useMemo(() => (loggedIn ? PlayerInfo : JoinForm), [loggedIn, me]);
 
     return (
         <Page>
-            {emergency && <WarningMessage message="An emergency has been declared. Return to the rendezvous point immediately." />}
             <StateViewer />
             {me?.auth && <GameController />}
             {me?.auth && <AnnouncementController />}

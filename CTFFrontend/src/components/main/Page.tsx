@@ -2,6 +2,8 @@ import type { ReactNode } from "react"
 import { PiWifiXBold } from "react-icons/pi"
 import Spinner from "./LoadingSpinner"
 import { useAuthContext } from "../contexts/AuthContext";
+import { useGameContext } from "../contexts/GameContext";
+import { WarningMessage } from "./Messages";
 
 type PageProps = {
     children?: ReactNode;
@@ -9,12 +11,14 @@ type PageProps = {
 
 const Page = ({ children }: PageProps) => {
     const { authLoading, healthy } = useAuthContext();
+    const { emergency } = useGameContext();
 
     if (authLoading) return <Loading />
     if (!healthy) return <NoConnection />
 
     return (
         <div className="flex flex-col flex-1 w-full min-h-0 text-white py-5 px-5">
+            {emergency && <WarningMessage message="An emergency has been declared. Return to the rendezvous point immediately." />}
             {children}
         </div>
     )

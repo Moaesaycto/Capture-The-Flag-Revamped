@@ -82,7 +82,7 @@ export type GameState = {
     emergency: boolean,
 }
 
-export const ANNOUNCEMENT_TYPES = ["emergency", "custom", "reset"] as const;
+export const ANNOUNCEMENT_TYPES = ["emergency", "custom", "reset", "release"] as const;
 export type AnnouncementType = (typeof ANNOUNCEMENT_TYPES)[number];
 
 export type Announcement = {

@@ -44,3 +44,7 @@ export const gameReset = async (hard: boolean, jwt: string) => {
 export const gameAnnounce = async (type: AnnouncementType, message: string, jwt: string) => {
     return await apiCall<StandardStatus>(`game/announce`, "POST", { type, message }, jwt);
 }
+
+export const releaseEmergency = async(jwt: string) => {
+    return await apiCall<StandardStatus>(`game/emergency/release`, "POST", undefined, jwt);
+}

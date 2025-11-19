@@ -2,7 +2,7 @@ import { useState, type ComponentType } from "react";
 import { FaArrowRotateLeft, FaLock } from "react-icons/fa6";
 import { PiPauseFill, PiPlayFill, PiSkipBackFill, PiSkipForwardFill, PiStopFill } from "react-icons/pi";
 import type { StandardStatus } from "../../types";
-import { gameEnd, gamePause, gameReset, gameResume, gameRewind, gameSkip, gameStart } from "../../services/GameApi";
+import { gameEnd, gamePause, gameReset, gameResume, gameRewind, gameSkip, gameStart, releaseEmergency } from "../../services/GameApi";
 import { useAuthContext } from "../contexts/AuthContext";
 import { ErrorMessage } from "./Messages";
 import { useGameContext } from "../contexts/GameContext";
@@ -34,12 +34,26 @@ const GameController = () => {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const { jwt } = useAuthContext();
-    const { isInGame, isPaused, state } = useGameContext();
+    const { isInGame, isPaused, state, emergency } = useGameContext();
 
     const ExecuteUpdate = (action: (jwt: string) => Promise<StandardStatus>) => {
         setError(null);
         setLoading(true);
         action(jwt!).catch((e: any) => setError(e.message)).finally(() => setLoading(false))
+    }
+
+    const release = () => {
+        setError(null);
+        setLoading(true);
+        if (!jwt) {
+            setError("No valid JWT set");
+            return;
+        }
+        releaseEmergency(jwt)
+            .catch((e: any) => setError(e.message))
+            .finally(() => {
+                setLoading(false);
+            })
     }
 
     return (
@@ -55,7 +69,7 @@ const GameController = () => {
                         Icon={FaArrowRotateLeft}
                         color="#ffb2b2"
                         onClick={() => ExecuteUpdate((jwt) => gameReset(false, jwt))}
-                        disabled={loading}
+                        disabled={emergency || loading}
                     />
 
                     {/* Rewind Button */}
@@ -63,7 +77,7 @@ const GameController = () => {
                         Icon={PiSkipBackFill}
                         color="#a0c0ff"
                         onClick={() => ExecuteUpdate(gameRewind)}
-                        disabled={loading || state === "ready"}
+                        disabled={emergency || loading || state === "ready"}
                     />
 
                     {/* Play / Pause Button */}
@@ -72,7 +86,7 @@ const GameController = () => {
                         onClick={() => {
                             isPaused ? ExecuteUpdate(gameResume) : isInGame ? ExecuteUpdate(gamePause) : ExecuteUpdate(gameStart);
                         }}
-                        disabled={loading || state == "ended"}
+                        disabled={emergency || loading || state == "ended"}
                     />
 
                     {/* Skip Button */}
@@ -80,7 +94,7 @@ const GameController = () => {
                         Icon={PiSkipForwardFill}
                         color="#a0c0ff"
                         onClick={() => ExecuteUpdate(gameSkip)}
-                        disabled={loading || state === "ready" || state === "ended"}
+                        disabled={emergency || loading || state === "ready" || state === "ended"}
                     />
 
                     {/* Stop Button */}
@@ -88,9 +102,18 @@ const GameController = () => {
                         Icon={PiStopFill}
                         color="#ffb2b2"
                         onClick={() => ExecuteUpdate(gameEnd)}
-                        disabled={loading || state === "ready" || state === "ended"}
+                        disabled={emergency || loading || state === "ready" || state === "ended"}
                     />
                 </div>
+                {emergency &&
+                    <button
+                        onClick={release}
+                        className={`bg-red-400 text-black w-full h-7.5 rounded flex justify-center items-center
+                               hover:bg-red-500 hover:cursor-pointer disabled:hover:cursor-not-allowed
+                               disabled:hover:bg-red-400 disabled:opacity-50 mt-4`}
+                    >
+                        Release Emergency
+                    </button>}
             </div>
         </div>
     )
