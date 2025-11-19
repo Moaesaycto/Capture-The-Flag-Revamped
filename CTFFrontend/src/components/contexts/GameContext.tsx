@@ -20,6 +20,7 @@ interface GameContextValue {
     isPaused: boolean;
     stateUpdateKey: number;
     emergency: boolean;
+    emergencyChannelConnected: boolean;
 }
 
 const GameContext = createContext<GameContextValue | undefined>(undefined);
@@ -39,6 +40,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [initialDataLoaded, setInitialDataLoaded] = useState<boolean>(false);
 
     const [emergency, setEmergency] = useState<boolean>(false);
+    const [emergencyChannelConnected, setEmergencyChannelConnected] = useState<boolean>(false);
 
     useEffect(() => {
         const socket = createWebSocket(
@@ -82,8 +84,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                         setEmergency(false);
                         break;
                 }
-
-            }
+            },
+            () => setEmergencyChannelConnected(true),
+            () => {},
+            () => setEmergencyChannelConnected(false)
         );
         return () => socket.close();
     }, [])
@@ -194,6 +198,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             isPaused: paused,
             stateUpdateKey,
             emergency,
+            emergencyChannelConnected
         }}>
             {children}
         </GameContext.Provider>

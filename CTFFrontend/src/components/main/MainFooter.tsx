@@ -1,10 +1,10 @@
 import { BiCopyright } from "react-icons/bi";
 import { useGameContext } from "../contexts/GameContext";
 import Spinner from "./LoadingSpinner";
-import { PiWifiHighBold, PiWifiXBold } from "react-icons/pi";
+import { PiWarningBold, PiWifiHighBold, PiWifiXBold } from "react-icons/pi";
 
 const MainFooter = () => {
-    const { loading, health } = useGameContext();
+    const { loading, health, emergencyChannelConnected } = useGameContext();
     return (
         <footer className="flex flex-col bg-amber-400 z-1 w-full items-center">
             <div className="construction-pattern h-2 w-full" />
@@ -23,7 +23,7 @@ const MainFooter = () => {
                         <Spinner colorClass="text-black" thickness={4} />
                     }
                     {!loading && (health ?
-                        <PiWifiHighBold className="h-full" /> :
+                        (emergencyChannelConnected ? <PiWifiHighBold className="h-full" /> : <PiWarningBold />) :
                         <PiWifiXBold className="h-full" />
                     )}
                 </div>
