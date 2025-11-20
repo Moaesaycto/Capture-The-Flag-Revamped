@@ -4,7 +4,6 @@ import JoinForm from "@/components/forms/JoinForm";
 import { useAuthContext } from "@/components/contexts/AuthContext";
 import PlayerList from "@/components/main/PlayerList";
 import PlayerInfo from "@/components/main/PlayerInfo";
-import Map from "@/components/main/Map";
 import GameController from "@/components/main/GameController";
 import StateViewer from "@/components/main/StateViewer";
 import Container from "@/components/main/Containers";
@@ -13,9 +12,10 @@ import { useGameContext } from "@/components/contexts/GameContext";
 import { playerLeave } from "@/services/PlayerApi";
 import { RxExit } from "react-icons/rx";
 import Color from "color";
+import TeamController from "@/components/main/TeamController";
 
 const HomePage = () => {
-    const { loggedIn, me, jwt, logout } = useAuthContext();
+    const { loggedIn, me, jwt, logout, myTeam } = useAuthContext();
     const { removeMeFromGame } = useGameContext();
 
     const Controller = useMemo(() => (loggedIn ? PlayerInfo : JoinForm), [loggedIn, me]);
@@ -49,7 +49,7 @@ const HomePage = () => {
                     </button>
                 }
             </Container>
-            <Map />
+            {myTeam && <TeamController />}
         </Page>
     )
 }
