@@ -60,7 +60,6 @@ const DelayButton = ({ onClick, color, Icon, disabled = false }: ControlButtonPr
         resetButton();
     };
 
-    // Clean up on unmount or when disabled changes
     useState(() => {
         if (disabled) {
             resetButton();

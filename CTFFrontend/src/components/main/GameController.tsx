@@ -37,8 +37,8 @@ const GameController = () => {
     return (
         <Container Icon={FaLock} title="Game Controls">
             <GameControls />
-            <div className="h-5" />
-            <AnnouncementController />
+            {/* <div className="h-5" />
+            <AnnouncementController /> */}
         </Container>
     )
 }

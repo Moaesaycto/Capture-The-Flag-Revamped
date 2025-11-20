@@ -8,7 +8,9 @@ import { TbTrash } from "react-icons/tb";
 import { playerRemove } from "../../services/PlayerApi";
 import { useGameContext } from "../contexts/GameContext";
 
-const NameRow = ({ player, index }: { player?: Player, index: number }) => {
+type Align = "left" | "right" | "center";
+
+const NameRow = ({ player, index, align }: { player?: Player, index: number, align: Align }) => {
     const { me, jwt } = useAuthContext();
 
     const onClick = () => {
@@ -23,24 +25,27 @@ const NameRow = ({ player, index }: { player?: Player, index: number }) => {
                 ${index % 2 === 0 ? 'bg-neutral-800' : 'bg-neutral-900'}
             `}
         >
-            {player && <div className="w-full flex items-center justify-between">
-                <div className="flex flex-row items-center gap-1">
-                    {player.auth && <RiAdminFill style={{ color: "#FFB900" }} />}
-                    <span>{player.name}</span>
+            {player && <div className="w-full flex items-center justify-between gap-2">
+                <div className="flex flex-row items-center gap-1 flex-1">
+                    <RiAdminFill style={{ color: "#FFB900", visibility: player.auth ? "visible" : "hidden" }} />
+                    <span className={`flex-1 justify-${align} flex gap-1 items-center`}>
+                        {me?.id == player?.id && <BiSolidStar className="inline" style={{ color: "gold" }} />}
+                        {player.name}
+                    </span>
                 </div>
-                {me?.id == player?.id ? <BiSolidStar style={{ color: "gold" }} /> :
-                    me?.auth ? player.auth || <button className="hover:cursor-pointer" onClick={onClick}><TbTrash color="#ff5e5e" /></button> : null
-                }
-
+                <button className="hover:cursor-pointer" onClick={onClick}
+                    style={{ visibility: me?.auth && !player.auth ? "visible" : "hidden" }}
+                ><TbTrash color="#ff5e5e" /></button>
             </div>}
         </li>
     )
 }
 
 const PlayerList = () => {
+    const { me } = useAuthContext();
     const { players, teams } = useGameContext();
 
-    const TeamDisplay = ({ team, players, maxSize }: { team: Team, players: Player[], maxSize: number }) => {
+    const TeamDisplay = ({ team, players, maxSize, align = "left" }: { team: Team, players: Player[], maxSize: number, align: Align }) => {
         const missingRows = maxSize - players.length;
 
         const sortedPlayers = useMemo(() => {
@@ -51,16 +56,20 @@ const PlayerList = () => {
 
         const placeholderRows = useMemo(() => {
             return Array.from({ length: missingRows }).map((_, i) => {
-                return <NameRow index={players.length + i} key={players.length + i} />
+                return <NameRow index={players.length + i} key={players.length + i} align={align} />
             });
         }, [players.length, maxSize]);
 
         return (
             <div
-                className="border-2 rounded w-full"
-                style={{ borderColor: team.color }}
+                className="border-2 w-full"
+                style={{
+                    borderColor: team.color,
+                    borderRadius: me ? "0.25rem" : "0 0 0.25rem 0.25rem",
+                    borderTop: me ? "2xp" : "none"
+                }}
             >
-                <h2
+                {me && <h2
                     className="w-full text-center uppercase"
                     style={{
                         borderColor: team.color,
@@ -68,9 +77,9 @@ const PlayerList = () => {
                         backgroundColor: Color(team.color).alpha(0.25).toString(),
                     }}
                 >
-                    {team.name}</h2>
+                    {team.name}</h2>}
                 <ul className="w-full">
-                    {sortedPlayers.map((p, i) => <NameRow player={p} index={i} key={i} />)}
+                    {sortedPlayers.map((p, i) => <NameRow player={p} index={i} key={i} align={align} />)}
                     {placeholderRows}
                 </ul>
             </div>
@@ -102,10 +111,16 @@ const PlayerList = () => {
     );
 
     return (
-        <div className="py-5 grid gap-4 w-full sm:grid-cols-2">
+        <div
+            className="pb-5 gap-4 w-full"
+            style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+            }}
+        >
             {teams.map((t, i) => {
                 const teamPlayers = playersByTeam.find(to => to.team === t.id)?.players ?? [];
-                return <TeamDisplay team={t} players={teamPlayers} key={i} maxSize={maxSize} />;
+                return <TeamDisplay team={t} players={teamPlayers} key={i} maxSize={maxSize} align={"center"} />;
             })}
         </div>
     )
