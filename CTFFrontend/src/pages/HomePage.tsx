@@ -15,9 +15,9 @@ const HomePage = () => {
 
     return (
         <Page>
-            <Controller />
-            <StateViewer />
             {me?.auth && <GameController />}
+            <StateViewer />
+            <Controller />
             <PlayerList />
             <Map />
         </Page>

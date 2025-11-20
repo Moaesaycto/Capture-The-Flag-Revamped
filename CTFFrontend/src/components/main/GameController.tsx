@@ -1,14 +1,14 @@
 import { useCallback, useState, type ChangeEvent, type ComponentType } from "react";
 import { FaArrowRotateLeft, FaLock, FaPaperPlane } from "react-icons/fa6";
-import { PiPauseFill, PiPlayFill, PiSkipBackFill, PiSkipForwardFill, PiStopFill } from "react-icons/pi";
-import { ANNOUNCEMENT_TYPES, type AnnouncementType, type StandardStatus } from "../../types";
-import { gameAnnounce, gameEnd, gamePause, gameReset, gameResume, gameRewind, gameSkip, gameStart, releaseEmergency } from "../../services/GameApi";
-import { useAuthContext } from "../contexts/AuthContext";
-import { ErrorMessage } from "./Messages";
-import { useGameContext } from "../contexts/GameContext";
-import Container from "./Containers";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { PiPauseFill, PiPlayFill, PiSkipBackFill, PiSkipForwardFill, PiStopFill, PiWarningBold } from "react-icons/pi";
+import { type StandardStatus } from "@/types";
+import { gameAnnounce, gameEnd, gamePause, gameReset, gameResume, gameRewind, gameSkip, gameStart, releaseEmergency } from "@/services/GameApi";
+import { useAuthContext } from "@/components/contexts/AuthContext";
+import { ErrorMessage } from "@/components/main/Messages";
+import { useGameContext } from "@/components/contexts/GameContext";
+import Container from "@/components/main/Containers";
 import { FaUnlock } from "react-icons/fa";
+import DelayButton from "./DelayButton";
 
 type ControlButtonProps = {
     onClick: () => void;
@@ -72,7 +72,7 @@ const GameControls = () => {
     return (
         <div>
             {error && <ErrorMessage message={error} />}
-            <div className="w-full pb-2 pt-3 flex flex-row items-center justify-around">
+            <div className="w-full pt-1 flex flex-row items-center justify-around">
                 {/* Reset Button */}
                 <ControlButton
                     Icon={FaArrowRotateLeft}
@@ -114,10 +114,11 @@ const GameControls = () => {
                     disabled={emergency || loading || state === "ready" || state === "ended"}
                 />
 
-                <ControlButton
-                    Icon={FaUnlock}
-                    onClick={release}
-                    disabled={!emergency}
+                {/* Emergency Button */}
+                <DelayButton
+                    Icon={emergency ? FaUnlock : PiWarningBold}
+                    onClick={emergency ? release : () => gameAnnounce("emergency", "", jwt!)}
+                    color="gold"
                 />
             </div>
         </div>
@@ -125,64 +126,27 @@ const GameControls = () => {
 }
 
 const AnnouncementController = () => {
-    const [announcementType, setAnnouncementType] = useState<AnnouncementType>("emergency");
     const [message, setMessage] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
-
     const { jwt } = useAuthContext();
 
     const submit = useCallback(() => {
         if (!jwt) return;
 
         setLoading(true);
-        if (announcementType == "custom" && message.length == 0) {
-            setError("Custom announcements must include a message");
-        }
-
-        gameAnnounce(announcementType, message, jwt)
+        gameAnnounce("custom", message, jwt)
             .catch((e: any) => setError(e.message))
             .finally(() => setLoading(false));
 
-    }, [setError, message, announcementType, jwt]);
+    }, [setError, message, jwt]);
 
     return (
         <div>
             {error && <ErrorMessage message={error} />}
             <div className="flex gap-3 items-center">
-                <Select
-                    value={announcementType}
-                    onValueChange={(val) => setAnnouncementType(val as AnnouncementType)}
-                >
-                    <SelectTrigger
-                        className="
-                            bg-neutral-900 border-none rounded
-                            outline-none
-                            focus:outline-none
-                            focus-visible:outline-none
-
-                            focus:ring-2 focus:ring-amber-400
-                            data-[state=open]:ring-2 data-[state=open]:ring-amber-400
-                        "
-                    >
-
-                        <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-neutral-900 text-white border-none text-xl">
-                        <SelectGroup>
-                            {ANNOUNCEMENT_TYPES.map((e, k) => <SelectItem
-                                value={e}
-                                key={k}
-                                className="focus:bg-amber-400"
-                            >
-                                {String(e).charAt(0).toUpperCase() + String(e).slice(1)}
-                            </SelectItem>)}
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
-
                 <input
-                    className="bg-neutral-900 w-full py-1 px-2 rounded focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                    className="bg-neutral-900 py-1 px-2 rounded focus:ring-2 focus:ring-amber-400 focus:outline-none flex-1"
                     name="name"
                     placeholder="Enter announcement message"
                     autoComplete="off"
@@ -194,7 +158,7 @@ const AnnouncementController = () => {
                                hover:bg-amber-500 hover:cursor-pointer disabled:hover:cursor-not-allowed
                                disabled:hover:bg-amber-400 disabled:opacity-50`}
                     onClick={submit}
-                    disabled={loading}
+                    disabled={loading || !message}
                 >
                     <FaPaperPlane />
                 </button>
