@@ -42,7 +42,6 @@ const NameRow = ({ player, index, align }: { player?: Player, index: number, ali
 }
 
 const PlayerList = () => {
-    const { me } = useAuthContext();
     const { players, teams } = useGameContext();
 
     const TeamDisplay = ({ team, players, maxSize, align = "left" }: { team: Team, players: Player[], maxSize: number, align: Align }) => {
@@ -65,11 +64,11 @@ const PlayerList = () => {
                 className="border-2 w-full"
                 style={{
                     borderColor: team.color,
-                    borderRadius: me ? "0.25rem" : "0 0 0.25rem 0.25rem",
-                    borderTop: me ? "2xp" : "none"
+                    borderRadius: "0.25rem",
+                    borderTop: "2xp",
                 }}
             >
-                {me && <h2
+                <h2
                     className="w-full text-center uppercase"
                     style={{
                         borderColor: team.color,
@@ -77,7 +76,8 @@ const PlayerList = () => {
                         backgroundColor: Color(team.color).alpha(0.25).toString(),
                     }}
                 >
-                    {team.name}</h2>}
+                    {team.name}
+                    </h2>
                 <ul className="w-full">
                     {sortedPlayers.map((p, i) => <NameRow player={p} index={i} key={i} align={align} />)}
                     {placeholderRows}

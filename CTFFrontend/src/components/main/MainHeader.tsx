@@ -16,12 +16,19 @@ const MainHeader = () => {
         <header
             className="w-full flex flex-col items-center"
         >
-            <div className="bg-amber-400 w-full text-3xl sm:text-5xl z-1 flex flex-col items-center justify-center">
-                <div className="flex justify-between items-center px-3 h-12 max-w-6xl w-full">
-                    <div className="flex flex-row gap-2 py-0">
+            <div className="bg-amber-400 w-full z-1 text-5xl flex flex-col items-center justify-center">
+                <div className="flex flex-col sm:flex-row justify-between items-center px-3 max-w-6xl w-full">
+                    <div
+                        className="flex flex-row gap-2 py-0 items-center"
+                        style={{
+                            fontSize: "clamp(2.3rem, 7.45vw, 2.75rem)",
+                        }}
+                    >
                         <PiFlagBannerFoldDuotone />
                         <h1
-                            style={{ fontFamily: "American Captain" }}
+                            style={{
+                                fontFamily: "American Captain",
+                            }}
                         >
                             Capture The Flag
                         </h1>

@@ -118,6 +118,8 @@ const GameControls = () => {
                 <DelayButton
                     Icon={emergency ? FaUnlock : PiWarningBold}
                     onClick={emergency ? release : () => gameAnnounce("emergency", "", jwt!)}
+                    onError={(e: any) => setError(e.message)}
+                    onSuccess={() => setError("")}
                     color="gold"
                 />
             </div>
@@ -125,7 +127,7 @@ const GameControls = () => {
     );
 }
 
-const AnnouncementController = () => {
+export const AnnouncementController = () => {
     const [message, setMessage] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);

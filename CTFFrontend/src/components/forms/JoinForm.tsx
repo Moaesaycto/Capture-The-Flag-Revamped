@@ -6,6 +6,8 @@ import { ErrorMessage } from "../main/Messages";
 import { useAuthContext } from "../contexts/AuthContext";
 import Color from "color";
 import { useGameContext } from "../contexts/GameContext";
+import { FaFlag } from "react-icons/fa";
+import { RiAdminFill } from "react-icons/ri";
 
 const JoinForm = () => {
     const [wantsAuth, setWantsAuth] = useState<boolean>(false);
@@ -53,29 +55,27 @@ const JoinForm = () => {
         return (
             <button
                 style={{
-                    color: Color(team.color).alpha(disabled ? 0.25 : 1).toString(),
+                    color: team.color,
                     backgroundColor: Color(team.color).alpha(0.25).toString(),
                     borderColor: team.color
                 }}
-                className="flex-1 justify-center 
-                           px-5 py-1 font-semibold border-2 border-b-0 rounded-t flex gap-2 items-center
+                className="justify-center 
+                           w-10 h-10 font-semibold border-2 rounded flex gap-2 items-center
                            hover:cursor-pointer disabled:hover:scale-100 disabled:hover:cursor-not-allowed
-                           uppercase"
+                           uppercase disabled:opacity-50"
                 aria-label={`Join Team ${team.name}`}
                 type="submit"
                 value={team.id}
                 disabled={disabled}
             >
-                {/* <FaFlag /> */}
-                <span>
-                    Join {team.name}
-                </span>
+                <FaFlag />
+                {/* <span>Join {team.name}</span> */}
             </button>
         )
     }
 
     return (
-        <form onSubmit={onSubmit} className="w-full gap-3 bg-neutral-800 pt-3 rounded relative" autoComplete="off">
+        <form onSubmit={onSubmit} className="w-full gap-3 bg-neutral-800 rounded relative" autoComplete="off">
             {error && <ErrorMessage message={error} />}
             {loading &&
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -83,14 +83,14 @@ const JoinForm = () => {
                 </div>
             }
             <div
-                className="flex flex-col gap-2 items-center"
+                className="flex flex-col gap-2 items-center pb-5"
                 style={{
                     visibility: loading ? "hidden" : "visible"
                 }}
             >
                 <div className="flex flex-row w-full gap-2 items-center">
                     <input
-                        className="bg-neutral-900 w-full py-1 px-2 rounded focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                        className="bg-neutral-900 flex-1 h-7 pl-2 rounded focus:ring-2 focus:ring-amber-400 focus:outline-none"
                         name="name"
                         placeholder="Enter Name"
                         autoComplete="off"
@@ -98,11 +98,16 @@ const JoinForm = () => {
                         onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
                         value={name.slice(0, 32)}
                     />
-                    <input
-                        className="appearance-none h-7 w-7 bg-neutral-950 checked:bg-amber-300 rounded"
-                        type="checkbox"
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => { setWantsAuth(e.target.checked) }}
-                    />
+                    <div
+                        className="h-7 w-7 bg-neutral-900 rounded flex items-center justify-center"
+                        style={{
+                            background: wantsAuth ? "#FFD230" : "#171717",
+                            color: wantsAuth ? "black" : "white"
+                        }}
+                        onClick={() => setWantsAuth(prev => !prev)}
+                    >
+                        <RiAdminFill />
+                    </div>
                 </div>
 
                 {wantsAuth &&
@@ -114,7 +119,8 @@ const JoinForm = () => {
                         onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
                         autoComplete="off"
                     />}
-                <div className="flex flex-row w-full justify-around pt-1 gap-4">
+                <div className="flex flex-row w-full justify-around p-2 pl-4 gap-4 bg-neutral-900 rounded items-center">
+                    <span className="flex-1">Select your team:</span>
                     {teams.map((t, key) => <TeamButton team={t} key={key} disabled={loading || name.length < 1} />)}
                 </div>
             </div>
