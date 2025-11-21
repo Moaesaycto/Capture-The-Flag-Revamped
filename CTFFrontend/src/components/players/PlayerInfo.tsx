@@ -1,5 +1,5 @@
 import { useAuthContext } from "@/components/contexts/AuthContext";
-import Spinner from "./LoadingSpinner";
+import Spinner from "../main/LoadingSpinner";
 import { useCallback } from "react";
 import { playerLeave } from "@/services/PlayerApi";
 import { useGameContext } from "../contexts/GameContext";

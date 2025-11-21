@@ -19,7 +19,6 @@ const NameRow = ({ player, index, align }: { player?: Player, index: number, ali
 
     return (
         <li
-            key={index}
             className={`
                 w-full flex items-center gap-1 px-2 py-0.5 h-7
                 ${index % 2 === 0 ? 'bg-neutral-800' : 'bg-neutral-900'}
@@ -55,7 +54,7 @@ const PlayerList = () => {
 
         const placeholderRows = useMemo(() => {
             return Array.from({ length: missingRows }).map((_, i) => {
-                return <NameRow index={players.length + i} key={players.length + i} align={align} />
+                return <NameRow index={players.length + i} key={`placeholder-${i}`} align={align} />
             });
         }, [players.length, maxSize]);
 
@@ -77,9 +76,11 @@ const PlayerList = () => {
                     }}
                 >
                     {team.name}
-                    </h2>
+                </h2>
                 <ul className="w-full">
-                    {sortedPlayers.map((p, i) => <NameRow player={p} index={i} key={i} align={align} />)}
+                    {sortedPlayers.map((p) =>
+                        <NameRow player={p} index={sortedPlayers.indexOf(p)} key={p.id} align={align} />
+                    )}
                     {placeholderRows}
                 </ul>
             </div>
@@ -106,9 +107,9 @@ const PlayerList = () => {
         }, []);
     }, [players]);
 
-    const maxSize = Math.max(
-        ...playersByTeam.map(teamData => teamData.players.length)
-    );
+    const maxSize = playersByTeam.length > 0
+        ? Math.max(...playersByTeam.map(teamData => teamData.players.length))
+        : 0;
 
     return (
         <div

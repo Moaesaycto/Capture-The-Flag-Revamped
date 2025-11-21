@@ -57,16 +57,14 @@ const Option = ({ title, onChange, disabled = false, type = "switch", icon: Icon
 
 
     return (
-        <div className="w-full odd:bg-neutral-800 even:bg-neutral-900 p-2">
-            <div className="w-full flex flex-row justify-between items-center">
-                <span className="text-md">{title}</span>
-                {control}
-            </div>
-            {details &&
-                <div className="text-xs text-neutral-500">
+        <div className="w-full odd:bg-neutral-800 even:bg-neutral-900 p-2 flex">
+            <div className="w-full flex flex-col justify-between items-center">
+                <span className="text-md flex-1 w-full">{title}</span>
+                <div className="text-xs text-neutral-500 flex-1">
                     {details}
                 </div>
-            }
+            </div>
+            {control}
         </div>
     );
 };
