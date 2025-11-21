@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import Spinner from "./LoadingSpinner";
 type ControlButtonProps = {
-    onClick: () => void | Promise<void>;
+    onClick: () => void | Promise<any>;
     onSuccess?: () => void;
     onError?: (error: Error) => void;
     onFinally?: () => void;
@@ -100,9 +100,15 @@ const DelayButton = ({
 
     return (
         <button
-            className="bg-neutral-900 hover:bg-neutral-700 p-2 rounded-lg disabled:opacity-50
-                       disabled:hover:bg-neutral-900 disabled:cursor-not-allowed relative overflow-hidden
-                       h-9 w-9 transition-colors"
+            className={`
+                    bg-neutral-800
+                    ${!isDisabled ? "hover:bg-neutral-700" : ""}
+                    p-2 rounded-lg
+                    disabled:opacity-50
+                    disabled:cursor-not-allowed
+                    relative overflow-hidden
+                    h-9 w-9 transition-colors
+                `}
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseLeave}
@@ -115,6 +121,7 @@ const DelayButton = ({
             }}
             disabled={isDisabled}
         >
+
             {/* Progress border */}
             <div
                 className="absolute inset-0 rounded-lg pointer-events-none"
@@ -125,7 +132,7 @@ const DelayButton = ({
                 }}
             />
             {/* Inner content area to create border effect */}
-            <div className="absolute inset-[3px] bg-neutral-900 rounded-md pointer-events-none" />
+            <div className="absolute inset-[3px] bg-neutral-800 rounded-md pointer-events-none" />
             {/* Icon or Spinner */}
             <div className="relative z-10 flex items-center justify-center">
                 {isLoading ? <Spinner size={20} /> : <Icon />}

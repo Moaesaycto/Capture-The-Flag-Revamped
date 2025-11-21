@@ -113,7 +113,7 @@ const PlayerList = () => {
 
     return (
         <div
-            className="pb-5 gap-4 w-full"
+            className="gap-4 w-full"
             style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",

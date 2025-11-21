@@ -1,14 +1,12 @@
 import { useCallback, useState, type ChangeEvent, type ComponentType } from "react";
 import { FaArrowRotateLeft, FaLock, FaPaperPlane } from "react-icons/fa6";
-import { PiPauseFill, PiPlayFill, PiSkipBackFill, PiSkipForwardFill, PiStopFill, PiWarningBold } from "react-icons/pi";
+import { PiPauseFill, PiPlayFill, PiSkipBackFill, PiSkipForwardFill, PiStopFill } from "react-icons/pi";
 import { type StandardStatus } from "@/types";
-import { gameAnnounce, gameEnd, gamePause, gameReset, gameResume, gameRewind, gameSkip, gameStart, releaseEmergency } from "@/services/GameApi";
+import { gameAnnounce, gameEnd, gamePause, gameReset, gameResume, gameRewind, gameSkip, gameStart } from "@/services/GameApi";
 import { useAuthContext } from "@/components/contexts/AuthContext";
 import { ErrorMessage } from "@/components/main/Messages";
 import { useGameContext } from "@/components/contexts/GameContext";
 import Container from "@/components/main/Containers";
-import { FaUnlock } from "react-icons/fa";
-import DelayButton from "./DelayButton";
 
 type ControlButtonProps = {
     onClick: () => void;
@@ -20,7 +18,7 @@ type ControlButtonProps = {
 const ControlButton = ({ onClick, color, Icon, disabled = false }: ControlButtonProps) => {
     return (
         <button
-            className="bg-neutral-900 hover:bg-neutral-700 hover:cursor-pointer p-2 rounded-lg disabled:opacity-50 disabled:hover:bg-neutral-900 disabled:cursor-not-allowed"
+            className="w-9 h-9 bg-neutral-900 hover:bg-neutral-700 hover:cursor-pointer p-2 rounded-lg disabled:opacity-50 disabled:hover:bg-neutral-900 disabled:cursor-not-allowed"
             onClick={onClick}
             style={{
                 color,
@@ -55,24 +53,10 @@ const GameControls = () => {
         action(jwt!).catch((e: any) => setError(e.message)).finally(() => setLoading(false))
     }
 
-    const release = () => {
-        setError(null);
-        setLoading(true);
-        if (!jwt) {
-            setError("No valid JWT set");
-            return;
-        }
-        releaseEmergency(jwt)
-            .catch((e: any) => setError(e.message))
-            .finally(() => {
-                setLoading(false);
-            })
-    }
-
     return (
         <div>
             {error && <ErrorMessage message={error} />}
-            <div className="w-full pt-1 flex flex-row items-center justify-around">
+            <div className="w-full pt-1 grid grid-cols-5 justify-items-center items-center gap-y-2">
                 {/* Reset Button */}
                 <ControlButton
                     Icon={FaArrowRotateLeft}
@@ -114,14 +98,6 @@ const GameControls = () => {
                     disabled={emergency || loading || state === "ready" || state === "ended"}
                 />
 
-                {/* Emergency Button */}
-                <DelayButton
-                    Icon={emergency ? FaUnlock : PiWarningBold}
-                    onClick={emergency ? release : () => gameAnnounce("emergency", "", jwt!)}
-                    onError={(e: any) => setError(e.message)}
-                    onSuccess={() => setError("")}
-                    color="gold"
-                />
             </div>
         </div>
     );
