@@ -263,7 +263,8 @@ export const ChatWindow = ({
                                 )}
                             </div>
                         </div>
-                    )
+                    ),
+                    Footer: () => <div className="h-2" />
                 }}
                 followOutput={latestIsAtBottomRef.current ? 'smooth' : false}
                 atBottomStateChange={(atBottom) => {
