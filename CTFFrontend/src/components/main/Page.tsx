@@ -3,12 +3,14 @@ import { PiWifiXBold } from "react-icons/pi"
 import Spinner from "./LoadingSpinner"
 import { useAuthContext } from "../contexts/AuthContext";
 import { useGameContext } from "../contexts/GameContext";
+import clsx from "clsx";
 
 type PageProps = {
     children?: ReactNode;
+    padding?: boolean;
 }
 
-const Page = ({ children }: PageProps) => {
+const Page = ({ children, padding = true }: PageProps) => {
     const { authLoading, healthy } = useAuthContext();
     const { loading, health } = useGameContext();
 
@@ -16,10 +18,15 @@ const Page = ({ children }: PageProps) => {
     if (!healthy) return <NoConnection />
 
     return (
-        <div className="flex flex-col flex-1 w-full min-h-0 text-white py-5 px-5">
+        <div
+            className={clsx(
+                "flex flex-col flex-1 w-full min-h-0 text-white",
+                padding && "py-5 px-5"
+            )}
+        >
             {children}
         </div>
-    )
+    );
 }
 
 const Loading = () => (

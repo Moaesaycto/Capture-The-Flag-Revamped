@@ -53,7 +53,7 @@ const MessageInput: FC<MessageInputProps> = ({
     };
 
     return (
-        <div className="relative">
+        <div className="relative bg-neutral-900">
             {value.length > maxLength && (
                 <div className="text-xs px-4 h-2 text-red-800">
                     Messages cannot exceed {maxLength} characters
@@ -68,7 +68,7 @@ const MessageInput: FC<MessageInputProps> = ({
             <div className="relative py-4 px-4 flex flex-row gap-4 items-center">
                 <input
                     ref={inputRef}
-                    className={`bg-neutral-900 w-full py-1 px-2 rounded focus:ring-2 focus:ring-amber-400 focus:outline-none
+                    className={`bg-neutral-950 w-full py-1 px-2 rounded focus:ring-2 focus:ring-amber-400 focus:outline-none
                                disabled:hover:cursor-not-allowed disabled:opacity-50`}
                     value={value}
                     placeholder={placeholder}

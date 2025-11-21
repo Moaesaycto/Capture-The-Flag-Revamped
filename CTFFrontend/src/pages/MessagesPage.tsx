@@ -74,7 +74,7 @@ const MessagesPage = () => {
 
 
     return (
-        <Page>
+        <Page padding={false}>
             <ChatTabs chats={chats} openChat={openChat} setOpenChat={setOpenChat} />
             <div className="relative bg-neutral-950 w-full h-full rounded-b-md flex flex-col">
                 {openChat ? <ChatWindow
