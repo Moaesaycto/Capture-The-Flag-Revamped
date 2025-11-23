@@ -6,6 +6,7 @@ import { useGameContext } from "../contexts/GameContext";
 import { useMemo } from "react";
 import { useAuthContext } from "../contexts/AuthContext";
 import { SuccessMessage, WarningMessage } from "../main/Messages";
+import TeamFlagRegistration from "../team/TeamFlagRegistration";
 
 const TeamController = () => {
     const { state, isPaused } = useGameContext();
@@ -18,10 +19,11 @@ const TeamController = () => {
     return (
         <Container title="Team Controls" Icon={HiMiniUserGroup}>
             <div className="flex flex-col gap-4">
-                {myTeam?.registered ?
+                {state === "grace" && (myTeam?.registered ?
                     <SuccessMessage message="Your team has registered their flag's location" /> :
                     <WarningMessage message="Your team has not registered a flag yet!" />
-                }
+                )}
+                <TeamFlagRegistration />
                 <div className="flex flex-row justify-between items-center bg-neutral-900 py-2 px-4 rounded gap-2">
                     <div className="flex flex-col gap-1 flex-1">
                         <span className="flex-1">Hold to delcare victory</span>

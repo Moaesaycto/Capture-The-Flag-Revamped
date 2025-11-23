@@ -123,7 +123,7 @@ public class Game {
   public void resume() {
     if (!paused) throw new IllegalStateException("Cannot resume a unpaused game");
 
-    if (state == State.GRACE_PERIOD && !allFlagsRegistered())
+    if (state == State.GRACE_PERIOD && !allFlagsRegistered() && remaining <= 0)
       throw new IllegalStateException("Cannot resume until all flags are registered");
 
     paused = false;
@@ -352,8 +352,6 @@ public class Game {
           }
         };
 
-    UUID winnerInfo;
-
     Map<String, Object> result = new HashMap<>();
     result.put("state", state.toString());
     result.put("duration", timeLeft);
@@ -504,7 +502,7 @@ public class Game {
 
     boolean removed = players.removeIf(p -> id.equals(p.getID()));
 
-    if (players.isEmpty()) reset(true);
+    if (players.isEmpty()) reset();
     return removed;
   }
 
@@ -574,9 +572,6 @@ public class Game {
       throw new IllegalStateException("Flags can only be registered during grace period");
 
     Team team = getTeam(teamId);
-    if (team.isRegistered())
-      throw new IllegalStateException("Flag already registered for this team");
-
     team.registerFlag(x, y);
 
     if (allFlagsRegistered() && paused) {
@@ -584,7 +579,7 @@ public class Game {
     }
 
     AnnouncementSocketConnectionHandler.broadcast(
-        new AnnouncementMessage("register", team.toString()));
+        new AnnouncementMessage("register", teamId.toString()));
   }
 
   public void declareVictory(UUID team) {

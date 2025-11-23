@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import type { IconType } from "react-icons";
 import { FaRegHandPointer, FaTrash } from "react-icons/fa";
 import { IoNotifications } from "react-icons/io5";
+import { MdVideogameAsset } from "react-icons/md";
 import { RiAdminFill } from "react-icons/ri";
 
 type OptionType = "switch" | "button";
@@ -58,9 +59,9 @@ const Option = ({ title, onChange, disabled = false, type = "switch", icon: Icon
 
     return (
         <div className="w-full odd:bg-neutral-800 even:bg-neutral-900 p-2 flex">
-            <div className="w-full flex flex-col justify-between items-center">
+            <div className="w-full flex flex-col justify-between">
                 <span className="text-md flex-1 w-full">{title}</span>
-                <div className="text-xs text-neutral-500 flex-1">
+                <div className="text-xs text-neutral-500 flex-1 text-left">
                     {details}
                 </div>
             </div>
@@ -90,7 +91,7 @@ const SettingsSection = ({ icon: Icon, title, children }: SettingsSectionProps) 
 
 const SettingsPage = () => {
     const { me, jwt, logout } = useAuthContext();
-    const { wantsNewMessageBadges, setWantsNewMessageBadges } = useSettingsContext();
+    const { wantsNewMessageBadges, setWantsNewMessageBadges, wantsMoreDetails, setWantsMoreDetails } = useSettingsContext();
     const { subscribe, subscription, unsubscribe } = usePushNotifications();
 
     return (
@@ -101,6 +102,9 @@ const SettingsPage = () => {
             >
                 Settings
             </h2>
+            <SettingsSection title="Game" icon={MdVideogameAsset }>
+                <Option title="View more game details" onChange={(e) => setWantsMoreDetails(e)} value={wantsMoreDetails} />
+            </SettingsSection>
             <SettingsSection title="Notifications" icon={IoNotifications} >
                 <Option title="Receive Notifications" onChange={(e) => e ? subscribe() : unsubscribe()} value={!!subscription} disabled={!me} details={"This includes both status updates and emergency alerts. It is recommended to turn this on."} />
                 <Option title="Show New Message Badge" onChange={(e) => setWantsNewMessageBadges(e)} value={wantsNewMessageBadges} disabled={!me} />

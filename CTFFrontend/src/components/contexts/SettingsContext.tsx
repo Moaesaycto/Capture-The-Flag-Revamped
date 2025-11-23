@@ -2,19 +2,26 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from "
 
 interface Settings {
     wantsNewMessageBadges: boolean;
+    wantsMoreDetails: boolean;
 }
 
 interface SettingsContextValue extends Settings {
     setWantsNewMessageBadges: (v: boolean) => void;
+    setWantsMoreDetails: (v: boolean) => void;
 }
 
 const SettingsContext = createContext<SettingsContextValue | undefined>(undefined);
 const STORAGE_KEY = "userSettings";
 
+const DEFAULT = {
+    wantsNewMessageBadges: true,
+    wantsMoreDetails: false,
+}
+
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     const [settings, setSettings] = useState<Settings>(() => {
         if (typeof window === "undefined") {
-            return { wantsNewMessageBadges: true };
+            return DEFAULT;
         }
 
         try {
@@ -24,7 +31,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
             console.warn("Failed to read settings from localStorage:", e);
         }
 
-        return { wantsNewMessageBadges: true };
+        return DEFAULT;
     });
 
     useEffect(() => {
@@ -41,6 +48,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
                 wantsNewMessageBadges: settings.wantsNewMessageBadges,
                 setWantsNewMessageBadges: (value: boolean) =>
                     setSettings(prev => ({ ...prev, wantsNewMessageBadges: value })),
+                wantsMoreDetails: settings.wantsMoreDetails,
+                setWantsMoreDetails: (value: boolean) =>
+                    setSettings(prev => ({ ...prev, wantsMoreDetails: value })),
+
             }}
         >
             {children}

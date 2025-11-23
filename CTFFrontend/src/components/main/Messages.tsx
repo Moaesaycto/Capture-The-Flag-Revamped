@@ -9,7 +9,7 @@ export const ErrorMessage = ({ message }: { message: string }) => {
             style={{ backgroundColor: Color("#9F0712").alpha(0.2).toString() }}
         >
             <ImWarning />
-            <span>
+            <span className="flex-1">
                 {message}
             </span>
         </div>

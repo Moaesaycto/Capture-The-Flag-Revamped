@@ -17,7 +17,7 @@ const Container = ({ title, Icon, children, collapsible = true }: ContainerProps
         <div className="bg-neutral-800 rounded-b mb-5 w-full">
             <div
                 className={clsx(`bg-amber-400 text-black flex gap-1 px-1 items-center text-sm uppercase
-                        ${open ? "rounded-t" : "rounded"}`)}
+                        ${open ? "rounded-t" : "rounded"} ${collapsible ? "hover:cursor-pointer" : ""}`)}
                 onClick={() => collapsible && setOpen(prev => !prev)}
             >
                 {Icon && <Icon />}

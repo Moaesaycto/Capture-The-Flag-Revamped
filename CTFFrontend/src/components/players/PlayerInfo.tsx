@@ -14,7 +14,6 @@ const PlayerInfo = () => {
         removeMeFromGame();
         playerLeave(jwt);
         logout();
-        console.log('Logout complete');
     }, [jwt, logout, removeMeFromGame]);
 
     return (
@@ -25,7 +24,7 @@ const PlayerInfo = () => {
                 <div className="flex-1 min-w-0">
                     <span
                         className="block text-lg sm:text-2xl font-medium leading-tight
-                 truncate"
+                            truncate"
                         style={{ color: myTeam?.color }}
                         title={me?.name}
                     >
@@ -47,8 +46,8 @@ const PlayerInfo = () => {
                     aria-label="Leave game"
                     onClick={onClick}
                     className="shrink-0 h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center
-               text-red-500 border-2 border-red-800 rounded p-2
-               hover:cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1"
+                              text-red-500 border-2 border-red-800 rounded p-2
+                                hover:cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1"
                     style={{
                         backgroundColor: Color("#9F0712").alpha(0.20).toString()
                     }}

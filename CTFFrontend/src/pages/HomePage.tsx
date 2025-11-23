@@ -10,9 +10,12 @@ import { IoPerson } from "react-icons/io5";
 import TeamController from "@/components/controllers/TeamController";
 import PlayerList from "@/components/players/PlayerList";
 import AuthController from "@/components/controllers/AuthController";
+import { useSettingsContext } from "@/components/contexts/SettingsContext";
+import MoreInfo from "@/components/game/MoreInfo";
 
 const HomePage = () => {
     const { loggedIn, me, myTeam } = useAuthContext();
+    const { wantsMoreDetails } = useSettingsContext();
 
     const Controller = useMemo(() => (loggedIn ? PlayerInfo : JoinForm), [loggedIn, me]);
 
@@ -20,11 +23,12 @@ const HomePage = () => {
         <Page>
             {me?.auth && <GameController />}
             <StateViewer />
-            <Container title="Player information" Icon={IoPerson} id="player-information">
+            <Container title="Player information" Icon={IoPerson}>
                 <Controller />
-            <PlayerList />
+                <PlayerList />
             </Container>
             {myTeam && <TeamController />}
+            {wantsMoreDetails && <MoreInfo />}
             {me?.auth && <AuthController />}
         </Page>
     )

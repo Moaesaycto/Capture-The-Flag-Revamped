@@ -54,9 +54,9 @@ const PlayerList = () => {
 
         const placeholderRows = useMemo(() => {
             return Array.from({ length: missingRows }).map((_, i) => {
-                return <NameRow index={players.length + i} key={`placeholder-${i}`} align={align} />
+                return <NameRow index={players.length + i} key={`placeholder-${team.id}-${i}`} align={align} />
             });
-        }, [players.length, maxSize]);
+        }, [players.length, maxSize, team.id]);
 
         return (
             <div
@@ -78,8 +78,8 @@ const PlayerList = () => {
                     {team.name}
                 </h2>
                 <ul className="w-full">
-                    {sortedPlayers.map((p) =>
-                        <NameRow player={p} index={sortedPlayers.indexOf(p)} key={p.id} align={align} />
+                    {sortedPlayers.map((p, idx) =>
+                        <NameRow player={p} index={idx} key={p.id} align={align} />
                     )}
                     {placeholderRows}
                 </ul>
@@ -119,9 +119,9 @@ const PlayerList = () => {
                 gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
             }}
         >
-            {teams.map((t, i) => {
+            {teams.map((t) => {
                 const teamPlayers = playersByTeam.find(to => to.team === t.id)?.players ?? [];
-                return <TeamDisplay team={t} players={teamPlayers} key={i} maxSize={maxSize} align={"center"} />;
+                return <TeamDisplay team={t} players={teamPlayers} key={t.id} maxSize={maxSize} align={"center"} />;
             })}
         </div>
     )

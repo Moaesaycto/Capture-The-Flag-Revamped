@@ -27,7 +27,7 @@ interface GameContextValue {
 const GameContext = createContext<GameContextValue | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
-    const { me, logout, setMyTeam } = useAuthContext();
+    const { me, logout, setMyTeam, myTeam } = useAuthContext();
 
     const [loading, setLoading] = useState<boolean>(true);
     const [health, setHealth] = useState<boolean>(false);
@@ -43,6 +43,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [emergency, setEmergency] = useState<boolean>(false);
     const [emergencyChannelConnected, setEmergencyChannelConnected] = useState<boolean>(false);
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+
+    useEffect(() => {
+        if (state === "ready") {
+            setTeams(prev =>
+                prev.map(team => ({ ...team, registered: false }) )
+            );
+            setMyTeam(prev => prev ? { ...prev, registered: false } : prev);
+        }
+    }, [state]);
 
     useEffect(() => {
         const socket = createWebSocket(
@@ -74,6 +83,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             "announcements",
             undefined,
             (msg: string) => {
+                console.log(msg);
                 const announcement: Announcement = JSON.parse(msg);
                 switch (announcement.type) {
                     case "emergency":
@@ -96,6 +106,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                                     : team
                             )
                         );
+                        console.log(myTeam);
                         setMyTeam(prev => prev ? { ...prev, registered: true } : prev);
                         break;
 
@@ -106,7 +117,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             () => setEmergencyChannelConnected(false)
         );
         return () => socket.close();
-    }, [])
+    }, [myTeam])
 
     useEffect(() => {
         let socket: WebSocket | null = null;
