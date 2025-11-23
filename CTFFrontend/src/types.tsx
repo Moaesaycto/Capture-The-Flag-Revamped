@@ -13,7 +13,8 @@ export type Team = {
     id: string,
     name: string,
     color: string,
-    flag: Flag,
+    flag: Flag | null,
+    registered: boolean,
 }
 
 export type Player = {
@@ -82,11 +83,11 @@ export type GameState = {
     emergency: boolean,
 }
 
-export const ANNOUNCEMENT_TYPES = ["emergency", "custom", "reset", "release"] as const;
+export const ANNOUNCEMENT_TYPES = ["emergency", "custom", "reset", "release", "register", "victory"] as const;
 export type AnnouncementType = (typeof ANNOUNCEMENT_TYPES)[number];
 
 export type Announcement = {
     type: AnnouncementType,
     message: string,
-    
+
 }

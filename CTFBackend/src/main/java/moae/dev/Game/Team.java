@@ -11,7 +11,7 @@ public class Team {
   private final UUID id;
   private final String name;
   private final String color;
-  private final Flag flag;
+  private Flag flag;
   private final List<ChatMessage> messages;
   private SocketConnectionHandler webSocketHandler;
 
@@ -20,7 +20,7 @@ public class Team {
     this.id = UUID.randomUUID();
     this.name = name;
     this.color = color;
-    this.flag = new Flag();
+    this.flag = null;
     this.messages = new ArrayList<ChatMessage>();
   }
 
@@ -36,12 +36,21 @@ public class Team {
     return this.color;
   }
 
-  public Map<String, Object> toMap() {
-    return Map.of(
-        "id", this.id,
-        "name", this.name,
-        "color", this.color,
-        "flag", this.flag.toMap());
+  public Map<String, Object> toMap(boolean revealed) {
+
+    Map<String, Object> result = new HashMap<>();
+    result.put("id", this.id);
+    result.put("name", this.name);
+    result.put("color", this.color);
+
+    if (flag == null || !revealed) {
+      result.put("flag", null);
+      result.put("registered", flag != null);
+    } else {
+      result.put("flag", flag.toMap());
+      result.put("registered", flag != null);
+    }
+    return result;
   }
 
   public void setWebSocketHandler(SocketConnectionHandler handler) {
@@ -63,5 +72,18 @@ public class Team {
 
   public MessagePage getMessages(Integer start, Integer count) {
     return MessageUtils.getMessages(start, count, messages);
+  }
+
+  public void reset() {
+    messages.clear();
+    flag = null;
+  }
+
+  public void registerFlag(int x, int y) {
+    this.flag = new Flag(x, y);
+  }
+
+  public boolean isRegistered() {
+    return flag != null;
   }
 }

@@ -27,7 +27,7 @@ interface GameContextValue {
 const GameContext = createContext<GameContextValue | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
-    const { me, logout } = useAuthContext();
+    const { me, logout, setMyTeam } = useAuthContext();
 
     const [loading, setLoading] = useState<boolean>(true);
     const [health, setHealth] = useState<boolean>(false);
@@ -88,6 +88,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     case "custom":
                         setAnnouncements(prev => [...prev, announcement]);
                         break;
+                    case "register":
+                        setTeams(prev =>
+                            prev.map(team =>
+                                team.id === announcement.message
+                                    ? { ...team, registered: true }
+                                    : team
+                            )
+                        );
+                        setMyTeam(prev => prev ? { ...prev, registered: true } : prev);
+                        break;
+
                 }
             },
             () => setEmergencyChannelConnected(true),

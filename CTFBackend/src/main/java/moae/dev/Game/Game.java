@@ -45,6 +45,8 @@ public class Game {
   private boolean paused = false;
   private boolean emergencyDeclared = false;
 
+  private Team winner;
+
   public enum State {
     WAITING_TO_START("ready"),
     GRACE_PERIOD("grace"),
@@ -76,6 +78,7 @@ public class Game {
     paused = false;
     config = initConfig;
     locked = false;
+    winner = null;
 
     if (!registerNTeams(initConfig.getGame().getMaxTeams(), initConfig.getTeams())) {
       throw new RuntimeException("Failed to register teams. Check the configuration and retry");
@@ -120,6 +123,9 @@ public class Game {
   public void resume() {
     if (!paused) throw new IllegalStateException("Cannot resume a unpaused game");
 
+    if (state == State.GRACE_PERIOD && !allFlagsRegistered())
+      throw new IllegalStateException("Cannot resume until all flags are registered");
+
     paused = false;
     goToWithRemaining(state, remaining);
   }
@@ -127,6 +133,10 @@ public class Game {
   public void skip() {
     if (!isGameRunning() && !paused)
       throw new IllegalStateException("Cannot skip a game that isn't running");
+
+    if (paused && state == State.GRACE_PERIOD && !allFlagsRegistered())
+      throw new IllegalStateException("Cannot skip until all flags are registered");
+
     if (scheduled != null) scheduled.cancel(false);
 
     if (paused) {
@@ -196,6 +206,9 @@ public class Game {
     remaining = -1;
     stageDuration = -1;
     stageStartEpoch = 0;
+    winner = null;
+
+    teams.forEach(Team::reset);
 
     if (hard) {
       players.clear();
@@ -251,7 +264,16 @@ public class Game {
   public void advance() {
     synchronized (this) {
       switch (state) {
-        case GRACE_PERIOD -> goTo(State.SCOUT_PERIOD, config.getGame().getScoutTime() * 1000L);
+        case GRACE_PERIOD -> {
+          if (!allFlagsRegistered()) {
+            pause(false);
+            pushService.notifyAll(
+                "Waiting for all flags to be registered",
+                "The game will resume once all teams have registered their flags");
+          } else {
+            goTo(State.SCOUT_PERIOD, config.getGame().getScoutTime() * 1000L);
+          }
+        }
         case SCOUT_PERIOD -> goTo(State.FFA_PERIOD, config.getGame().getFfaTime() * 1000L);
         case FFA_PERIOD -> goTo(State.ENDED, 0);
       }
@@ -307,7 +329,7 @@ public class Game {
     Map<String, Object> currState = getCurrentState(now);
 
     players.forEach(p -> playerList.add(p.toMap()));
-    teams.forEach(t -> teamList.add(t.toMap()));
+    teams.forEach(t -> teamList.add(t.toMap(state == State.FFA_PERIOD)));
 
     return Map.of(
         "players", playerList,
@@ -330,15 +352,34 @@ public class Game {
           }
         };
 
-    return Map.of(
-        "state",
-        state.toString(),
-        "duration",
-        timeLeft,
-        "paused",
-        paused,
-        "emergency",
-        emergencyDeclared);
+    UUID winnerInfo;
+
+    Map<String, Object> result = new HashMap<>();
+    result.put("state", state.toString());
+    result.put("duration", timeLeft);
+    result.put("paused", paused);
+    result.put("emergency", emergencyDeclared);
+    if (winner == null || (state != State.SCOUT_PERIOD && state != State.FFA_PERIOD)) {
+      result.put("victor", null);
+    } else {
+
+      result.put("victor", winner.getID());
+    }
+
+    return result;
+  }
+
+  private long getTimeRemaining() {
+    long now = System.currentTimeMillis();
+    if (paused) {
+      return Math.max(0L, remaining);
+    } else if (state == State.WAITING_TO_START) {
+      return config.getGame().getGraceTime() * 1000L;
+    } else if (state == State.ENDED) {
+      return 0L;
+    } else {
+      return Math.max(0L, stageDuration - (now - stageStartEpoch));
+    }
   }
 
   public void merge(@Valid SettingsRequest settings) {
@@ -413,13 +454,16 @@ public class Game {
     } catch (Exception ignored) {
     }
 
-      pushService.notifyAll(
-          "EMERGENCY DECLARED", "An emergency has been declared. Return to the rendezvous point immediately");
+    pushService.notifyAll(
+        "EMERGENCY DECLARED",
+        "An emergency has been declared. Return to the rendezvous point immediately");
   }
 
   public void releaseEmergency() {
     emergencyDeclared = false;
-    pushService.notifyAll("Emergency state has been lifted", "Check the global chat for further information if needed.");
+    pushService.notifyAll(
+        "Emergency state has been lifted",
+        "Check the global chat for further information if needed.");
   }
 
   public boolean emergencyDeclared() {
@@ -521,7 +565,41 @@ public class Game {
     return teams.stream().anyMatch(p -> p.getID().equals(team));
   }
 
-  public boolean declareVictory(UUID team) {
-    return true;
+  public boolean allFlagsRegistered() {
+    return teams.stream().allMatch(Team::isRegistered);
+  }
+
+  public void registerFlag(UUID teamId, int x, int y) {
+    if (state != State.GRACE_PERIOD)
+      throw new IllegalStateException("Flags can only be registered during grace period");
+
+    Team team = getTeam(teamId);
+    if (team.isRegistered())
+      throw new IllegalStateException("Flag already registered for this team");
+
+    team.registerFlag(x, y);
+
+    if (allFlagsRegistered() && paused) {
+      resume();
+    }
+
+    AnnouncementSocketConnectionHandler.broadcast(
+        new AnnouncementMessage("register", team.toString()));
+  }
+
+  public void declareVictory(UUID team) {
+    if (state != State.SCOUT_PERIOD && state != State.FFA_PERIOD)
+      throw new IllegalStateException("Cannot declare victory in this state");
+
+    winner = getTeam(team);
+
+    pushService.notifyAll(
+        "Team " + winner.getName() + " has declared victory!",
+        "The game has concluded. Please return to the rendezvous point.");
+
+    AnnouncementSocketConnectionHandler.broadcast(
+        new AnnouncementMessage("victory", team.toString()));
+
+    end();
   }
 }

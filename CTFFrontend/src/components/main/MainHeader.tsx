@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useMessageContext } from "@/components/contexts/MessageContext";
 import { useSettingsContext } from "../contexts/SettingsContext";
 import { useGameContext } from "../contexts/GameContext";
-import { WarningMessage } from "./Messages";
+import { BannerWarning } from "./Messages";
 
 const MainHeader = () => {
     const { loggedIn } = useAuthContext();
@@ -59,7 +59,7 @@ const MainHeader = () => {
                 <div className="w-full h-2 construction-pattern" />
             </div>
             <div className="w-full max-w-6xl">
-                {emergency && <WarningMessage message="An emergency has been declared. Check the global chat often for updates." />}
+                {emergency && <BannerWarning message="An emergency has been declared. Check the global chat often for updates." />}
             </div>
         </header>
     )

@@ -2,8 +2,10 @@ package moae.dev.Server;
 
 import jakarta.validation.Valid;
 import moae.dev.Game.Game;
+import moae.dev.Game.Player;
 import moae.dev.Game.Team;
 import moae.dev.Requests.DeclareVictoryRequest;
+import moae.dev.Requests.FlagRegisterationRequest;
 import moae.dev.Requests.MessageRequest;
 import moae.dev.Requests.TeamGetRequest;
 import moae.dev.Utils.MessagePage;
@@ -35,18 +37,33 @@ public class TeamController {
     if (team == null)
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid team UUID");
 
-    return team.toMap();
+    return team.toMap(false);
   }
 
-  @PostMapping("/declare")
-  public Map<String, String> declareVictory(@Valid @RequestBody DeclareVictoryRequest req) {
+  @PostMapping("/declare/victory")
+  public Map<String, String> declareVictory(
+      @Valid @RequestBody DeclareVictoryRequest req, @AuthenticationPrincipal Jwt jwt) {
     UUID team = validator.ValidateUUID(req.getTeam(), "team");
 
-    try {
-      game.declareVictory(team);
-    } catch (Exception e) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
-    }
+    UUID playerId = validator.ValidateUUID(jwt.getSubject(), "player");
+    if (!game.isPlayerOnTeam(playerId, team))
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not on this team.");
+
+    game.declareVictory(team);
+
+    return Map.of("message", "success");
+  }
+
+  @PostMapping("/flag/location")
+  public Map<String, String> registerFlag(
+      @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody FlagRegisterationRequest req) {
+    UUID team = validator.ValidateUUID(req.getTeam(), "team");
+    UUID playerId = validator.ValidateUUID(jwt.getSubject(), "player");
+
+    if (!game.isPlayerOnTeam(playerId, team))
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not on this team.");
+
+    game.registerFlag(team, req.getX(), req.getY());
 
     return Map.of("message", "success");
   }
@@ -90,7 +107,7 @@ public class TeamController {
     }
 
     if (!game.isValidTeam(teamId)) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team not found");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team not found");
     }
 
     game.isPlayerOnTeam(playerId, teamId);

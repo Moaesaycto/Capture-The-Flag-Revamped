@@ -18,7 +18,7 @@ interface AuthContextValue {
     me: Player | null;
     setMe: (p: Player | null) => void;
     myTeam: Team | null;
-    setMyTeam: (t: Team | null) => void;
+    setMyTeam: React.Dispatch<React.SetStateAction<Team | null>>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
