@@ -47,10 +47,10 @@ const StateViewer = () => {
     const intervalRef = useRef<number | null>(null);
 
     useEffect(() => {
-        setDisplayTime(currentDuration);
-    }, [stateUpdateKey, currentDuration]);
+        console.log('Timer effect:', { stateUpdateKey, currentDuration, isPaused, isInGame });
 
-    useEffect(() => {
+        setDisplayTime(currentDuration);
+
         const startTime = Date.now();
         const initialDuration = currentDuration;
 
@@ -59,10 +59,8 @@ const StateViewer = () => {
             intervalRef.current = null;
         }
 
-        if (!isInGame || isPaused) {
-            return;
-        }
-        
+        if (!isInGame || isPaused) return;
+
         intervalRef.current = window.setInterval(() => {
             const elapsed = Date.now() - startTime;
             const remaining = Math.max(0, initialDuration - elapsed);

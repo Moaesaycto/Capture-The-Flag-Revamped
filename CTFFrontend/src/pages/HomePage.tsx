@@ -29,7 +29,7 @@ const HomePage = () => {
                 <PlayerList />
             </Container>
             {myTeam && <TeamController />}
-            {wantsMoreDetails && <MoreInfo />}
+            {me && wantsMoreDetails && <MoreInfo />}
             {me?.auth && <AuthController />}
             {!me && <MapViewer />}
         </Page>

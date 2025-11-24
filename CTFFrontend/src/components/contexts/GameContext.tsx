@@ -160,10 +160,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     }
 
                     const update: GameState = JSON.parse(msg);
-                    setState(update.state);
-                    setCurrentDuration(update.duration);
-                    setStateUpdateKey(prev => prev + 1);
-                    setPaused(update.paused);
+                    setTimeout(() => {
+                        setState(update.state);
+                        setPaused(update.paused);
+                        setCurrentDuration(update.duration);
+                        setEmergency(false);
+                        setStateUpdateKey(prev => prev + 1);
+                    }, 0);
 
                     setEmergency(false);
                 },
