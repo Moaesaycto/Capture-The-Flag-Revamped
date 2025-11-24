@@ -52,7 +52,7 @@ const TeamController = () => {
                         disabled={state !== "grace"}
                     />}
                 <LabelDelayButton
-                    title="Hold to delcare victory"
+                    title="Hold to declare victory"
                     description="This will immediately end the game. Activate with caution."
                     onClick={victoryCall}
                     onError={(e) => setError(e.message)}

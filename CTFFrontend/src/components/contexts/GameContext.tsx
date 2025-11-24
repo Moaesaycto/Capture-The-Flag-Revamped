@@ -34,6 +34,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [loading, setLoading] = useState<boolean>(true);
     const [health, setHealth] = useState<boolean>(false);
     const [state, setState] = useState<State | null>(null);
+    const [prevState, setPrevState] = useState<State | null>(null);
     const [players, setPlayers] = useState<Player[]>([]);
     const [teams, setTeams] = useState<Team[]>([]);
     const [currentDuration, setCurrentDuration] = useState<number>(0);
@@ -49,7 +50,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [winner, setWinner] = useState<null | Team>(null);
 
     useEffect(() => {
-        setFrozen(false);
+        if (prevState !== null && state !== prevState) {
+            setFrozen(false);
+        }
+
+        setPrevState(state);
 
         if (state === "ready") {
             setTeams(prev =>
@@ -211,8 +216,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setCurrentDuration(r.state.duration);
             setPaused(r.state.paused);
             setEmergency(r.state.emergency);
-            setInitialDataLoaded(true);
             setFrozen(r.state.frozen);
+            setInitialDataLoaded(true);
 
             if (r.state.winner) {
                 const winnerTeam = r.teams.find(t => t.id === r.state.winner) ?? null;

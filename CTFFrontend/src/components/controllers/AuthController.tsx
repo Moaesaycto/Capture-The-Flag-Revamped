@@ -19,7 +19,7 @@ const AuthController = () => {
         <Container title="Admin Controls" Icon={RiAdminFill}>
             {error && <ErrorMessage message={error} />}
             <LabelDelayButton
-                title={emergency ? "Hold to release emergency lock" : "Hold to delcare emergency"}
+                title={emergency ? "Hold to release emergency lock" : "Hold to declare emergency"}
                 description={emergency ? "Unlock the emergency to resume the game." : "This is a very serious game state. Activate with caution."}
                 Icon={emergency ? FaUnlock : PiWarningBold}
                 onClick={emergency ? () => releaseEmergency(jwt!) : () => gameAnnounce("emergency", "", jwt!)}
