@@ -126,6 +126,11 @@ public class Game {
     if (state == State.GRACE_PERIOD && !allFlagsRegistered() && remaining <= 0)
       throw new IllegalStateException("Cannot resume until all flags are registered");
 
+    if (state == State.GRACE_PERIOD && allFlagsRegistered() && remaining <= 0) {
+      goTo(State.SCOUT_PERIOD, config.getGame().getScoutTime() * 1000L);
+      return;
+    }
+
     paused = false;
     goToWithRemaining(state, remaining);
   }
@@ -134,7 +139,7 @@ public class Game {
     if (!isGameRunning() && !paused)
       throw new IllegalStateException("Cannot skip a game that isn't running");
 
-    if (paused && state == State.GRACE_PERIOD && !allFlagsRegistered())
+    if (paused && state == State.GRACE_PERIOD && !allFlagsRegistered() && remaining <= 0)
       throw new IllegalStateException("Cannot skip until all flags are registered");
 
     if (scheduled != null) scheduled.cancel(false);
@@ -270,6 +275,7 @@ public class Game {
             pushService.notifyAll(
                 "Waiting for all flags to be registered",
                 "The game will resume once all teams have registered their flags");
+            AnnouncementSocketConnectionHandler.broadcast(new AnnouncementMessage("frozen", null));
           } else {
             goTo(State.SCOUT_PERIOD, config.getGame().getScoutTime() * 1000L);
           }
@@ -329,7 +335,7 @@ public class Game {
     Map<String, Object> currState = getCurrentState(now);
 
     players.forEach(p -> playerList.add(p.toMap()));
-    teams.forEach(t -> teamList.add(t.toMap(state == State.FFA_PERIOD)));
+    teams.forEach(t -> teamList.add(t.toMap(state == State.FFA_PERIOD || state == State.ENDED)));
 
     return Map.of(
         "players", playerList,
@@ -357,11 +363,11 @@ public class Game {
     result.put("duration", timeLeft);
     result.put("paused", paused);
     result.put("emergency", emergencyDeclared);
-    if (winner == null || (state != State.SCOUT_PERIOD && state != State.FFA_PERIOD)) {
-      result.put("victor", null);
+    result.put("frozen", paused && state == State.GRACE_PERIOD && remaining <= 0);
+    if (winner == null || state != State.ENDED) {
+      result.put("winner", null);
     } else {
-
-      result.put("victor", winner.getID());
+      result.put("winner", winner.getID());
     }
 
     return result;
@@ -574,7 +580,7 @@ public class Game {
     Team team = getTeam(teamId);
     team.registerFlag(x, y);
 
-    if (allFlagsRegistered() && paused) {
+    if (allFlagsRegistered() && paused && getTimeRemaining() <= 0) {
       resume();
     }
 

@@ -56,6 +56,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 prev.map(team => ({ ...team, registered: false }))
             );
             setMyTeam(prev => prev ? { ...prev, registered: false } : prev);
+            setWinner(null);
         }
 
         if (state === "ffa" || state === "ended") {
@@ -94,7 +95,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             "announcements",
             undefined,
             (msg: string) => {
-                console.log(msg);
                 const announcement: Announcement = JSON.parse(msg);
                 switch (announcement.type) {
                     case "emergency":
@@ -164,7 +164,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 "state",
                 undefined,
                 (msg: string) => {
-                    console.log(msg)
+                    setFrozen(false);
                     if (!hasConnected) {
                         hasConnected = true;
                         setHealth(true);
@@ -172,13 +172,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     }
 
                     const update: GameState = JSON.parse(msg);
-                    setTimeout(() => {
-                        setState(update.state);
-                        setPaused(update.paused);
-                        setCurrentDuration(update.duration);
-                        setEmergency(false);
-                        setStateUpdateKey(prev => prev + 1);
-                    }, 0);
+                    setState(update.state);
+                    setPaused(update.paused);
+                    setCurrentDuration(update.duration);
+                    setEmergency(false);
+                    setStateUpdateKey(prev => prev + 1);
 
                     setEmergency(false);
                 },

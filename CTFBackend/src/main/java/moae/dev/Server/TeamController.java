@@ -31,13 +31,18 @@ public class TeamController {
   }
 
   @GetMapping("/info/{teamId}")
-  public Map<String, Object> getTeam(@PathVariable("teamId") UUID teamId) {
+  public Map<String, Object> getTeam(
+      @PathVariable("teamId") UUID teamId, @AuthenticationPrincipal Jwt jwt) {
     Team team = game.getTeam(teamId);
 
     if (team == null)
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid team UUID");
 
-    return team.toMap(false);
+    UUID playerId = validator.ValidateUUID(jwt.getSubject(), "player");
+    if (!game.isPlayerOnTeam(playerId, teamId))
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not on this team.");
+
+    return team.toMap(true);
   }
 
   @PostMapping("/declare/victory")
