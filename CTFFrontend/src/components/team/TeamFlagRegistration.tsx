@@ -104,7 +104,7 @@ const TeamFlagRegistration = () => {
             {error && <ErrorMessage message={error} />}
             {loading && <Spinner />}
             <div
-                className="w-full relative bg-neutral-600 shadow-xl rounded overflow-hidden"
+                className="w-full relative bg-neutral-600 shadow-xl rounded overflow-hidden mb-2"
                 ref={containerRef}
                 style={{
                     touchAction: "none",
