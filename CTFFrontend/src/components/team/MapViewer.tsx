@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useAuthContext } from "../contexts/AuthContext";
 import { useGameContext } from "../contexts/GameContext";
 import { FaFlag } from "react-icons/fa";
@@ -33,22 +32,37 @@ const FlagMarker = ({ color, x, y }: FlagMarkerProps) => {
 
 const MapViewer = () => {
     const { state, teams } = useGameContext();
-    const { myTeam } = useAuthContext();
-
-    useEffect(() => {
-        console.log(teams);
-    }, [myTeam]);
-
+    const { myTeam, me } = useAuthContext();
+    
+    // For logged-in users
+    if (me) {
+        return (
+            <div>
+                <div className="w-full relative bg-neutral-600 shadow-xl rounded overflow-hidden">
+                    {state === "ffa" || state === "ended" ? (
+                        teams.filter(t => t.flag !== null).map((t, k) => (
+                            <FlagMarker x={t.flag!.x} y={t.flag!.y} color={t.color} key={k} />
+                        ))
+                    ) : (
+                        myTeam?.registered && myTeam.flag && (
+                            <FlagMarker x={myTeam.flag.x} y={myTeam.flag.y} color={myTeam.color} />
+                        )
+                    )}
+                    <img src={map} alt="map" className="w-full h-full object-contain" style={{ pointerEvents: "none" }} />
+                </div>
+            </div>
+        );
+    }
+    
+    // For non-logged-in users
     return (
         <div>
-            <div
-                className="w-full relative bg-neutral-600 shadow-xl rounded overflow-hidden"
-            >
-                {state === "ffa" ?
-                    (teams.filter(t => t.flag !== null).map((t, k) => <FlagMarker x={t.flag!.x} y={t.flag!.y} color={t.color} key={k} />))
-                    :
-
-                    (myTeam?.registered && <FlagMarker x={myTeam.flag!.x} y={myTeam.flag!.y} color={myTeam.color} />)}
+            <div className="w-full relative bg-neutral-600 shadow-xl rounded overflow-hidden">
+                {(state === "ffa" || state === "ended") && (
+                    teams.filter(t => t.flag !== null).map((t, k) => (
+                        <FlagMarker x={t.flag!.x} y={t.flag!.y} color={t.color} key={k} />
+                    ))
+                )}
                 <img src={map} alt="map" className="w-full h-full object-contain" style={{ pointerEvents: "none" }} />
             </div>
         </div>

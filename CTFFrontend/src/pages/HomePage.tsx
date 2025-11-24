@@ -12,6 +12,7 @@ import PlayerList from "@/components/players/PlayerList";
 import AuthController from "@/components/controllers/AuthController";
 import { useSettingsContext } from "@/components/contexts/SettingsContext";
 import MoreInfo from "@/components/game/MoreInfo";
+import MapViewer from "@/components/team/MapViewer";
 
 const HomePage = () => {
     const { loggedIn, me, myTeam } = useAuthContext();
@@ -30,6 +31,7 @@ const HomePage = () => {
             {myTeam && <TeamController />}
             {wantsMoreDetails && <MoreInfo />}
             {me?.auth && <AuthController />}
+            {!me && <MapViewer />}
         </Page>
     )
 }

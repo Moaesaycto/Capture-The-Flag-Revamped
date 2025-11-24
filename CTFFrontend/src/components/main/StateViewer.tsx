@@ -59,8 +59,10 @@ const StateViewer = () => {
             intervalRef.current = null;
         }
 
-        if (!isInGame || isPaused) return;
-
+        if (!isInGame || isPaused) {
+            return;
+        }
+        
         intervalRef.current = window.setInterval(() => {
             const elapsed = Date.now() - startTime;
             const remaining = Math.max(0, initialDuration - elapsed);
