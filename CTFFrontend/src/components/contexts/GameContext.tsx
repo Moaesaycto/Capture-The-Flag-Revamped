@@ -22,6 +22,8 @@ interface GameContextValue {
     emergency: boolean;
     emergencyChannelConnected: boolean;
     announcements: Announcement[];
+    frozen: boolean;
+    winner: null | Team;
 }
 
 const GameContext = createContext<GameContextValue | undefined>(undefined);
@@ -39,12 +41,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [paused, setPaused] = useState<boolean>(false);
     const [wsConnected, setWsConnected] = useState<boolean>(false);
     const [initialDataLoaded, setInitialDataLoaded] = useState<boolean>(false);
+    const [frozen, setFrozen] = useState<boolean>(false);
 
     const [emergency, setEmergency] = useState<boolean>(false);
     const [emergencyChannelConnected, setEmergencyChannelConnected] = useState<boolean>(false);
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+    const [winner, setWinner] = useState<null | Team>(null);
 
     useEffect(() => {
+        setFrozen(false);
+
         if (state === "ready") {
             setTeams(prev =>
                 prev.map(team => ({ ...team, registered: false }))
@@ -113,6 +119,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                         );
                         refreshTeam();
                         break;
+                    case "frozen":
+                        setFrozen(true);
+                        break;
+                    case "victory":
+                        setWinner(getTeamFromId(announcement.message));
                 }
             },
             () => setEmergencyChannelConnected(true),
@@ -153,6 +164,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 "state",
                 undefined,
                 (msg: string) => {
+                    console.log(msg)
                     if (!hasConnected) {
                         hasConnected = true;
                         setHealth(true);
@@ -194,6 +206,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         gameStatus().then(r => {
+            console.log(r);
             setTeams(r.teams);
             setPlayers(r.players);
             setState(r.state.state as State);
@@ -201,6 +214,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setPaused(r.state.paused);
             setEmergency(r.state.emergency);
             setInitialDataLoaded(true);
+            setFrozen(r.state.frozen);
+
+            if (r.state.winner) {
+                const winnerTeam = r.teams.find(t => t.id === r.state.winner) ?? null;
+                setWinner(winnerTeam);
+            } else {
+                setWinner(null);
+            }
         }).catch(() => setLoading(false));
     }, []);
 
@@ -233,6 +254,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             emergency,
             emergencyChannelConnected,
             announcements,
+            frozen,
+            winner,
         }}>
             {children}
         </GameContext.Provider>

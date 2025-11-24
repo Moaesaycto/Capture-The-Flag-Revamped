@@ -2,10 +2,11 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { useGameContext } from "../contexts/GameContext";
 import type { IconType } from "react-icons";
 import type { State } from "../../types";
-import { FaBinoculars, FaFistRaised, FaFlagCheckered, FaHourglassHalf, FaShieldAlt } from "react-icons/fa";
+import { FaBinoculars, FaFistRaised, FaFlag, FaFlagCheckered, FaHourglassHalf, FaShieldAlt } from "react-icons/fa";
 import confetti from "canvas-confetti";
 import Spinner from "./LoadingSpinner";
-import { PiPauseFill, PiWarning } from "react-icons/pi";
+import { PiPauseFill, PiSnowflakeFill, PiWarning } from "react-icons/pi";
+import { useAuthContext } from "../contexts/AuthContext";
 
 type StateDisplay = {
     title: string,
@@ -41,8 +42,46 @@ export const STATE_MAP: { [key in State]: StateDisplay } = {
     }
 };
 
+// Reusable component for status displays
+const StatusDisplay = ({
+    icon: Icon,
+    iconColor,
+    title,
+    subtitle,
+    iconOpacity = 0.1
+}: {
+    icon: IconType,
+    iconColor: string,
+    title: React.ReactNode,
+    subtitle?: string,
+    iconOpacity?: number
+}) => (
+    <div className="w-full py-10 relative mb-10 mt-4 flex items-center justify-center">
+        <Icon
+            className="absolute text-gray-300"
+            style={{
+                fontSize: "12rem",
+                opacity: iconOpacity,
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                pointerEvents: "none",
+                zIndex: 0,
+                color: iconColor
+            }}
+        />
+        <div className="h-30 flex flex-col items-center justify-center">
+            <div className="text-5xl flex flex-row items-center gap-4">
+                <span className="relative z-10">{title}</span>
+            </div>
+            {subtitle && <span className="text-lg opacity-50">{subtitle}</span>}
+        </div>
+    </div>
+);
+
 const StateViewer = () => {
-    const { state, currentDuration, isPaused, isInGame, stateUpdateKey, health: gameHealth, emergency } = useGameContext();
+    const { myTeam } = useAuthContext();
+    const { state, currentDuration, isPaused, isInGame, stateUpdateKey, health: gameHealth, emergency, frozen, winner } = useGameContext();
     const [displayTime, setDisplayTime] = useState(currentDuration);
     const intervalRef = useRef<number | null>(null);
 
@@ -102,60 +141,66 @@ const StateViewer = () => {
 
     const Icon = isPaused ? PiPauseFill : stateDisplay.icon;
 
+    if (winner) {
+        if (!myTeam)
+            return (
+                <StatusDisplay
+                    icon={FaFlagCheckered}
+                    iconColor={winner.color}
+                    title={winner.name.toLocaleUpperCase() + " HAS WON"}
+                    subtitle="The game has ended, return to the rendezvous point."
+                />
+            );
+
+        return (
+            <StatusDisplay
+                icon={FaFlagCheckered}
+                iconColor={winner.color}
+                title={myTeam.id === winner.id ? "YOU WIN" : "YOU LOSE"}
+                subtitle={myTeam.id === winner.id ? "Great job! Return to the rendezvous point." : "Return to the rendezvous point for another try!"}
+            />
+        )
+    }
+
+    if (frozen) {
+        return (
+            <StatusDisplay
+                icon={PiSnowflakeFill}
+                iconColor="#77c2ff"
+                title="HALTED"
+                subtitle="All flags must be registered to continue the game"
+            />
+        )
+    }
+
     if (emergency) {
         return (
-            <div className="w-full py-10 relative mb-10 mt-4 flex items-center justify-center">
-                <PiWarning
-                    className="absolute text-gray-300"
-                    style={{
-                        fontSize: "12rem",
-                        opacity: 0.1,
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        pointerEvents: "none",
-                        zIndex: 0,
-                        color: "gold"
-                    }}
-                />
-                <div className="h-30 flex flex-col items-center justify-center">
-                    <div className="text-5xl flex flex-row items-center gap-4">
-                        <span className="relative z-10">EMERGENCY</span>
-                    </div>
-                    <span className="text-lg opacity-50">Return to the rendezvous point immediately</span>
-                </div>
-            </div>
-        )
+            <StatusDisplay
+                icon={PiWarning}
+                iconColor="gold"
+                title="EMERGENCY"
+                subtitle="Return to the rendezvous point immediately"
+            />
+        );
     }
 
     if (!gameHealth) {
         return (
-            <div className="w-full py-10 relative mb-10 mt-4 flex items-center justify-center">
-                <PiWarning
-                    className="absolute text-gray-300"
-                    style={{
-                        fontSize: "12rem",
-                        opacity: 0.1,
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        pointerEvents: "none",
-                        zIndex: 0,
-                        color: "red"
-                    }}
-                />
-                <div className="h-30 flex flex-col items-center justify-center">
-                    <div className="text-3xl flex flex-row items-center gap-4">
-                        <span className="relative z-10">Connecting</span>
+            <StatusDisplay
+                icon={PiWarning}
+                iconColor="red"
+                title={
+                    <>
+                        Connecting
                         <Spinner />
-                    </div>
-                    <span className="text-lg opacity-50">If it doesn't load soon, try refreshing the page</span>
-                </div>
-            </div>
-        )
+                    </>
+                }
+                subtitle="If it doesn't load soon, try refreshing the page"
+            />
+        );
     }
 
-
+    // Main timer display
     return (
         <div className="w-full py-10 relative mb-10 mt-4 flex items-center justify-center">
             <Icon

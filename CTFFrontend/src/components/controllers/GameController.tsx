@@ -45,7 +45,7 @@ const GameControls = () => {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const { jwt } = useAuthContext();
-    const { isInGame, isPaused, state, emergency } = useGameContext();
+    const { isInGame, isPaused, state, emergency, frozen } = useGameContext();
 
     const ExecuteUpdate = (action: (jwt: string) => Promise<StandardStatus>) => {
         setError(null);
@@ -79,7 +79,7 @@ const GameControls = () => {
                     onClick={() => {
                         isPaused ? ExecuteUpdate(gameResume) : isInGame ? ExecuteUpdate(gamePause) : ExecuteUpdate(gameStart);
                     }}
-                    disabled={emergency || loading || state == "ended"}
+                    disabled={frozen || emergency || loading || state == "ended"}
                 />
 
                 {/* Skip Button */}
@@ -87,7 +87,7 @@ const GameControls = () => {
                     Icon={PiSkipForwardFill}
                     color="#a0c0ff"
                     onClick={() => ExecuteUpdate(gameSkip)}
-                    disabled={emergency || loading || state === "ready" || state === "ended"}
+                    disabled={frozen || emergency || loading || state === "ready" || state === "ended"}
                 />
 
                 {/* Stop Button */}

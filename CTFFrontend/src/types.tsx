@@ -81,9 +81,11 @@ export type GameState = {
     duration: number,
     paused: boolean,
     emergency: boolean,
+    frozen: boolean,
+    winner: string | null,
 }
 
-export const ANNOUNCEMENT_TYPES = ["emergency", "custom", "reset", "release", "register", "victory"] as const;
+export const ANNOUNCEMENT_TYPES = ["emergency", "custom", "reset", "release", "register", "victory", "frozen"] as const;
 export type AnnouncementType = (typeof ANNOUNCEMENT_TYPES)[number];
 
 export type Announcement = {
