@@ -5,7 +5,6 @@ import { useGameContext } from "../contexts/GameContext";
 import { useMemo } from "react";
 import { useAuthContext } from "../contexts/AuthContext";
 import { SuccessMessage, WarningMessage } from "../main/Messages";
-import TeamFlagRegistration from "../team/TeamFlagRegistration";
 import LabelDelayButton from "../main/Buttons";
 import { useNavigate } from "react-router-dom";
 
@@ -25,7 +24,6 @@ const TeamController = () => {
                     <SuccessMessage message="Your team has registered their flag's location" /> :
                     <WarningMessage message="Your team has not registered a flag yet!" />
                 )}
-                <TeamFlagRegistration />
 
                 {state === "grace" && (!myTeam?.registered ?
                     <LabelDelayButton

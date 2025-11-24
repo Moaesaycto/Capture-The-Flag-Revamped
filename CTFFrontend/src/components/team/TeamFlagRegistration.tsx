@@ -4,8 +4,14 @@ import Spinner from "../main/LoadingSpinner";
 import map from "@/assets/syd_park_map.png";
 import Color from "color";
 import { FaFlag } from "react-icons/fa";
+import LabelDelayButton from "../main/Buttons";
+import { ErrorMessage } from "../main/Messages";
+import { registerFlag } from "@/services/TeamApi";
+import { useNavigate } from "react-router-dom";
 
 const TeamFlagRegistration = () => {
+    const navigate = useNavigate();
+
     const { jwt, myTeam } = useAuthContext();
 
     const [loading, setLoading] = useState<boolean>(false);
@@ -16,11 +22,25 @@ const TeamFlagRegistration = () => {
     const nodeRef = useRef<HTMLDivElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
 
-    const onClick = useCallback(() => {
+    const onClick = useCallback(async () => {
         setError(null);
 
+        if (!pos) {
+            setError("No flag position set");
+            return;
+        }
 
+        if (!myTeam) {
+            setError("Not on a team");
+            return
+        }
 
+        if (!jwt) {
+            setError("No account token set");
+            return;
+        }
+
+        await registerFlag(pos?.x, pos?.y, myTeam?.id, jwt);
     }, [jwt, myTeam, pos, setLoading, setError]);
 
 
@@ -81,10 +101,10 @@ const TeamFlagRegistration = () => {
 
     return (
         <div>
-            {error && <span>{error}</span>}
+            {error && <ErrorMessage message={error} />}
             {loading && <Spinner />}
             <div
-                className="w-full relative bg-neutral-600 shadow-xl"
+                className="w-full relative bg-neutral-600 shadow-xl rounded overflow-hidden"
                 ref={containerRef}
                 style={{
                     touchAction: "none",
@@ -118,11 +138,18 @@ const TeamFlagRegistration = () => {
                 </div>}
                 <img src={map} alt="map" className="w-full h-full object-contain" style={{ pointerEvents: "none" }} />
             </div>
-            <button onClick={onClick}>
-                Submit
-            </button>
+            <LabelDelayButton
+                title="Hold to confirm map location"
+                description="You can do this as many times as you need during the grace period."
+                onClick={onClick}
+                onError={(e) => setError(e.message)}
+                onSuccess={() => navigate("/")}
+                Icon={FaFlag}
+                color={myTeam?.color}
+                padding={false}
+            />
         </div>
-    )
+    );
 }
 
 export default TeamFlagRegistration;
