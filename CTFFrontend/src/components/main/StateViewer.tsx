@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { useGameContext } from "../contexts/GameContext";
 import type { IconType } from "react-icons";
 import type { State } from "../../types";
-import { FaBinoculars, FaFistRaised, FaFlag, FaFlagCheckered, FaHourglassHalf, FaShieldAlt } from "react-icons/fa";
+import { FaBinoculars, FaFistRaised, FaFlagCheckered, FaHourglassHalf, FaShieldAlt } from "react-icons/fa";
 import confetti from "canvas-confetti";
 import Spinner from "./LoadingSpinner";
 import { PiPauseFill, PiSnowflakeFill, PiWarning } from "react-icons/pi";
@@ -72,7 +72,7 @@ const StatusDisplay = ({
         />
         <div className="h-30 flex flex-col items-center justify-center">
             <div className="text-5xl flex flex-row items-center gap-4">
-                <span className="relative z-10">{title}</span>
+                <span className="relative z-10 flex flex-row gap-4 items-center">{title}</span>
             </div>
             {subtitle && <span className="text-lg opacity-50">{subtitle}</span>}
         </div>
@@ -120,14 +120,14 @@ const StateViewer = () => {
     }, [stateUpdateKey, isInGame, isPaused, currentDuration]);
 
     useEffect(() => {
-        if (state === "ended") {
+        if (state === "ended" && myTeam && winner && myTeam.id === winner.id) {
             confetti({
                 particleCount: 200,
                 spread: 90,
                 origin: { y: 0.3 },
             });
         }
-    }, [state]);
+    }, [state, myTeam, winner]);
 
     const totalSeconds = Math.floor(displayTime / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -140,6 +140,22 @@ const StateViewer = () => {
     }, [state]);
 
     const Icon = isPaused ? PiPauseFill : stateDisplay.icon;
+
+    if (!gameHealth) {
+        return (
+            <StatusDisplay
+                icon={PiWarning}
+                iconColor="red"
+                title={
+                    <>
+                        Connecting
+                        <Spinner />
+                    </>
+                }
+                subtitle="If it doesn't load soon, try refreshing the page"
+            />
+        );
+    }
 
     if (winner) {
         if (!myTeam)
@@ -180,22 +196,6 @@ const StateViewer = () => {
                 iconColor="gold"
                 title="EMERGENCY"
                 subtitle="Return to the rendezvous point immediately"
-            />
-        );
-    }
-
-    if (!gameHealth) {
-        return (
-            <StatusDisplay
-                icon={PiWarning}
-                iconColor="red"
-                title={
-                    <>
-                        Connecting
-                        <Spinner />
-                    </>
-                }
-                subtitle="If it doesn't load soon, try refreshing the page"
             />
         );
     }
