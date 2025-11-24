@@ -209,7 +209,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         gameStatus().then(r => {
-            console.log(r);
             setTeams(r.teams);
             setPlayers(r.players);
             setState(r.state.state as State);

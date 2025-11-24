@@ -6,7 +6,7 @@ import MainFooter from './components/main/MainFooter'
 import MessagesPage from './pages/MessagesPage'
 import SettingsPage from './pages/SettingsPage'
 import { useAuthContext } from './components/contexts/AuthContext'
-import { useEffect, type JSX } from 'react'
+import { type JSX } from 'react'
 import RulesPage from './pages/RulesPage'
 import FlagRegistrationPage from './pages/FlagRegistrationPage'
 
@@ -33,7 +33,6 @@ function App() {
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { me } = useAuthContext();
 
-  useEffect(() => console.log(me), [me]);
   if (!me) return <Navigate to="/" replace />;
   return children;
 }

@@ -8,8 +8,9 @@ export async function subscribeUser() {
 
     const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
+        // Public key, so allowed to be exposed!
         applicationServerKey: urlBase64ToUint8Array(
-            "YOUR_VAPID_PUBLIC_KEY" // generate this later
+            "BPBB7YTMuhbUbFEZZNXeNeTpw_lD3dobyzOiE7HUO7POfrMlEM-kztNoAnD2473B732jlD4agryajdOMKnRUiz8"
         ),
     });
 
@@ -31,11 +32,9 @@ export async function unsubscribeUser() {
 
     const subscription = await registration.pushManager.getSubscription();
     if (subscription) {
-        // Unsubscribe from the push service
         const unsubscribed = await subscription.unsubscribe();
         console.log("Unsubscribed:", unsubscribed);
 
-        // Optionally, tell your backend to remove this subscription
         await fetch("/api/unsubscribe", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
