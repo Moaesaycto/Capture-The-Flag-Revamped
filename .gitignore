@@ -1,0 +1,73 @@
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+
+# Editor / IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.iml
+
+# Backend
+/CTFBackend/.gradle/
+/CTFBackend/build/
+/CTFBackend/out/
+/CTFBackend/target/
+/CTFBackend/.mvn/
+/CTFBackend/*.log
+/CTFBackend/logs/
+/CTFBackend/tmp/
+/CTFBackend/*.tmp
+/CTFBackend/application-*.yml
+/CTFBackend/application-*.properties
+/CTFBackend/.env
+/CTFBackend/.env.*
+/CTFBackend/.gradle/
+/CTFBackend/build/
+
+# IDE and workspace local files
+/CTFBackend/.idea/
+/CTFBackend/*.iml
+/CTFBackend/.classpath
+/CTFBackend/.project
+/CTFBackend/.settings/
+
+# Frontend
+/CTFFrontend/node_modules/
+/CTFFrontend/dist/
+/CTFFrontend/dist-ssr/
+/CTFFrontend/logs/
+/CTFFrontend/*.log
+/CTFFrontend/npm-debug.log*
+/CTFFrontend/yarn-debug.log*
+/CTFFrontend/yarn-error.log*
+/CTFFrontend/pnpm-debug.log*
+/CTFFrontend/lerna-debug.log*
+/CTFFrontend/*.local
+/CTFFrontend/.env
+/CTFFrontend/.env.*
+
+# Editor
+/CTFFrontend/.vscode/*
+!/CTFFrontend/.vscode/extensions.json
+/CTFFrontend/.idea/
+/CTFFrontend/.DS_Store
+
+# TypeScript
+/.parcel-cache/
+/.cache/
+/.vite/
+
+# Misc
+/coverage/
+/reports/
+/tmp/
+/*.log
+*.swp
+*.swo
+*.bak
+
+# My stuff
+/temp
