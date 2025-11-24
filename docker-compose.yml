@@ -1,0 +1,21 @@
+services:
+  backend:
+    build:
+      context: ./CTFBackend
+      dockerfile: Dockerfile
+    container_name: ctf_backend
+    ports:
+      - "8080:8080"
+    volumes: 
+      - ./backend/src/main/resources/application.yml:/app/config/application.yml
+      - ./backend/src/main/resources/config.yml:/app/config/config.yml
+    environment:
+      - SPRING_PROFILE_ACTIVE=prod
+      - SPRING_CONFIG_LOCATION=file:/app/config/
+    networks:
+      - ctf_network
+
+networks:
+  ctf_network:
+    name: ctf_network
+    driver: bridge
