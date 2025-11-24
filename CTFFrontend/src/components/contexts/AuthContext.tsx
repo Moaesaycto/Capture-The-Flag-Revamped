@@ -19,6 +19,7 @@ interface AuthContextValue {
     setMe: (p: Player | null) => void;
     myTeam: Team | null;
     setMyTeam: React.Dispatch<React.SetStateAction<Team | null>>;
+    refreshTeam: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -94,6 +95,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .catch(() => setHealthy(false));
     }, []);
 
+    const refreshTeam = useCallback(() => {
+        if (!myTeam || !jwt) return;
+        teamGet(myTeam.id, jwt).then((t) => setMyTeam(t)).catch(() => { });
+    }, [myTeam, jwt])
+
     return (
         <AuthContext.Provider
             value={{
@@ -108,6 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 me,
                 myTeam,
                 setMyTeam,
+                refreshTeam,
             }}
         >
             {children}

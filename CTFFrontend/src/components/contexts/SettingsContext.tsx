@@ -3,11 +3,13 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from "
 interface Settings {
     wantsNewMessageBadges: boolean;
     wantsMoreDetails: boolean;
+    alwaysShowMap: boolean;
 }
 
 interface SettingsContextValue extends Settings {
     setWantsNewMessageBadges: (v: boolean) => void;
     setWantsMoreDetails: (v: boolean) => void;
+    setAlwaysShowMap: (v: boolean) => void;
 }
 
 const SettingsContext = createContext<SettingsContextValue | undefined>(undefined);
@@ -16,6 +18,7 @@ const STORAGE_KEY = "userSettings";
 const DEFAULT = {
     wantsNewMessageBadges: true,
     wantsMoreDetails: false,
+    alwaysShowMap: true,
 }
 
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
@@ -51,7 +54,9 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
                 wantsMoreDetails: settings.wantsMoreDetails,
                 setWantsMoreDetails: (value: boolean) =>
                     setSettings(prev => ({ ...prev, wantsMoreDetails: value })),
-
+                alwaysShowMap: settings.alwaysShowMap,
+                setAlwaysShowMap: (value: boolean) =>
+                    setSettings(prev => ({ ...prev, alwaysShowMap: value })),
             }}
         >
             {children}

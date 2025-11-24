@@ -27,7 +27,7 @@ interface GameContextValue {
 const GameContext = createContext<GameContextValue | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
-    const { me, logout, setMyTeam, myTeam } = useAuthContext();
+    const { me, logout, setMyTeam, myTeam, refreshTeam } = useAuthContext();
 
     const [loading, setLoading] = useState<boolean>(true);
     const [health, setHealth] = useState<boolean>(false);
@@ -47,9 +47,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         if (state === "ready") {
             setTeams(prev =>
-                prev.map(team => ({ ...team, registered: false }) )
+                prev.map(team => ({ ...team, registered: false }))
             );
             setMyTeam(prev => prev ? { ...prev, registered: false } : prev);
+        }
+
+        if (state === "ffa" || state === "ended") {
+            gameStatus().then(r => setTeams(r.teams));
+            refreshTeam();
         }
     }, [state]);
 
@@ -106,10 +111,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                                     : team
                             )
                         );
-                        console.log(myTeam);
-                        setMyTeam(prev => prev ? { ...prev, registered: true } : prev);
+                        refreshTeam();
                         break;
-
                 }
             },
             () => setEmergencyChannelConnected(true),

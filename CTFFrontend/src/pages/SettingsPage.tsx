@@ -91,7 +91,7 @@ const SettingsSection = ({ icon: Icon, title, children }: SettingsSectionProps) 
 
 const SettingsPage = () => {
     const { me, jwt, logout } = useAuthContext();
-    const { wantsNewMessageBadges, setWantsNewMessageBadges, wantsMoreDetails, setWantsMoreDetails } = useSettingsContext();
+    const { wantsNewMessageBadges, setWantsNewMessageBadges, wantsMoreDetails, setWantsMoreDetails, setAlwaysShowMap, alwaysShowMap } = useSettingsContext();
     const { subscribe, subscription, unsubscribe } = usePushNotifications();
 
     return (
@@ -102,8 +102,9 @@ const SettingsPage = () => {
             >
                 Settings
             </h2>
-            <SettingsSection title="Game" icon={MdVideogameAsset }>
-                <Option title="View more game details" onChange={(e) => setWantsMoreDetails(e)} value={wantsMoreDetails} />
+            <SettingsSection title="Game" icon={MdVideogameAsset}>
+                <Option title="More game details" onChange={(e) => setWantsMoreDetails(e)} value={wantsMoreDetails} />
+                <Option title="Always show map" onChange={(e) => setAlwaysShowMap(e)} value={alwaysShowMap} />
             </SettingsSection>
             <SettingsSection title="Notifications" icon={IoNotifications} >
                 <Option title="Receive Notifications" onChange={(e) => e ? subscribe() : unsubscribe()} value={!!subscription} disabled={!me} details={"This includes both status updates and emergency alerts. It is recommended to turn this on."} />

@@ -7,9 +7,12 @@ import { useAuthContext } from "../contexts/AuthContext";
 import { SuccessMessage, WarningMessage } from "../main/Messages";
 import LabelDelayButton from "../main/Buttons";
 import { useNavigate } from "react-router-dom";
+import MapViewer from "../team/MapViewer";
+import { useSettingsContext } from "../contexts/SettingsContext";
 
 const TeamController = () => {
-    const { state, isPaused } = useGameContext();
+    const { state, isPaused, isInGame } = useGameContext();
+    const { alwaysShowMap } = useSettingsContext();
     const { myTeam } = useAuthContext();
     const navigate = useNavigate();
 
@@ -24,8 +27,8 @@ const TeamController = () => {
                     <SuccessMessage message="Your team has registered their flag's location" /> :
                     <WarningMessage message="Your team has not registered a flag yet!" />
                 )}
-
-                {state === "grace" && (!myTeam?.registered ?
+                {(isInGame || alwaysShowMap) && <MapViewer />}
+                {state === "grace" &&
                     <LabelDelayButton
                         title="Register flag"
                         description="Hold to go to flag registration page."
@@ -33,7 +36,7 @@ const TeamController = () => {
                         Icon={FaFlag}
                         color="gold"
                         disabled={state !== "grace"}
-                    /> : null)}
+                    />}
                 <LabelDelayButton
                     title="Hold to delcare victory"
                     description="This will immediately end the game. Activate with caution."
