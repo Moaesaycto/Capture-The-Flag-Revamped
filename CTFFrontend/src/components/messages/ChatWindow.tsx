@@ -87,6 +87,7 @@ export const ChatWindow = ({
     const isInteractingRef = useRef(false);
     const queuedLoadRef = useRef(false);
     const queuedLoadParamRef = useRef<number | null>(null);
+    const isScrollableRef = useRef<boolean>(false);
 
     const totalMessages = messages.length + pendingMessages.length;
 
@@ -136,7 +137,10 @@ export const ChatWindow = ({
 
         const isFromMe = !!last && last.player?.id === me?.id;
 
-        if (isFromMe || latestIsAtBottomRef.current) {
+        // If content isn't scrollable, treat it as if we're at the bottom
+        const effectivelyAtBottom = !isScrollableRef.current || latestIsAtBottomRef.current;
+
+        if (isFromMe || effectivelyAtBottom) {
             requestAnimationFrame(scrollToBottom);
             setNewMessageAlert(false);
             setOpenChatDirty(false);
@@ -274,12 +278,25 @@ export const ChatWindow = ({
                         setOpenChatDirty(false);
                     }
                 }}
+                rangeChanged={(range) => {
+                    // Track if content is actually scrollable
+                    if (range) {
+                        const hasScroll = range.startIndex > 0 || range.endIndex < allSorted.length - 1;
+                        isScrollableRef.current = hasScroll;
+
+                        // If not scrollable, we're effectively at the bottom
+                        if (!hasScroll) {
+                            setNewMessageAlert(false);
+                            setOpenChatDirty(false);
+                        }
+                    }
+                }}
             />
             {
                 newMessageAlert && (
                     <div
                         className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-red-700 hover:bg-red-600 shadow-2xl text-center px-5 py-1
-                   rounded-full cursor-pointer flex flex-row items-center gap-1"
+                                   rounded-full cursor-pointer flex flex-row items-center gap-1"
                         onClick={() => {
                             scrollToBottom();
                             latestIsAtBottomRef.current = true;
@@ -287,7 +304,7 @@ export const ChatWindow = ({
                             setOpenChatDirty(false);
                         }}
                     >
-                        <span>New Messages</span>
+                        <span className="text-sm">New Messages</span>
                         <BiChevronDown size={20} />
                     </div>
                 )
