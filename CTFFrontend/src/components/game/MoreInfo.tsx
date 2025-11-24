@@ -15,7 +15,7 @@ const MoreInfo = () => {
                 <span className="truncate">Team flag registrations:</span>
                 <div className="flex-1 flex flex-row justify-end gap-4">
                     {teams.map((t, k) => {
-                        return <div className="relative">
+                        return <div className="relative" key={k}>
                             <div
                                 className="w-10 h-10 text-xl flex items-center justify-center border-3 rounded"
                                 key={k}

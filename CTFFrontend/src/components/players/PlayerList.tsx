@@ -79,7 +79,7 @@ const PlayerList = () => {
                 </h2>
                 <ul className="w-full">
                     {sortedPlayers.map((p, idx) =>
-                        <NameRow player={p} index={idx} key={p.id} align={align} />
+                        <NameRow player={p} index={idx} key={`${p.id}-${idx}`} align={align} />
                     )}
                     {placeholderRows}
                 </ul>

@@ -1,8 +1,8 @@
 import type { StandardStatus, MessageChunk, MessageResponse, Team } from "../types";
 import apiCall from "./api";
 
-export const teamGet = async (id: string) => {
-    return await apiCall<Team>(`team/info/${id}`, "GET");
+export const teamGet = async (id: string, jwt: string) => {
+    return await apiCall<Team>(`team/info/${id}`, "GET", undefined, jwt);
 }
 
 export const teamMessage = async (content: string, id: string | undefined, jwt: string) => {

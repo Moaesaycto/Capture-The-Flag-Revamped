@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .then((p) => {
                 if (cancelled) return;
                 setMe(p);
-                teamGet(p.team).then((t) => !cancelled && setMyTeam(t)).catch(() => { });
+                teamGet(p.team, jwt).then((t) => !cancelled && setMyTeam(t)).catch(() => { });
                 setLoggedIn(true);
             })
             .catch(() => {
