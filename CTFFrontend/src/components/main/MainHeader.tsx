@@ -16,11 +16,17 @@ const MainHeader = () => {
         <header
             className="w-full flex flex-col items-center"
         >
-            <div className="bg-amber-400 w-full z-1 flex flex-col justify-center items-center min-h-20">
-                <div className="flex flex-col sm:flex-row justify-between items-center px-3 max-w-6xl w-full">
+            <div className="bg-amber-400 w-full z-1 flex flex-col justify-center items-center min-h-16">
+                <div className="flex flex-col sm:flex-row justify-between items-center px-3 max-w-6xl w-full flex-1">
                     <div className="flex flex-row gap-2 items-center">
-                        <PiFlagBannerFoldDuotone />
-                        <h1
+                        <PiFlagBannerFoldDuotone
+                            style={{
+                                fontFamily: "American Captain",
+                                fontSize: "clamp(2.3rem, 7.45vw, 2.75rem)",
+                                lineHeight: 1,
+                            }}
+                        />
+                        <span
                             style={{
                                 fontFamily: "American Captain",
                                 fontSize: "clamp(2.3rem, 7.45vw, 2.75rem)",
@@ -28,7 +34,7 @@ const MainHeader = () => {
                             }}
                         >
                             Capture The Flag
-                        </h1>
+                        </span>
                     </div>
                     <div className="h-full flex items-center justify-center gap-1">
                         {me &&
