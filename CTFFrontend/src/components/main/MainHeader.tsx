@@ -16,18 +16,15 @@ const MainHeader = () => {
         <header
             className="w-full flex flex-col items-center"
         >
-            <div className="bg-amber-400 w-full z-1 text-5xl flex flex-col items-center justify-center">
+            <div className="bg-amber-400 w-full z-1 flex flex-col justify-center items-center min-h-20">
                 <div className="flex flex-col sm:flex-row justify-between items-center px-3 max-w-6xl w-full">
-                    <div
-                        className="flex flex-row gap-2 py-0 items-center"
-                        style={{
-                            fontSize: "clamp(2.3rem, 7.45vw, 2.75rem)",
-                        }}
-                    >
+                    <div className="flex flex-row gap-2 items-center">
                         <PiFlagBannerFoldDuotone />
                         <h1
                             style={{
                                 fontFamily: "American Captain",
+                                fontSize: "clamp(2.3rem, 7.45vw, 2.75rem)",
+                                lineHeight: 1,
                             }}
                         >
                             Capture The Flag
