@@ -33,7 +33,7 @@ function App() {
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { me } = useAuthContext();
 
-  if (!me) return <Navigate to="/" replace />;
+  if (!me) return <Navigate to="." replace />;
   return children;
 }
 
