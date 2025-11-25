@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const logout = useCallback(async () => {
+        console.log("Hello");
         await unsubscribe();
         setJwt(null);
         setMe(null);
@@ -49,6 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoggedIn(false);
         setAuthLoading(true);
         localStorage.removeItem(JWT_KEY);
+        window.location.reload;
     }, [unsubscribe]);
 
     useEffect(() => {

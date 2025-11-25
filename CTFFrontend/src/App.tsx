@@ -23,7 +23,7 @@ function App() {
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="/register-flag" element={<ProtectedRoute><FlagRegistrationPage /></ProtectedRoute>} />
           <Route path="/rules" element={<RulesPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="." replace />} />
         </Routes>
       </main>
       <MainFooter />
