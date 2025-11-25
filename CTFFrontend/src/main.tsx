@@ -10,7 +10,7 @@ import { SettingsProvider } from './components/contexts/SettingsContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/capture-the-flag">
       <AuthProvider>
         <SettingsProvider>
           <GameProvider>
