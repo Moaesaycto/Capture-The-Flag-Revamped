@@ -26,6 +26,8 @@ Icon?
 /CTFBackend/.env.*
 /CTFBackend/.gradle/
 /CTFBackend/build/
+/CTFBackend/src/main/resources/certs/*.p12
+/CTFBackend/src/main/resources/application.yml
 
 # IDE and workspace local files
 /CTFBackend/.idea/

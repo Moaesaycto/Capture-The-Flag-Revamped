@@ -1,5 +1,11 @@
 server:
-  port: 8080
+  port: 8443
+  ssl:
+    enabled: true
+    key-store: classpath:certs/ctf-local.p12
+    key-store-password: oopygoopy
+    key-store-type: PKCS12
+    key-alias: ctf-local
   error:
     include-message: always
 logging:
@@ -23,7 +29,7 @@ app:
       - /player/join
       - /team/info/*
       - /api/push/**
-    auth-pw: "a"
+    auth-pw: "oopygoopy"
     frontend: http://localhost:5173
 vapid:
   publicKey: BPBB7YTMuhbUbFEZZNXeNeTpw_lD3dobyzOiE7HUO7POfrMlEM-kztNoAnD2473B732jlD4agryajdOMKnRUiz8
