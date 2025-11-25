@@ -258,3 +258,7 @@ input:focus+.slider {
   outline: none;
   box-shadow: none;
 }
+
+p, h1, h2, h3, span, div {
+  line-height: 1; /* or a precise value like 1.1 */
+}
