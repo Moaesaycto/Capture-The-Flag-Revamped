@@ -11,6 +11,8 @@ import RulesPage from './pages/RulesPage'
 import FlagRegistrationPage from './pages/FlagRegistrationPage'
 
 function App() {
+  console.log("Capture the flag");
+  
   return (
     <div className="flex flex-col min-h-screen w-full items-center bg-neutral-950">
       <MainHeader />
