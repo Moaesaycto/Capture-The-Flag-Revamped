@@ -4,12 +4,14 @@ interface Settings {
     wantsNewMessageBadges: boolean;
     wantsMoreDetails: boolean;
     alwaysShowMap: boolean;
+    debugInfo: boolean;
 }
 
 interface SettingsContextValue extends Settings {
     setWantsNewMessageBadges: (v: boolean) => void;
     setWantsMoreDetails: (v: boolean) => void;
     setAlwaysShowMap: (v: boolean) => void;
+    setDebugInfo: (v: boolean) => void;
 }
 
 const SettingsContext = createContext<SettingsContextValue | undefined>(undefined);
@@ -19,6 +21,7 @@ const DEFAULT = {
     wantsNewMessageBadges: true,
     wantsMoreDetails: false,
     alwaysShowMap: true,
+    debugInfo: false,
 }
 
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
@@ -57,6 +60,9 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
                 alwaysShowMap: settings.alwaysShowMap,
                 setAlwaysShowMap: (value: boolean) =>
                     setSettings(prev => ({ ...prev, alwaysShowMap: value })),
+                debugInfo: settings.debugInfo,
+                setDebugInfo: (value: boolean) =>
+                    setSettings(prev => ({ ...prev, debugInfo: value })),
             }}
         >
             {children}

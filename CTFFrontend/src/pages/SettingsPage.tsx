@@ -91,7 +91,16 @@ const SettingsSection = ({ icon: Icon, title, children }: SettingsSectionProps) 
 
 const SettingsPage = () => {
     const { me, jwt, logout } = useAuthContext();
-    const { wantsNewMessageBadges, setWantsNewMessageBadges, wantsMoreDetails, setWantsMoreDetails, setAlwaysShowMap, alwaysShowMap } = useSettingsContext();
+    const {
+        wantsNewMessageBadges,
+        setWantsNewMessageBadges,
+        wantsMoreDetails,
+        setWantsMoreDetails,
+        setAlwaysShowMap,
+        alwaysShowMap,
+        debugInfo,
+        setDebugInfo,
+    } = useSettingsContext();
     const { subscribe, subscription, unsubscribe, isSubscribing, isSupported } = usePushNotifications();
 
 
@@ -115,18 +124,10 @@ const SettingsPage = () => {
             >
                 Settings
             </h2>
-            <div className="bg-yellow-900 text-yellow-100 p-4 mb-4 rounded text-xs">
-                <p>Debug Info:</p>
-                <p>isSupported: {isSupported ? 'YES' : 'NO'}</p>
-                <p>ServiceWorker: {'serviceWorker' in navigator ? 'YES' : 'NO'}</p>
-                <p>PushManager: {'PushManager' in window ? 'YES' : 'NO'}</p>
-                <p>Standalone (nav): {('standalone' in navigator && (navigator as any).standalone) ? 'YES' : 'NO'}</p>
-                <p>Standalone (media): {window.matchMedia('(display-mode: standalone)').matches ? 'YES' : 'NO'}</p>
-                <p>User Agent: {navigator.userAgent}</p>
-            </div>
             <SettingsSection title="Game" icon={MdVideogameAsset}>
                 <Option title="More game details" onChange={(e) => setWantsMoreDetails(e)} value={wantsMoreDetails} />
                 <Option title="Always show map" onChange={(e) => setAlwaysShowMap(e)} value={alwaysShowMap} />
+                <Option title="Debug Info" onChange={(e) => setDebugInfo(e)} value={debugInfo} />
             </SettingsSection>
             <SettingsSection title="Notifications" icon={IoNotifications} >
                 <Option
@@ -145,6 +146,15 @@ const SettingsPage = () => {
             {me && me.auth && <SettingsSection title="Moderator Options" icon={RiAdminFill} >
                 <Option title="Full Reset Game" onClick={() => { gameReset(true, jwt!); logout(); }} type="button" icon={FaTrash} color="#ff7a7a" />
             </SettingsSection>}
+            {debugInfo && <div className="bg-yellow-900 text-yellow-100 p-4 mb-4 rounded text-xs">
+                <p>Debug Info:</p>
+                <p>isSupported: {isSupported ? 'YES' : 'NO'}</p>
+                <p>ServiceWorker: {'serviceWorker' in navigator ? 'YES' : 'NO'}</p>
+                <p>PushManager: {'PushManager' in window ? 'YES' : 'NO'}</p>
+                <p>Standalone (nav): {('standalone' in navigator && (navigator as any).standalone) ? 'YES' : 'NO'}</p>
+                <p>Standalone (media): {window.matchMedia('(display-mode: standalone)').matches ? 'YES' : 'NO'}</p>
+                <p>User Agent: {navigator.userAgent}</p>
+            </div>}
         </Page>
     )
 }
