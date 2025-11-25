@@ -16,6 +16,7 @@
 :root {
   font-family: "Titillium Web";
   font-synthesis: none;
+  color-scheme: light;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
