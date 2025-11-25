@@ -1,7 +1,7 @@
 {
     "name": "Capture the Flag",
     "short_name": "CTF",
-    "start_url": "/",
+    "start_url": "/capture-the-flag/",
     "display": "standalone",
     "icons": [
         {
