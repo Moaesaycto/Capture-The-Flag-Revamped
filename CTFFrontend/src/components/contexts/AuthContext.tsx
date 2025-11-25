@@ -13,7 +13,6 @@ interface AuthContextValue {
     logout: () => void;
     authLoading: boolean;
     healthy: boolean | null;
-    loggedIn: boolean;
     hydrate: (token: string) => void;
     me: Player | null;
     setMe: (p: Player | null) => void;
@@ -25,11 +24,10 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const { unsubscribe } = usePushNotifications();
+    const { unsubscribe, subscription } = usePushNotifications();
 
     const [healthy, setHealthy] = useState<boolean | null>(null);
     const [jwt, setJwt] = useState<string | null>(() => localStorage.getItem(JWT_KEY));
-    const [loggedIn, setLoggedIn] = useState<boolean>(false);
 
     const [authLoading, setAuthLoading] = useState<boolean>(!!jwt);
 
@@ -42,15 +40,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const logout = useCallback(async () => {
-        console.log("Hello");
-        await unsubscribe();
+        console.log("Logout started");
+
+        if (subscription) {
+            try {
+                await Promise.race([
+                    unsubscribe(),
+                    new Promise((resolve) => setTimeout(resolve, 5000))
+                ]);
+                console.log("Unsubscribed successfully");
+            } catch (error) {
+                console.error("Unsubscribe failed, continuing logout:", error);
+            }
+        }
+
+        console.log("Clearing state");
+        localStorage.removeItem(JWT_KEY);
         setJwt(null);
         setMe(null);
         setMyTeam(null);
-        setLoggedIn(false);
-        setAuthLoading(true);
-        localStorage.removeItem(JWT_KEY);
-        window.location.reload;
+        console.log("Logout completed, redirecting...");
+
+        window.location.href = '/capture-the-flag';
     }, [unsubscribe]);
 
     useEffect(() => {
@@ -61,7 +72,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         if (!jwt) {
             setAuthLoading(false);
-            setLoggedIn(false);
             setMe(null);
             setMyTeam(null);
             return;
@@ -75,7 +85,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 if (cancelled) return;
                 setMe(p);
                 teamGet(p.team, jwt).then((t) => !cancelled && setMyTeam(t)).catch(() => { });
-                setLoggedIn(true);
             })
             .catch(() => {
                 if (cancelled) return;
@@ -110,7 +119,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 logout,
                 authLoading,
                 healthy,
-                loggedIn,
                 hydrate,
                 setMe,
                 me,

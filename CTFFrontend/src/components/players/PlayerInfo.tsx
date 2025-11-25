@@ -11,9 +11,10 @@ const PlayerInfo = () => {
     const { removeMeFromGame } = useGameContext();
 
     const onClick = useCallback(() => {
-        removeMeFromGame();
-        playerLeave(jwt);
-        logout();
+        playerLeave(jwt).then(() => {
+            removeMeFromGame();
+            logout();
+        }).catch((e) => console.error("Failed to leave game: " + e.message));
     }, [jwt, logout, removeMeFromGame]);
 
     return (

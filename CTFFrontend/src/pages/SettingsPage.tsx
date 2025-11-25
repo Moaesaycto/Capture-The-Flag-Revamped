@@ -92,7 +92,19 @@ const SettingsSection = ({ icon: Icon, title, children }: SettingsSectionProps) 
 const SettingsPage = () => {
     const { me, jwt, logout } = useAuthContext();
     const { wantsNewMessageBadges, setWantsNewMessageBadges, wantsMoreDetails, setWantsMoreDetails, setAlwaysShowMap, alwaysShowMap } = useSettingsContext();
-    const { subscribe, subscription, unsubscribe } = usePushNotifications();
+    const { subscribe, subscription, unsubscribe, isSubscribing } = usePushNotifications();
+
+    const handleNotificationToggle = async (enabled: boolean) => {
+        try {
+            if (enabled) {
+                await subscribe();
+            } else {
+                await unsubscribe();
+            }
+        } catch (error) {
+            console.error('Failed to toggle notifications:', error);
+        }
+    };
 
     return (
         <Page>
@@ -107,7 +119,13 @@ const SettingsPage = () => {
                 <Option title="Always show map" onChange={(e) => setAlwaysShowMap(e)} value={alwaysShowMap} />
             </SettingsSection>
             <SettingsSection title="Notifications" icon={IoNotifications} >
-                <Option title="Receive Notifications" onChange={(e) => e ? subscribe() : unsubscribe()} value={!!subscription} disabled={!me} details={"This includes both status updates and emergency alerts. It is recommended to turn this on."} />
+                <Option
+                    title="Receive Notifications"
+                    onChange={handleNotificationToggle}
+                    value={!!subscription}
+                    disabled={!me || isSubscribing}
+                    details={"This includes both status updates and emergency alerts. It is recommended to turn this on."}
+                />
                 <Option title="Show New Message Badge" onChange={(e) => setWantsNewMessageBadges(e)} value={wantsNewMessageBadges} disabled={!me} />
             </SettingsSection>
             {me && me.auth && <SettingsSection title="Moderator Options" icon={RiAdminFill} >

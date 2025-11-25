@@ -7,7 +7,7 @@ import { useGameContext } from "../contexts/GameContext";
 import { BannerWarning } from "./Messages";
 
 const MainHeader = () => {
-    const { loggedIn } = useAuthContext();
+    const { me } = useAuthContext();
     const { dirtyTeams, dirtyGlobal } = useMessageContext();
     const { wantsNewMessageBadges } = useSettingsContext();
     const { emergency } = useGameContext();
@@ -34,7 +34,7 @@ const MainHeader = () => {
                         </h1>
                     </div>
                     <div className="h-full flex items-center justify-center gap-1">
-                        {loggedIn &&
+                        {me &&
                             <div className="flex flex-row items-center">
                                 <Link to="/">
                                     <div className="m-1 text-2xl border-3 border-black rounded-xl relative p-0.5 hover:cursor-pointer">

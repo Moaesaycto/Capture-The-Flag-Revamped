@@ -1,18 +1,28 @@
 self.addEventListener('push', (event) => {
-    const data = event.data.json();
+    console.log('Push received:', event);
+
+    const data = event.data ? event.data.json() : { title: 'Notification', body: 'New message' };
 
     event.waitUntil(
         self.clients.matchAll({ type: 'window', includeUncontrolled: true })
             .then(clientList => {
                 const isPageFocused = clientList.some(client => client.focused);
-
                 if (!isPageFocused) {
                     return self.registration.showNotification(data.title, {
                         body: data.body,
-                        icon: '/icon.png',
-                        badge: '/badge.png'
+                        icon: '/capture-the-flag/icon.png',
+                        badge: '/capture-the-flag/badge.png',
+                        tag: 'notification',
+                        requireInteraction: false
                     });
                 }
             })
+    );
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    event.waitUntil(
+        clients.openWindow('/capture-the-flag/')
     );
 });

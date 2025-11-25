@@ -6,7 +6,20 @@ import path from "path"
 // https://vite.dev/config/
 export default defineConfig({
   base: '/capture-the-flag/',
-  build: { outDir: 'dist' },
+  publicDir: 'public',
+  build: {
+    outDir: 'dist',
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/[name].[hash].js',
+        chunkFileNames: 'assets/[name].[hash].js',
+        assetFileNames: 'assets/[name].[hash].[ext]'
+      },
+      input: {
+        main: './index.html',
+      }
+    }
+  },
   plugins: [
     react(),
     tailwindcss(),

@@ -15,10 +15,10 @@ import MoreInfo from "@/components/game/MoreInfo";
 import MapViewer from "@/components/team/MapViewer";
 
 const HomePage = () => {
-    const { loggedIn, me, myTeam } = useAuthContext();
+    const { me, myTeam } = useAuthContext();
     const { wantsMoreDetails } = useSettingsContext();
 
-    const Controller = useMemo(() => (loggedIn ? PlayerInfo : JoinForm), [loggedIn, me]);
+    const Controller = useMemo(() => (me ? PlayerInfo : JoinForm), [me]);
 
     return (
         <Page>
