@@ -2,7 +2,7 @@ import { useAuthContext } from "@/components/contexts/AuthContext";
 import { useSettingsContext } from "@/components/contexts/SettingsContext";
 import Page from "@/components/main/Page"
 import { gameReset } from "@/services/GameApi";
-import { usePushNotifications } from "@/services/usePushNotifications";
+import { getPushUnsupportedMessage, usePushNotifications } from "@/services/usePushNotifications";
 import type { ReactNode } from "react";
 import type { IconType } from "react-icons";
 import { FaRegHandPointer, FaTrash } from "react-icons/fa";
@@ -92,7 +92,8 @@ const SettingsSection = ({ icon: Icon, title, children }: SettingsSectionProps) 
 const SettingsPage = () => {
     const { me, jwt, logout } = useAuthContext();
     const { wantsNewMessageBadges, setWantsNewMessageBadges, wantsMoreDetails, setWantsMoreDetails, setAlwaysShowMap, alwaysShowMap } = useSettingsContext();
-    const { subscribe, subscription, unsubscribe, isSubscribing } = usePushNotifications();
+    const { subscribe, subscription, unsubscribe, isSubscribing, isSupported } = usePushNotifications();
+
 
     const handleNotificationToggle = async (enabled: boolean) => {
         try {
@@ -114,6 +115,15 @@ const SettingsPage = () => {
             >
                 Settings
             </h2>
+            <div className="bg-yellow-900 text-yellow-100 p-4 mb-4 rounded text-xs">
+                <p>Debug Info:</p>
+                <p>isSupported: {isSupported ? 'YES' : 'NO'}</p>
+                <p>ServiceWorker: {'serviceWorker' in navigator ? 'YES' : 'NO'}</p>
+                <p>PushManager: {'PushManager' in window ? 'YES' : 'NO'}</p>
+                <p>Standalone (nav): {('standalone' in navigator && (navigator as any).standalone) ? 'YES' : 'NO'}</p>
+                <p>Standalone (media): {window.matchMedia('(display-mode: standalone)').matches ? 'YES' : 'NO'}</p>
+                <p>User Agent: {navigator.userAgent}</p>
+            </div>
             <SettingsSection title="Game" icon={MdVideogameAsset}>
                 <Option title="More game details" onChange={(e) => setWantsMoreDetails(e)} value={wantsMoreDetails} />
                 <Option title="Always show map" onChange={(e) => setAlwaysShowMap(e)} value={alwaysShowMap} />
@@ -123,8 +133,12 @@ const SettingsPage = () => {
                     title="Receive Notifications"
                     onChange={handleNotificationToggle}
                     value={!!subscription}
-                    disabled={!me || isSubscribing}
-                    details={"This includes both status updates and emergency alerts. It is recommended to turn this on."}
+                    disabled={!me || isSubscribing || !isSupported}
+                    details={
+                        !isSupported
+                            ? getPushUnsupportedMessage()
+                            : "This includes both status updates and emergency alerts. It is recommended to turn this on."
+                    }
                 />
                 <Option title="Show New Message Badge" onChange={(e) => setWantsNewMessageBadges(e)} value={wantsNewMessageBadges} disabled={!me} />
             </SettingsSection>
