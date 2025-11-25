@@ -10,8 +10,8 @@ self.addEventListener('push', (event) => {
                 if (!isPageFocused) {
                     return self.registration.showNotification(data.title, {
                         body: data.body,
-                        icon: '/capture-the-flag/icon.png',  // Updated path
-                        badge: '/capture-the-flag/badge.png', // Updated path
+                        icon: '/capture-the-flag/icon.png',
+                        badge: '/capture-the-flag/badge.png',
                         tag: 'notification',
                         requireInteraction: false
                     });
@@ -23,6 +23,6 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     event.waitUntil(
-        clients.openWindow('/capture-the-flag/') // Updated path
+        clients.openWindow('/capture-the-flag/')
     );
 });
