@@ -1,7 +1,7 @@
 server:
   port: 8443
   ssl:
-    enabled: true
+    enabled: false
     key-store: classpath:certs/ctf-local.p12
     key-store-password: oopygoopy
     key-store-type: PKCS12
@@ -30,7 +30,7 @@ app:
       - /team/info/*
       - /api/push/**
     auth-pw: "oopygoopy"
-    frontend: http://192.168.0.76:5173
+    frontend: http://localhost:5173
 vapid:
   publicKey: BPBB7YTMuhbUbFEZZNXeNeTpw_lD3dobyzOiE7HUO7POfrMlEM-kztNoAnD2473B732jlD4agryajdOMKnRUiz8
   privateKey: 6OPI6pyL1dNgZSYpq2YgGfNbQFqS3_oQu1orG2a0OIg

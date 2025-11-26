@@ -13,6 +13,14 @@
   src: url('/fonts/TitilliumWeb-SemiBold.ttf') format('truetype');
 }
 
+/* Covering the overflow on Apple devices */
+html, body {
+  background-color: #FFB900;
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
 :root {
   font-family: "Titillium Web";
   font-synthesis: none;

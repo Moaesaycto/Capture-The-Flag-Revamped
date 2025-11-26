@@ -8,9 +8,10 @@ type ContainerProps = {
     Icon?: IconType,
     children?: ReactNode,
     collapsible?: boolean,
+    padding?: boolean,
 }
 
-const Container = ({ title, Icon, children, collapsible = true }: ContainerProps) => {
+const Container = ({ title, Icon, children, collapsible = true, padding = true }: ContainerProps) => {
     const [open, setOpen] = useState<boolean>(true);
 
     return (
@@ -24,7 +25,7 @@ const Container = ({ title, Icon, children, collapsible = true }: ContainerProps
                 <span className="flex-1">{title}</span>
                 {collapsible && (open ? <PiMinus /> : <PiPlus />)}
             </div>
-            {open && <div className="p-5">
+            {open && <div className={padding ? "p-5" : ""}>
                 {children}
             </div>}
         </div>

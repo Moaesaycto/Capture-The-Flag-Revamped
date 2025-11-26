@@ -14,8 +14,8 @@ const Page = ({ children, padding = true }: PageProps) => {
     const { authLoading, healthy } = useAuthContext();
     const { loading, health } = useGameContext();
 
-    if (authLoading || (loading && !health)) return <Loading />
-    if (!healthy) return <NoConnection />
+    /* if (authLoading || (loading && !health)) return <Loading />
+    if (!healthy) return <NoConnection /> */
 
     return (
         <div
@@ -30,7 +30,7 @@ const Page = ({ children, padding = true }: PageProps) => {
 }
 
 const Loading = () => (
-    <div className="fixed inset-0 flex items-center justify-center bg-neutral-800">
+    <div className="flex-1 flex flex-col items-center justify-center bg-neutral-800">
         <div className="text-white">
             <Spinner size={100} />
         </div>
@@ -38,7 +38,7 @@ const Loading = () => (
 )
 
 const NoConnection = () => (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-neutral-800 text-white">
+    <div className="flex-1 flex flex-col items-center justify-center bg-neutral-800 text-white">
         <PiWifiXBold size={64} className="text-red-500 mb-4" />
         <p className="text-lg">No Connection to Server</p>
         <p className="opacity-50">

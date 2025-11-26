@@ -286,6 +286,7 @@ export const ChatWindow = ({
 
                         // If not scrollable, we're effectively at the bottom
                         if (!hasScroll) {
+                            latestIsAtBottomRef.current = true;
                             setNewMessageAlert(false);
                             setOpenChatDirty(false);
                         }
