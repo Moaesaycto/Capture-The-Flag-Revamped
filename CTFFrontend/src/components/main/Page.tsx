@@ -1,8 +1,8 @@
 import type { ReactNode } from "react"
-// import { PiWifiXBold } from "react-icons/pi"
-// import Spinner from "./LoadingSpinner"
-// import { useAuthContext } from "../contexts/AuthContext";
-// import { useGameContext } from "../contexts/GameContext";
+import { PiWifiXBold } from "react-icons/pi"
+import Spinner from "./LoadingSpinner"
+import { useAuthContext } from "../contexts/AuthContext";
+import { useGameContext } from "../contexts/GameContext";
 import clsx from "clsx";
 
 type PageProps = {
@@ -11,11 +11,11 @@ type PageProps = {
 }
 
 const Page = ({ children, padding = true }: PageProps) => {
-    // const { authLoading, healthy } = useAuthContext();
-    // const { loading, health } = useGameContext();
+    const { authLoading, healthy } = useAuthContext();
+    const { loading, health } = useGameContext();
 
-    /* if (authLoading || (loading && !health)) return <Loading />
-    if (!healthy) return <NoConnection /> */
+    if (authLoading || (loading && !health)) return <Loading />;
+    if (!healthy) return <NoConnection />;
 
     return (
         <div
@@ -29,7 +29,7 @@ const Page = ({ children, padding = true }: PageProps) => {
     );
 }
 
-/* const Loading = () => (
+const Loading = () => (
     <div className="flex-1 flex flex-col items-center justify-center bg-neutral-800">
         <div className="text-white">
             <Spinner size={100} />
@@ -46,5 +46,5 @@ const NoConnection = () => (
         </p>
     </div>
 )
- */
+
 export default Page
