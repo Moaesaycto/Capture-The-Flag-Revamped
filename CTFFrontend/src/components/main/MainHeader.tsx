@@ -12,7 +12,7 @@ const MainHeader = () => {
     const { dirtyTeams, dirtyGlobal } = useMessageContext();
     const { wantsNewMessageBadges } = useSettingsContext();
     const { emergency } = useGameContext();
-    
+
     return (
         <header className="w-full flex flex-col items-center">
             <div className="bg-amber-400 w-full z-1 flex flex-col justify-center items-center">
@@ -22,13 +22,13 @@ const MainHeader = () => {
                         <div className="h-8 w-8 sm:h-10 sm:w-10 flex items-center justify-center shrink-0">
                             <PiFlagBannerFoldDuotone className="w-full h-full" />
                         </div>
-                        <img 
-                            alt="main-title" 
-                            src={logo} 
-                            className="h-8 sm:h-10 w-auto max-w-[200px] sm:max-w-none" 
+                        <img
+                            alt="main-title"
+                            src={logo}
+                            className="h-8 sm:h-10 w-auto max-w-[200px] sm:max-w-none"
                         />
                     </div>
-                    
+
                     {/* Navigation Icons */}
                     {me && (
                         <div className="flex items-center justify-center mt-2 sm:mt-0">
